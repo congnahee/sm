@@ -562,6 +562,24 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
   .hbtn-ghost{display:none}
   .logo-txt{font-size:15px}
 }
+
+/* ── 직접 입력 사이즈 모달 ── */
+#customSizeModal{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.55);align-items:center;justify-content:center}
+#customSizeModal.show{display:flex}
+#customSizeBox{background:var(--parchment);border-radius:16px;padding:24px 20px;width:280px;max-width:90vw;font-family:'Gowun Dodum',serif;box-shadow:0 8px 32px rgba(0,0,0,.3)}
+#customSizeBox h3{margin:0 0 16px;font-size:15px;color:var(--ink);letter-spacing:.04em;text-align:center}
+.csz-row{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.csz-row label{font-size:12px;color:var(--ink2);width:32px;flex-shrink:0}
+.csz-row input{flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:'Gowun Dodum',serif;background:var(--bg);color:var(--ink);outline:none;text-align:center}
+.csz-row input:focus{border-color:var(--gold)}
+.csz-lock{display:flex;align-items:center;gap:6px;margin-bottom:16px;cursor:pointer;font-size:12px;color:var(--ink2)}
+.csz-lock input{width:14px;height:14px;cursor:pointer;accent-color:var(--gold)}
+.csz-presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.csz-preset{padding:4px 10px;border-radius:6px;border:1.5px solid var(--border);font-size:11px;cursor:pointer;color:var(--ink2);background:var(--bg);font-family:'Gowun Dodum',serif;transition:all .12s}
+.csz-preset:hover{border-color:var(--gold);color:var(--gold)}
+.csz-btns{display:flex;gap:8px}
+.csz-btn-cancel{flex:1;padding:10px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);color:var(--ink2);font-size:13px;font-family:'Gowun Dodum',serif;cursor:pointer}
+.csz-btn-ok{flex:2;padding:10px;border:none;border-radius:10px;background:linear-gradient(135deg,#C4973A,#a07830);color:#1C0F06;font-size:13px;font-weight:700;font-family:'Gowun Dodum',serif;cursor:pointer}
 </style>
 </head>
 <body>
@@ -695,6 +713,38 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
       </div>
     </div>
     <!-- SIZE BAR -->
+
+    <!-- ── 직접 입력 사이즈 모달 ── -->
+    <div id="customSizeModal" onclick="if(event.target===this)closeCustomSize()">
+      <div id="customSizeBox">
+        <h3>✏ 사이즈 직접 입력</h3>
+        <div class="csz-row">
+          <label>가로</label>
+          <input type="number" id="cszW" min="100" max="10000" placeholder="px" oninput="onCszInput('w')">
+          <span style="font-size:12px;color:var(--ink3)">px</span>
+        </div>
+        <div class="csz-row">
+          <label>세로</label>
+          <input type="number" id="cszH" min="100" max="10000" placeholder="px" oninput="onCszInput('h')">
+          <span style="font-size:12px;color:var(--ink3)">px</span>
+        </div>
+        <label class="csz-lock">
+          <input type="checkbox" id="cszLock" checked> 비율 고정
+        </label>
+        <div class="csz-presets">
+          <div class="csz-preset" onclick="cszPreset(5000,5000)">1:1</div>
+          <div class="csz-preset" onclick="cszPreset(1080,1920)">9:16</div>
+          <div class="csz-preset" onclick="cszPreset(1920,1080)">16:9</div>
+          <div class="csz-preset" onclick="cszPreset(1080,1350)">4:5</div>
+          <div class="csz-preset" onclick="cszPreset(1200,630)">SNS</div>
+          <div class="csz-preset" onclick="cszPreset(2480,3508)">A4</div>
+        </div>
+        <div class="csz-btns">
+          <button class="csz-btn-cancel" onclick="closeCustomSize()">취소</button>
+          <button class="csz-btn-ok" onclick="applyCustomSize()">적용</button>
+        </div>
+      </div>
+    </div>
     <div class="size-bar" id="sizeBar">
       <div class="size-chip active" data-w="5000" data-h="5000" onclick="setSize(this)">■ 1:1</div>
       <div class="size-chip" data-w="1080" data-h="1920" onclick="setSize(this)">▯ 9:16</div>
@@ -702,6 +752,7 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
       <div class="size-chip" data-w="1080" data-h="1350" onclick="setSize(this)">▯ 4:5</div>
 
       <div class="size-chip" onclick="enterCropMode()" style="border-color:#C4973A;color:#C4973A;flex-shrink:0">✂ 자르기</div>
+      <div class="size-chip" onclick="openCustomSize()" style="border-color:#7B9E87;color:#7B9E87;flex-shrink:0">✏ 직접입력</div>
       <div class="zoom-bar">
         <button class="zoom-btn" onclick="zoomCanvas(-1)" title="축소">－</button>
         <span class="zoom-pct" id="zoomPct">100%</span>
@@ -939,7 +990,7 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
               <span>배경 위치 · 크기</span>
               <div id="bgVisToggle" onclick="toggleBgVisible()" style="cursor:pointer;padding:2px 6px;border-radius:6px;border:1.5px solid var(--border);background:var(--parchment)" title="배경사진 숨기기/보이기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
             </div>
-            <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">배경 크기</span><span class="ctrl-v" id="vBgScale">100%</span></div><input type="range" id="slBgScale" min="30" max="300" value="100" oninput="setBgScale(this)" onchange="saveHistory()" ontouchend="this.oninput({target:this})"></div>
+            <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">배경 크기</span><span class="ctrl-v" id="vBgScale">100%</span></div><input type="range" id="slBgScale" min="10" max="400" value="100" oninput="setBgScale(this)" onchange="saveHistory()" ontouchend="this.oninput({target:this})"></div>
             <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">좌우 위치</span><span class="ctrl-v" id="vBgX">0</span></div><input type="range" id="slBgX" min="-200" max="200" value="0" oninput="setBgX(this)" onchange="saveHistory()" ontouchend="this.oninput({target:this})"></div>
             <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">상하 위치</span><span class="ctrl-v" id="vBgY">0</span></div><input type="range" id="slBgY" min="-200" max="200" value="0" oninput="setBgY(this)" onchange="saveHistory()" ontouchend="this.oninput({target:this})"></div>
             <div style="margin-bottom:8px"><div class="togbtn" onclick="resetBgPos()" style="text-align:center;padding:8px;font-size:11px">↺ 위치·크기 초기화</div></div>
@@ -1182,6 +1233,7 @@ function makeSnap() {
   if (!bgImgUrl && bgImg) { try { bgImgUrl = imgToDataUrl(bgImg); } catch(e) {} }
   return {
     bgColor, bgOffX, bgOffY, bgScale, currentFilter, bgImgUrl,
+    outputW, outputH,
     _bright, _contrast, _sat, _bgOp, _bgBlur,
     _fBright, _fCont, _fSat, _fTemp, _vig, _grain,
     layers: JSON.parse(JSON.stringify(layers.map(l => { const c={...l}; delete c.srcImg; return c; })))
@@ -1202,6 +1254,17 @@ function applySnap(snap) {
     bgOffX = snap.bgOffX || 0;
     bgOffY = snap.bgOffY || 0;
     bgScale = snap.bgScale || 100;
+    // ✅ outputW/H 복원
+    if (snap.outputW && snap.outputH) {
+      outputW = snap.outputW; outputH = snap.outputH;
+      saveW = outputW; saveH = outputH;
+      const lbl = $('sizeLabel');
+      if (lbl) lbl.textContent = outputW.toLocaleString() + ' × ' + outputH.toLocaleString() + ' px';
+    }
+    // ✅ 슬라이더 UI 동기화
+    if ($('slBgScale')) { $('slBgScale').value = bgScale; $('vBgScale').textContent = bgScale + '%'; }
+    if ($('slBgX'))     { const sx = Math.round(bgOffX*100); $('slBgX').value = sx; $('vBgX').textContent = sx; }
+    if ($('slBgY'))     { const sy = Math.round(bgOffY*100); $('slBgY').value = sy; $('vBgY').textContent = sy; }
     if (snap.currentFilter !== undefined) currentFilter = snap.currentFilter;
     if (snap._bright !== undefined) {
       _bright=snap._bright; _contrast=snap._contrast; _sat=snap._sat;
@@ -1220,13 +1283,25 @@ function applySnap(snap) {
     const checkDone = () => {
       done++;
       if (done >= total) {
-        refreshLayerList(); renderProps(); render();
+        // ✅ 배경 패널 표시 상태 동기화
+        const props = $('bgOverlayProps');
+        if (props) props.style.display = bgImg ? 'block' : 'none';
+        // ✅ 슬라이더 UI 재동기화 (비동기 로드 후)
+        if ($('slBgScale')) { $('slBgScale').value = bgScale; $('vBgScale').textContent = bgScale + '%'; }
+        if ($('slBgX'))     { const sx = Math.round(bgOffX*100); $('slBgX').value = sx; $('vBgX').textContent = sx; }
+        if ($('slBgY'))     { const sy = Math.round(bgOffY*100); $('slBgY').value = sy; $('vBgY').textContent = sy; }
+        initCanvas(); refreshLayerList(); renderProps(); render();
       }
     };
 
     if (total === 0) {
       bgImg = null; currentBgDataUrl = null;
-      refreshLayerList(); renderProps(); render();
+      const props = $('bgOverlayProps');
+      if (props) props.style.display = 'none';
+      if ($('slBgScale')) { $('slBgScale').value = bgScale; $('vBgScale').textContent = bgScale + '%'; }
+      if ($('slBgX'))     { const sx = Math.round(bgOffX*100); $('slBgX').value = sx; $('vBgX').textContent = sx; }
+      if ($('slBgY'))     { const sy = Math.round(bgOffY*100); $('slBgY').value = sy; $('vBgY').textContent = sy; }
+      initCanvas(); refreshLayerList(); renderProps(); render();
       return;
     }
 
@@ -1476,6 +1551,66 @@ function setSize(el) {
   if (lbl) lbl.textContent = `${outputW.toLocaleString()} × ${outputH.toLocaleString()} px`;
   showToast(`캔버스 크기: ${outputW}×${outputH}`);
 }
+
+/* ════════════════════════════════════
+   ✏ 직접 입력 사이즈
+════════════════════════════════════ */
+let _cszRatio = 1;
+
+function openCustomSize() {
+  const modal = $('customSizeModal');
+  if (!modal) return;
+  $('cszW').value = outputW;
+  $('cszH').value = outputH;
+  _cszRatio = outputW / outputH;
+  modal.classList.add('show');
+  setTimeout(() => $('cszW').focus(), 100);
+}
+
+function closeCustomSize() {
+  const modal = $('customSizeModal');
+  if (modal) modal.classList.remove('show');
+}
+
+function onCszInput(changed) {
+  if (!$('cszLock').checked) return;
+  const w = +$('cszW').value;
+  const h = +$('cszH').value;
+  if (changed === 'w' && w > 0) {
+    $('cszH').value = Math.round(w / _cszRatio);
+  } else if (changed === 'h' && h > 0) {
+    $('cszW').value = Math.round(h * _cszRatio);
+  }
+}
+
+function cszPreset(w, h) {
+  $('cszW').value = w;
+  $('cszH').value = h;
+  _cszRatio = w / h;
+}
+
+function applyCustomSize() {
+  const w = Math.max(100, Math.min(10000, +$('cszW').value || outputW));
+  const h = Math.max(100, Math.min(10000, +$('cszH').value || outputH));
+  saveHistory();
+  outputW = w; outputH = h; saveW = w; saveH = h;
+  document.querySelectorAll('.size-chip').forEach(c => c.classList.remove('active'));
+  // 현재 사이즈와 일치하는 칩 활성화
+  document.querySelectorAll('.size-chip[data-w]').forEach(c => {
+    if (+c.dataset.w === w && +c.dataset.h === h) c.classList.add('active');
+  });
+  const lbl = $('sizeLabel');
+  if (lbl) lbl.textContent = `${w.toLocaleString()} × ${h.toLocaleString()} px`;
+  initCanvas();
+  render();
+  closeCustomSize();
+  showToast(`✏ ${w.toLocaleString()} × ${h.toLocaleString()} px`);
+}
+
+// ESC로 닫기
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeCustomSize();
+});
 
 
 function cropCanvas() {
