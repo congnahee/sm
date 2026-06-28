@@ -578,85 +578,52 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
     <div style="font-size:42px;margin-bottom:8px">🫘</div>
     <div style="font-size:22px;font-weight:700;color:#C4973A;letter-spacing:.08em;margin-bottom:4px">콩심캘리</div>
     <div style="font-size:12px;color:rgba(196,151,58,.6);letter-spacing:.06em;margin-bottom:36px">STUDIO</div>
-
     <div style="position:relative;margin-bottom:14px">
       <input id="lockInput" type="password" placeholder="비밀번호를 입력하세요"
-        style="
-          width:100%;box-sizing:border-box;
-          background:rgba(255,255,255,.06);
-          border:1.5px solid rgba(196,151,58,.3);
-          border-radius:12px;
-          color:#fff;font-size:16px;
-          font-family:'Gowun Dodum',serif;
-          padding:14px 18px;
-          outline:none;
-          letter-spacing:.15em;
-          text-align:center;
-        "
+        style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.06);border:1.5px solid rgba(196,151,58,.3);border-radius:12px;color:#fff;font-size:16px;font-family:'Gowun Dodum',serif;padding:14px 18px;outline:none;letter-spacing:.15em;text-align:center;"
         onkeydown="if(event.key==='Enter')checkLock()"
       >
     </div>
     <div id="lockMsg" style="font-size:12px;color:#E84855;min-height:18px;margin-bottom:16px;letter-spacing:.04em"></div>
-
-    <button id="lockBtn" onclick="checkLock()" style="
-      width:100%;padding:14px;border:none;border-radius:12px;
-      background:linear-gradient(135deg,#C4973A,#a07830);
-      color:#1C0F06;font-size:15px;font-weight:700;
-      font-family:'Gowun Dodum',serif;
-      cursor:pointer;letter-spacing:.06em;
-      transition:filter .15s;
-    " onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter=''">
+    <button id="lockBtn" onclick="checkLock()" style="width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,#C4973A,#a07830);color:#1C0F06;font-size:15px;font-weight:700;font-family:'Gowun Dodum',serif;cursor:pointer;letter-spacing:.06em;transition:filter .15s;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter=''">
       입장하기
     </button>
-
     <div style="margin-top:28px;font-size:11px;color:rgba(255,255,255,.25);line-height:1.8">
       이용권 구매 문의<br>
       <span style="color:rgba(196,151,58,.5)">카카오톡 채널 @콩심캘리</span>
     </div>
   </div>
 </div>
-
 <script>
 (function(){
-  if(sessionStorage.getItem('csk_auth') === '1'){
+  if(sessionStorage.getItem('csk_auth')==='1'){
     document.getElementById('lockScreen').style.display='none';
     return;
   }
-
-  window.checkLock = function(){
-    var pw = document.getElementById('lockInput').value.trim();
-    if(!pw) return;
-    var btn = document.getElementById('lockBtn');
-    var msg = document.getElementById('lockMsg');
-    btn.disabled = true;
-    btn.textContent = '확인 중...';
-    msg.textContent = '';
-
-    fetch('/api/verify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: pw })
-    })
-    .then(function(r){ return r.json(); })
+  window.checkLock=function(){
+    var pw=document.getElementById('lockInput').value.trim();
+    if(!pw)return;
+    var btn=document.getElementById('lockBtn');
+    var msg=document.getElementById('lockMsg');
+    btn.disabled=true; btn.textContent='확인 중...'; msg.textContent='';
+    fetch('/api/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw})})
+    .then(function(r){return r.json();})
     .then(function(data){
       if(data.ok){
         sessionStorage.setItem('csk_auth','1');
-        var ls = document.getElementById('lockScreen');
-        ls.style.transition='opacity .4s';
-        ls.style.opacity='0';
+        var ls=document.getElementById('lockScreen');
+        ls.style.transition='opacity .4s'; ls.style.opacity='0';
         setTimeout(function(){ls.style.display='none';},400);
       } else {
-        msg.textContent = data.msg || '비밀번호가 올바르지 않습니다.';
+        msg.textContent=data.msg||'비밀번호가 올바르지 않습니다.';
         document.getElementById('lockInput').value='';
         document.getElementById('lockInput').focus();
-        btn.disabled = false;
-        btn.textContent = '입장하기';
+        btn.disabled=false; btn.textContent='입장하기';
       }
     })
     .catch(function(){
-      msg.textContent = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
-      btn.disabled = false;
-      btn.textContent = '입장하기';
+      msg.textContent='서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+      btn.disabled=false; btn.textContent='입장하기';
     });
   };
 })();
@@ -972,9 +939,9 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
               <span>배경 위치 · 크기</span>
               <div id="bgVisToggle" onclick="toggleBgVisible()" style="cursor:pointer;padding:2px 6px;border-radius:6px;border:1.5px solid var(--border);background:var(--parchment)" title="배경사진 숨기기/보이기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
             </div>
-            <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">배경 크기</span><span class="ctrl-v" id="vBgScale">100%</span></div><input type="range" id="slBgScale" min="30" max="300" value="100" oninput="setBgScale(this)" ontouchend="this.oninput({target:this})"></div>
-            <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">좌우 위치</span><span class="ctrl-v" id="vBgX">0</span></div><input type="range" id="slBgX" min="-100" max="100" value="0" oninput="setBgX(this)" ontouchend="this.oninput({target:this})"></div>
-            <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">상하 위치</span><span class="ctrl-v" id="vBgY">0</span></div><input type="range" id="slBgY" min="-100" max="100" value="0" oninput="setBgY(this)" ontouchend="this.oninput({target:this})"></div>
+            <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">배경 크기</span><span class="ctrl-v" id="vBgScale">100%</span></div><input type="range" id="slBgScale" min="30" max="300" value="100" oninput="setBgScale(this)" onchange="saveHistory()" ontouchend="this.oninput({target:this})"></div>
+            <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">좌우 위치</span><span class="ctrl-v" id="vBgX">0</span></div><input type="range" id="slBgX" min="-200" max="200" value="0" oninput="setBgX(this)" onchange="saveHistory()" ontouchend="this.oninput({target:this})"></div>
+            <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">상하 위치</span><span class="ctrl-v" id="vBgY">0</span></div><input type="range" id="slBgY" min="-200" max="200" value="0" oninput="setBgY(this)" onchange="saveHistory()" ontouchend="this.oninput({target:this})"></div>
             <div style="margin-bottom:8px"><div class="togbtn" onclick="resetBgPos()" style="text-align:center;padding:8px;font-size:11px">↺ 위치·크기 초기화</div></div>
             <div class="slabel" style="margin-top:4px">배경 조정</div>
             <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">밝기</span><span class="ctrl-v" id="vBright">100</span></div><input type="range" id="slBright" min="0" max="200" value="100" oninput="cv('vBright',this);_bright=+this.value;render()" ontouchend="this.oninput({target:this})"></div>
@@ -1563,7 +1530,6 @@ function cropCanvas() {
 /* ── 배경자르기: 배경사진만 현재 크기로 자르기 (레이어 유지) ── */
 function cropBg() {
   if (!bgImg) { showToast('배경사진을 먼저 선택하세요'); return; }
-  saveHistory();
   const tmp = document.createElement('canvas');
   tmp.width = outputW; tmp.height = outputH;
   const tctx = tmp.getContext('2d');
@@ -1578,12 +1544,16 @@ function cropBg() {
   const dataUrl = tmp.toDataURL('image/png');
   const img = new Image();
   img.onload = () => {
+    saveHistory(); // ✅ onload 안에서 저장 (이미지 교체 전 상태 저장)
     const id = Date.now();
     bgPhotos.push({ id, label:'배경자르기', dataUrl, imgObj: img });
     bgImg = img;
     currentBgDataUrl = dataUrl;
     activeBgPhotoId = id;
     bgOffX = 0; bgOffY = 0; bgScale = 100;
+    if ($('slBgScale')) { $('slBgScale').value=100; $('vBgScale').textContent='100%'; }
+    if ($('slBgX'))     { $('slBgX').value=0;       $('vBgX').textContent='0'; }
+    if ($('slBgY'))     { $('slBgY').value=0;       $('vBgY').textContent='0'; }
     // 레이어는 유지
     renderBgPhotoGallery();
     render();
@@ -2763,8 +2733,8 @@ function moveDrag(e) {
       bgOffY = bdoy + (fy - bdsy);
       const sx = Math.round(bgOffX * 100);
       const sy = Math.round(bgOffY * 100);
-      if ($('slBgX')) { $('slBgX').value = Math.max(-100,Math.min(100,sx)); $('vBgX').textContent = Math.max(-100,Math.min(100,sx)); }
-      if ($('slBgY')) { $('slBgY').value = Math.max(-100,Math.min(100,sy)); $('vBgY').textContent = Math.max(-100,Math.min(100,sy)); }
+      if ($('slBgX')) { $('slBgX').value = Math.max(-200,Math.min(200,sx)); $('vBgX').textContent = Math.max(-200,Math.min(200,sx)); }
+      if ($('slBgY')) { $('slBgY').value = Math.max(-200,Math.min(200,sy)); $('vBgY').textContent = Math.max(-200,Math.min(200,sy)); }
       render(); return;
     }
 
