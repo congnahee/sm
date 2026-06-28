@@ -3,14 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#1c0f06">
-<meta name="application-name" content="콩심캘리">
-<meta name="apple-mobile-web-app-title" content="콩심캘리">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="mobile-web-app-capable" content="yes">
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <title>콩심캘리</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600;700;900&family=Gowun+Dodum&family=Nanum+Myeongjo:wght@400;700;800&family=Nanum+Pen+Script&family=Nanum+Brush+Script&family=Single+Day&family=Gaegu:wght@300;400;700&family=Yeon+Sung&family=Black+Han+Sans&family=Do+Hyeon&family=Jua&family=Gugi&family=Hi+Melody&family=Cute+Font&family=East+Sea+Dokdo&display=swap" rel="stylesheet">
 <style>
@@ -111,9 +105,26 @@ header{
   box-shadow:0 8px 48px rgba(28,15,6,.22),0 2px 12px rgba(28,15,6,.12);
   border-radius:3px;overflow:hidden;cursor:move;
 }
+/* 캔버스 리사이즈 핸들 */
+.canvas-resize-handle{
+  position:absolute;width:16px;height:16px;z-index:20;
+  background:#fff;border:2px solid #C4973A;border-radius:3px;
+  cursor:nwse-resize;opacity:0.85;
+}
+.canvas-resize-handle.tl{top:-6px;left:-6px;cursor:nwse-resize;}
+.canvas-resize-handle.tr{top:-6px;right:-6px;cursor:nesw-resize;}
+.canvas-resize-handle.bl{bottom:-6px;left:-6px;cursor:nesw-resize;}
+.canvas-resize-handle.br{bottom:-6px;right:-6px;cursor:nwse-resize;}
 #mainCanvas{display:block;touch-action:none}
 @media(max-width:680px){
-  #mainCanvas{max-width:calc(100vw - 16px) !important;max-height:38vh !important;width:auto !important;height:auto !important}
+  #mainCanvas{max-width:calc(100vw - 16px) !important;max-height:min(calc(100vw - 16px), 70vh) !important;width:auto !important;height:auto !important}
+}
+
+/* 크롭 핸들 */
+.crop-handle{
+  position:absolute;width:10px;height:10px;
+  background:#fff;border:1.5px solid rgba(0,0,0,0.5);
+  border-radius:2px;
 }
 
 /* canvas hint */
@@ -534,7 +545,7 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
 @media(max-width:680px){
   :root{--panel:100%}
   .app{flex-direction:column;height:100vh;overflow:hidden}
-  .canvas-zone{flex:none;height:46vh;overflow:hidden;padding:6px 8px 4px;gap:4px;justify-content:center}
+  .canvas-zone{flex:none;height:55vh;overflow:hidden;padding:6px 8px 4px;gap:4px;justify-content:center}
   .canvas-shell{max-width:calc(100vw - 16px);overflow:hidden}
   .canvas-ctrl-bar{max-width:calc(100vw - 16px);padding:0 2px}
   .size-bar{gap:4px;max-width:calc(100vw - 16px);overflow-x:auto}
@@ -551,125 +562,6 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
   .hbtn-ghost{display:none}
   .logo-txt{font-size:15px}
 }
-
-/* ─────────────────────────────────
-   ✂ CROP OVERLAY
-───────────────────────────────── */
-#cropOverlay{position:absolute;inset:0;display:none;z-index:50;touch-action:none;pointer-events:none}
-#cropOverlay.active{pointer-events:all}
-.crop-mask{position:absolute;background:rgba(0,0,0,.52);pointer-events:none}
-.crop-border-box{position:absolute;border:2.5px solid #E8C47A;cursor:move;box-shadow:0 0 0 1px rgba(196,151,58,.25)}
-.crop-grid-overlay{position:absolute;inset:0;pointer-events:none}
-.crop-grid-overlay::before,.crop-grid-overlay::after{content:'';position:absolute;opacity:.28}
-.crop-grid-overlay::before{left:33.33%;top:0;bottom:0;border-left:1px dashed #E8C47A}
-.crop-grid-overlay::after{top:33.33%;left:0;right:0;border-top:1px dashed #E8C47A}
-#cropSzLbl{position:absolute;top:-26px;left:0;background:rgba(28,15,6,.9);color:#E8C47A;font-size:.62rem;padding:2px 9px;border-radius:5px;pointer-events:none;white-space:nowrap;font-family:'Gowun Dodum',serif;letter-spacing:.04em}
-.crop-handle{position:absolute;touch-action:none;z-index:55;pointer-events:all}
-.crop-handle.corner{width:16px;height:16px;background:#E8C47A;border-radius:3px;box-shadow:0 2px 8px rgba(196,151,58,.6)}
-.crop-handle.edge-h{height:5px;background:#E8C47A;border-radius:3px;width:34px}
-.crop-handle.edge-v{width:5px;background:#E8C47A;border-radius:3px;height:34px}
-.crop-handle[data-d=nw]{top:-8px;left:-8px;cursor:nw-resize}
-.crop-handle[data-d=ne]{top:-8px;right:-8px;cursor:ne-resize}
-.crop-handle[data-d=sw]{bottom:-8px;left:-8px;cursor:sw-resize}
-.crop-handle[data-d=se]{bottom:-8px;right:-8px;cursor:se-resize}
-.crop-handle[data-d=n]{top:-2.5px;left:calc(50% - 17px);cursor:n-resize}
-.crop-handle[data-d=s]{bottom:-2.5px;left:calc(50% - 17px);cursor:s-resize}
-.crop-handle[data-d=w]{left:-2.5px;top:calc(50% - 17px);cursor:w-resize}
-.crop-handle[data-d=e]{right:-2.5px;top:calc(50% - 17px);cursor:e-resize}
-#cropConfirmBar{display:none;position:absolute;bottom:0;left:0;right:0;height:50px;background:var(--ink);z-index:60;align-items:center;justify-content:center;gap:10px;padding:0 14px}
-#cropConfirmBar.show{display:flex}
-.crop-btn{padding:8px 22px;border-radius:9px;font-size:12px;font-weight:700;font-family:'Gowun Dodum',serif;cursor:pointer;border:none;transition:all .15s;letter-spacing:.04em}
-.crop-btn-cancel{background:rgba(255,255,255,.12);color:rgba(255,255,255,.8)}
-.crop-btn-cancel:hover{background:rgba(255,255,255,.2)}
-.crop-btn-ok{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--ink)}
-.crop-btn-ok:hover{filter:brightness(1.08)}
-.crop-trigger{padding:5px 12px;border-radius:18px;font-size:11px;border:1.5px solid var(--border2);background:rgba(255,255,255,.6);color:var(--muted);cursor:pointer;transition:all .15s;backdrop-filter:blur(4px);font-family:'Gowun Dodum',serif;display:flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0}
-.crop-trigger:hover{border-color:var(--gold);color:var(--gold);background:rgba(196,151,58,.08)}
-.crop-trigger.active{background:var(--ink);color:var(--gold2);border-color:var(--ink)}
-
-/* ─────────────────────────────────
-   ✂ BG-ONLY CROP OVERLAY
-───────────────────────────────── */
-#bgCropOverlay{position:absolute;inset:0;display:none;z-index:50;touch-action:none;pointer-events:none}
-#bgCropOverlay.active{pointer-events:all}
-.bgcrop-mask{position:absolute;background:rgba(0,0,0,.52);pointer-events:none}
-.bgcrop-border-box{position:absolute;border:2.5px solid #7EC8E3;cursor:move;box-shadow:0 0 0 1px rgba(100,180,210,.3)}
-.bgcrop-grid{position:absolute;inset:0;pointer-events:none}
-.bgcrop-grid::before,.bgcrop-grid::after{content:'';position:absolute;opacity:.28}
-.bgcrop-grid::before{left:33.33%;top:0;bottom:0;border-left:1px dashed #7EC8E3}
-.bgcrop-grid::after{top:33.33%;left:0;right:0;border-top:1px dashed #7EC8E3}
-#bgCropSzLbl{position:absolute;top:-26px;left:0;background:rgba(28,15,6,.9);color:#7EC8E3;font-size:.62rem;padding:2px 9px;border-radius:5px;pointer-events:none;white-space:nowrap;font-family:'Gowun Dodum',serif;letter-spacing:.04em}
-.bgcrop-handle{position:absolute;touch-action:none;z-index:55;pointer-events:all}
-.bgcrop-handle.corner{width:16px;height:16px;background:#7EC8E3;border-radius:3px;box-shadow:0 2px 8px rgba(100,180,210,.6)}
-.bgcrop-handle.edge-h{height:5px;background:#7EC8E3;border-radius:3px;width:34px}
-.bgcrop-handle.edge-v{width:5px;background:#7EC8E3;border-radius:3px;height:34px}
-.bgcrop-handle[data-d=nw]{top:-8px;left:-8px;cursor:nw-resize}
-.bgcrop-handle[data-d=ne]{top:-8px;right:-8px;cursor:ne-resize}
-.bgcrop-handle[data-d=sw]{bottom:-8px;left:-8px;cursor:sw-resize}
-.bgcrop-handle[data-d=se]{bottom:-8px;right:-8px;cursor:se-resize}
-.bgcrop-handle[data-d=n]{top:-2.5px;left:calc(50% - 17px);cursor:n-resize}
-.bgcrop-handle[data-d=s]{bottom:-2.5px;left:calc(50% - 17px);cursor:s-resize}
-.bgcrop-handle[data-d=w]{left:-2.5px;top:calc(50% - 17px);cursor:w-resize}
-.bgcrop-handle[data-d=e]{right:-2.5px;top:calc(50% - 17px);cursor:e-resize}
-#bgCropConfirmBar{display:none;position:absolute;bottom:0;left:0;right:0;height:50px;background:rgba(18,40,55,.96);z-index:60;align-items:center;justify-content:center;gap:10px;padding:0 14px}
-#bgCropConfirmBar.show{display:flex}
-/* ─────────────────────────────────
-   ✂ LAYER CROP OVERLAY
-───────────────────────────────── */
-#lyrCropOverlay{position:absolute;inset:0;display:none;z-index:52;touch-action:none;pointer-events:none}
-#lyrCropOverlay.active{pointer-events:all}
-.lyrcrop-mask{position:absolute;background:rgba(0,0,0,.52);pointer-events:none}
-.lyrcrop-border-box{position:absolute;border:2.5px solid #4ECDC4;cursor:move;box-shadow:0 0 0 1px rgba(78,205,196,.3)}
-.lyrcrop-grid{position:absolute;inset:0;pointer-events:none}
-.lyrcrop-grid::before,.lyrcrop-grid::after{content:'';position:absolute;opacity:.28}
-.lyrcrop-grid::before{left:33.33%;top:0;bottom:0;border-left:1px dashed #4ECDC4}
-.lyrcrop-grid::after{top:33.33%;left:0;right:0;border-top:1px dashed #4ECDC4}
-#lyrCropSzLbl{position:absolute;top:-26px;left:0;background:rgba(10,40,38,.9);color:#4ECDC4;font-size:.62rem;padding:2px 9px;border-radius:5px;pointer-events:none;white-space:nowrap;font-family:'Gowun Dodum',serif;letter-spacing:.04em}
-.lyrcrop-handle{position:absolute;touch-action:none;z-index:57;pointer-events:all}
-.lyrcrop-handle.corner{width:16px;height:16px;background:#4ECDC4;border-radius:3px;box-shadow:0 2px 8px rgba(78,205,196,.6)}
-.lyrcrop-handle.edge-h{height:5px;background:#4ECDC4;border-radius:3px;width:34px}
-.lyrcrop-handle.edge-v{width:5px;background:#4ECDC4;border-radius:3px;height:34px}
-.lyrcrop-handle[data-d=nw]{top:-8px;left:-8px;cursor:nw-resize}
-.lyrcrop-handle[data-d=ne]{top:-8px;right:-8px;cursor:ne-resize}
-.lyrcrop-handle[data-d=sw]{bottom:-8px;left:-8px;cursor:sw-resize}
-.lyrcrop-handle[data-d=se]{bottom:-8px;right:-8px;cursor:se-resize}
-.lyrcrop-handle[data-d=n]{top:-2.5px;left:calc(50% - 17px);cursor:n-resize}
-.lyrcrop-handle[data-d=s]{bottom:-2.5px;left:calc(50% - 17px);cursor:s-resize}
-.lyrcrop-handle[data-d=w]{left:-2.5px;top:calc(50% - 17px);cursor:w-resize}
-.lyrcrop-handle[data-d=e]{right:-2.5px;top:calc(50% - 17px);cursor:e-resize}
-#lyrCropConfirmBar{display:none;position:absolute;bottom:0;left:0;right:0;height:50px;background:rgba(10,38,36,.96);z-index:62;align-items:center;justify-content:center;gap:10px;padding:0 14px}
-#lyrCropConfirmBar.show{display:flex}
-.lyrcrop-btn{padding:8px 22px;border-radius:9px;font-size:12px;font-weight:700;font-family:'Gowun Dodum',serif;cursor:pointer;border:none;transition:all .15s;letter-spacing:.04em}
-.lyrcrop-btn-cancel{background:rgba(255,255,255,.12);color:rgba(255,255,255,.8)}
-.lyrcrop-btn-cancel:hover{background:rgba(255,255,255,.2)}
-.lyrcrop-btn-ok{background:linear-gradient(135deg,#4ECDC4,#2EAF9F);color:#fff}
-.lyrcrop-btn-ok:hover{filter:brightness(1.08)}
-
-.bgcrop-btn{padding:8px 22px;border-radius:9px;font-size:12px;font-weight:700;font-family:'Gowun Dodum',serif;cursor:pointer;border:none;transition:all .15s;letter-spacing:.04em}
-.bgcrop-btn-cancel{background:rgba(255,255,255,.12);color:rgba(255,255,255,.8)}
-.bgcrop-btn-cancel:hover{background:rgba(255,255,255,.2)}
-.bgcrop-btn-ok{background:linear-gradient(135deg,#5bb8d4,#7EC8E3);color:#0a1f2b}
-.bgcrop-btn-ok:hover{filter:brightness(1.08)}
-
-/* ─── 커스텀 사이즈 팝업 ─── */
-#customSizeModal{display:none;position:fixed;inset:0;z-index:200;align-items:center;justify-content:center}
-#customSizeModal.show{display:flex}
-#customSizeModal .modal-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(2px)}
-#customSizeModal .modal-box{position:relative;background:var(--parchment);border:1.5px solid var(--border);border-radius:16px;padding:22px 20px 18px;width:280px;box-shadow:0 8px 32px rgba(0,0,0,.18);font-family:'Gowun Dodum',serif}
-#customSizeModal .modal-title{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:16px;letter-spacing:.04em}
-#customSizeModal .px-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-#customSizeModal .px-inp{flex:1;border:1.5px solid var(--border2);border-radius:8px;padding:8px 10px;font-size:14px;font-family:'Gowun Dodum',serif;background:white;color:var(--ink);text-align:center;outline:none}
-#customSizeModal .px-inp:focus{border-color:var(--gold)}
-#customSizeModal .px-sep{color:var(--muted);font-size:13px;flex-shrink:0}
-#customSizeModal .lock-row{display:flex;align-items:center;gap:6px;margin-bottom:16px;cursor:pointer;user-select:none}
-#customSizeModal .lock-chk{width:16px;height:16px;accent-color:var(--gold);cursor:pointer}
-#customSizeModal .lock-lbl{font-size:11px;color:var(--muted)}
-#customSizeModal .modal-btns{display:flex;gap:8px}
-#customSizeModal .modal-cancel{flex:1;padding:9px;border-radius:9px;border:1.5px solid var(--border2);background:transparent;font-family:'Gowun Dodum',serif;font-size:12px;cursor:pointer;color:var(--muted)}
-#customSizeModal .modal-ok{flex:1;padding:9px;border-radius:9px;border:none;background:linear-gradient(135deg,var(--gold),var(--gold2));font-family:'Gowun Dodum',serif;font-size:12px;font-weight:700;cursor:pointer;color:var(--ink)}
-#customSizeModal .preset-row{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}
-#customSizeModal .px-preset{padding:4px 9px;border-radius:10px;font-size:10px;border:1.5px solid var(--border2);background:white;cursor:pointer;font-family:'Gowun Dodum',serif;color:var(--muted);transition:all .15s}
-#customSizeModal .px-preset:hover{border-color:var(--gold);color:var(--gold)}
 </style>
 </head>
 <body>
@@ -686,86 +578,52 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
     <div style="font-size:42px;margin-bottom:8px">🫘</div>
     <div style="font-size:22px;font-weight:700;color:#C4973A;letter-spacing:.08em;margin-bottom:4px">콩심캘리</div>
     <div style="font-size:12px;color:rgba(196,151,58,.6);letter-spacing:.06em;margin-bottom:36px">STUDIO</div>
-
     <div style="position:relative;margin-bottom:14px">
       <input id="lockInput" type="password" placeholder="비밀번호를 입력하세요"
-        style="
-          width:100%;box-sizing:border-box;
-          background:rgba(255,255,255,.06);
-          border:1.5px solid rgba(196,151,58,.3);
-          border-radius:12px;
-          color:#fff;font-size:16px;
-          font-family:'Gowun Dodum',serif;
-          padding:14px 18px;
-          outline:none;
-          letter-spacing:.15em;
-          text-align:center;
-        "
+        style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.06);border:1.5px solid rgba(196,151,58,.3);border-radius:12px;color:#fff;font-size:16px;font-family:'Gowun Dodum',serif;padding:14px 18px;outline:none;letter-spacing:.15em;text-align:center;"
         onkeydown="if(event.key==='Enter')checkLock()"
       >
     </div>
     <div id="lockMsg" style="font-size:12px;color:#E84855;min-height:18px;margin-bottom:16px;letter-spacing:.04em"></div>
-
-    <button id="lockBtn" onclick="checkLock()" style="
-      width:100%;padding:14px;border:none;border-radius:12px;
-      background:linear-gradient(135deg,#C4973A,#a07830);
-      color:#1C0F06;font-size:15px;font-weight:700;
-      font-family:'Gowun Dodum',serif;
-      cursor:pointer;letter-spacing:.06em;
-      transition:filter .15s;
-    " onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter=''">
+    <button id="lockBtn" onclick="checkLock()" style="width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,#C4973A,#a07830);color:#1C0F06;font-size:15px;font-weight:700;font-family:'Gowun Dodum',serif;cursor:pointer;letter-spacing:.06em;transition:filter .15s;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter=''">
       입장하기
     </button>
-
     <div style="margin-top:28px;font-size:11px;color:rgba(255,255,255,.25);line-height:1.8">
       이용권 구매 문의<br>
       <span style="color:rgba(196,151,58,.5)">카카오톡 채널 @콩심캘리</span>
     </div>
   </div>
 </div>
-
 <script>
 (function(){
-  // 세션 유지
-  if(sessionStorage.getItem('csk_auth') === '1'){
+  if(sessionStorage.getItem('csk_auth')==='1'){
     document.getElementById('lockScreen').style.display='none';
     return;
   }
-
-  window.checkLock = function(){
-    var pw = document.getElementById('lockInput').value.trim();
-    if(!pw) return;
-    var btn = document.getElementById('lockBtn');
-    var msg = document.getElementById('lockMsg');
-    btn.disabled = true;
-    btn.textContent = '확인 중...';
-    msg.textContent = '';
-
-    fetch('/api/verify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: pw })
-    })
-    .then(function(r){ return r.json(); })
+  window.checkLock=function(){
+    var pw=document.getElementById('lockInput').value.trim();
+    if(!pw)return;
+    var btn=document.getElementById('lockBtn');
+    var msg=document.getElementById('lockMsg');
+    btn.disabled=true; btn.textContent='확인 중...'; msg.textContent='';
+    fetch('/api/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw})})
+    .then(function(r){return r.json();})
     .then(function(data){
       if(data.ok){
         sessionStorage.setItem('csk_auth','1');
-        var ls = document.getElementById('lockScreen');
-        ls.style.transition='opacity .4s';
-        ls.style.opacity='0';
+        var ls=document.getElementById('lockScreen');
+        ls.style.transition='opacity .4s'; ls.style.opacity='0';
         setTimeout(function(){ls.style.display='none';},400);
       } else {
-        msg.textContent = data.msg || '비밀번호가 올바르지 않습니다.';
+        msg.textContent=data.msg||'비밀번호가 올바르지 않습니다.';
         document.getElementById('lockInput').value='';
         document.getElementById('lockInput').focus();
-        btn.disabled = false;
-        btn.textContent = '입장하기';
+        btn.disabled=false; btn.textContent='입장하기';
       }
     })
     .catch(function(){
-      msg.textContent = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
-      btn.disabled = false;
-      btn.textContent = '입장하기';
+      msg.textContent='서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+      btn.disabled=false; btn.textContent='입장하기';
     });
   };
 })();
@@ -794,76 +652,42 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
   <div class="canvas-zone" id="canvasZone">
     <div class="canvas-shell" id="canvasShell">
       <canvas id="mainCanvas"></canvas>
-      <!-- ✂ CROP OVERLAY -->
-      <div id="cropOverlay">
-        <div class="crop-mask" id="cropM0"></div>
-        <div class="crop-mask" id="cropM1"></div>
-        <div class="crop-mask" id="cropM2"></div>
-        <div class="crop-mask" id="cropM3"></div>
-        <div class="crop-border-box" id="cropBox">
-          <div class="crop-grid-overlay"></div>
-          <div id="cropSzLbl"></div>
-          <div class="crop-handle corner" data-d="nw"></div>
-          <div class="crop-handle corner" data-d="ne"></div>
-          <div class="crop-handle corner" data-d="sw"></div>
-          <div class="crop-handle corner" data-d="se"></div>
-          <div class="crop-handle edge-h" data-d="n"></div>
-          <div class="crop-handle edge-h" data-d="s"></div>
-          <div class="crop-handle edge-v" data-d="w"></div>
-          <div class="crop-handle edge-v" data-d="e"></div>
+      <div class="canvas-resize-handle tl" id="rh-tl"></div>
+      <!-- 크롭 오버레이 -->
+      <div id="cropOverlay" style="display:none;position:absolute;inset:0;z-index:30;">
+        <!-- 4방향 어두운 영역 -->
+        <div id="cropDark-top"    style="position:absolute;background:rgba(0,0,0,0.55);left:0;right:0;top:0;"></div>
+        <div id="cropDark-bottom" style="position:absolute;background:rgba(0,0,0,0.55);left:0;right:0;bottom:0;"></div>
+        <div id="cropDark-left"   style="position:absolute;background:rgba(0,0,0,0.55);top:0;bottom:0;left:0;"></div>
+        <div id="cropDark-right"  style="position:absolute;background:rgba(0,0,0,0.55);top:0;bottom:0;right:0;"></div>
+        <!-- 밝은 크롭 영역 테두리 -->
+        <div id="cropBox" style="position:absolute;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,0.3);cursor:move;box-sizing:border-box;">
+          <!-- 3x3 그리드 선 -->
+          <div style="position:absolute;inset:0;pointer-events:none;">
+            <div style="position:absolute;left:33.3%;top:0;bottom:0;border-left:1px solid rgba(255,255,255,0.4);"></div>
+            <div style="position:absolute;left:66.6%;top:0;bottom:0;border-left:1px solid rgba(255,255,255,0.4);"></div>
+            <div style="position:absolute;top:33.3%;left:0;right:0;border-top:1px solid rgba(255,255,255,0.4);"></div>
+            <div style="position:absolute;top:66.6%;left:0;right:0;border-top:1px solid rgba(255,255,255,0.4);"></div>
+          </div>
+          <!-- 8방향 핸들 -->
+          <div class="crop-handle" data-dir="tl" style="top:-5px;left:-5px;cursor:nwse-resize;"></div>
+          <div class="crop-handle" data-dir="tc" style="top:-5px;left:calc(50% - 5px);cursor:ns-resize;"></div>
+          <div class="crop-handle" data-dir="tr" style="top:-5px;right:-5px;cursor:nesw-resize;"></div>
+          <div class="crop-handle" data-dir="ml" style="top:calc(50% - 5px);left:-5px;cursor:ew-resize;"></div>
+          <div class="crop-handle" data-dir="mr" style="top:calc(50% - 5px);right:-5px;cursor:ew-resize;"></div>
+          <div class="crop-handle" data-dir="bl" style="bottom:-5px;left:-5px;cursor:nesw-resize;"></div>
+          <div class="crop-handle" data-dir="bc" style="bottom:-5px;left:calc(50% - 5px);cursor:ns-resize;"></div>
+          <div class="crop-handle" data-dir="br" style="bottom:-5px;right:-5px;cursor:nwse-resize;"></div>
+        </div>
+        <!-- 완료/취소 버튼 -->
+        <div id="cropActions" style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:40;">
+          <button onclick="applyCrop()" style="background:#C4973A;color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-family:'Gowun Dodum',serif;cursor:pointer;font-weight:700;">✓ 자르기 완료</button>
+          <button onclick="cancelCrop()" style="background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-family:'Gowun Dodum',serif;cursor:pointer;">✕ 취소</button>
         </div>
       </div>
-      <!-- ✂ CROP CONFIRM BAR -->
-      <div id="cropConfirmBar">
-        <button class="crop-btn crop-btn-cancel" id="cropCancelBtn">✕ 취소</button>
-        <button class="crop-btn crop-btn-ok" id="cropOkBtn">✓ 자르기 적용</button>
-      </div>
-      <!-- ✂ BG-ONLY CROP OVERLAY -->
-      <div id="bgCropOverlay">
-        <div class="bgcrop-mask" id="bgCropM0"></div>
-        <div class="bgcrop-mask" id="bgCropM1"></div>
-        <div class="bgcrop-mask" id="bgCropM2"></div>
-        <div class="bgcrop-mask" id="bgCropM3"></div>
-        <div class="bgcrop-border-box" id="bgCropBox">
-          <div class="bgcrop-grid"></div>
-          <div id="bgCropSzLbl"></div>
-          <div class="bgcrop-handle corner" data-d="nw"></div>
-          <div class="bgcrop-handle corner" data-d="ne"></div>
-          <div class="bgcrop-handle corner" data-d="sw"></div>
-          <div class="bgcrop-handle corner" data-d="se"></div>
-          <div class="bgcrop-handle edge-h" data-d="n"></div>
-          <div class="bgcrop-handle edge-h" data-d="s"></div>
-          <div class="bgcrop-handle edge-v" data-d="w"></div>
-          <div class="bgcrop-handle edge-v" data-d="e"></div>
-        </div>
-      </div>
-      <div id="bgCropConfirmBar">
-        <button class="bgcrop-btn bgcrop-btn-cancel" id="bgCropCancelBtn">✕ 취소</button>
-        <button class="bgcrop-btn bgcrop-btn-ok" id="bgCropOkBtn">✓ 이미지 자르기 적용</button>
-      </div>
-      <!-- ✂ LAYER CROP OVERLAY -->
-      <div id="lyrCropOverlay">
-        <div class="lyrcrop-mask" id="lyrCropM0"></div>
-        <div class="lyrcrop-mask" id="lyrCropM1"></div>
-        <div class="lyrcrop-mask" id="lyrCropM2"></div>
-        <div class="lyrcrop-mask" id="lyrCropM3"></div>
-        <div class="lyrcrop-border-box" id="lyrCropBox">
-          <div class="lyrcrop-grid"></div>
-          <div id="lyrCropSzLbl"></div>
-          <div class="lyrcrop-handle corner" data-d="nw"></div>
-          <div class="lyrcrop-handle corner" data-d="ne"></div>
-          <div class="lyrcrop-handle corner" data-d="sw"></div>
-          <div class="lyrcrop-handle corner" data-d="se"></div>
-          <div class="lyrcrop-handle edge-h" data-d="n"></div>
-          <div class="lyrcrop-handle edge-h" data-d="s"></div>
-          <div class="lyrcrop-handle edge-v" data-d="w"></div>
-          <div class="lyrcrop-handle edge-v" data-d="e"></div>
-        </div>
-      </div>
-      <div id="lyrCropConfirmBar">
-        <button class="lyrcrop-btn lyrcrop-btn-cancel" id="lyrCropCancelBtn">✕ 취소</button>
-        <button class="lyrcrop-btn lyrcrop-btn-ok" id="lyrCropOkBtn">✓ 레이어 자르기 적용</button>
-      </div>
+      <div class="canvas-resize-handle tr" id="rh-tr"></div>
+      <div class="canvas-resize-handle bl" id="rh-bl"></div>
+      <div class="canvas-resize-handle br" id="rh-br"></div>
       <div id="sizeLabel" style="position:absolute;bottom:5px;right:6px;font-size:10px;color:rgba(255,255,255,.85);background:rgba(0,0,0,.38);padding:2px 7px;border-radius:5px;letter-spacing:.03em;pointer-events:none;z-index:10;white-space:nowrap">5,000 × 5,000 px</div>
       <div class="canvas-hint" id="canvasHint">
         <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAXwAAAF8CAYAAADM5wDKAACFvUlEQVR42uzdd3hcxfU38O/M3LJVXbKKe7fcLRsbU2R675FJCAQCgYSQRtqb/FLWSiekAiGhdwIWCaGZEgKW6UXgKuNuuUuy1bfeO3PeP3ZlCwcSIJhAOJ88+5ho++7dc889M/cMwBhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4x9EAR/BOyjjohkQ0PDP23LdXV1RghB/AkxxthHIyERsVjMAtB/EW9x+bePkbtIAFZtba0Vi8XkO7w/Y5zhM3YAcnURiy0QDz/8sGpqajIA9MBrpZRwHQee70NrDYFs8r59x5ZJW7duH9LRtoeEMMJ1Q6ioKPPGVk9eLqVoAwDbdgAiZDzvrZ7Yrq2tpcbGRgMiAh8VMA74jL3/YrGYXLx4sWxsbKSBAd6xbaQzmeD1V1zhJAP2mX+4+mo7mfajNTUzz3l96VJ3y9atgMnevKxiyJhINOp4XmbvjkEphba2tta+rj27AVDNzINENBp+fUnj00vOOuMsVXf6CU9vfW3Vlq//5jeptyj7WACIiLgkxDjgM/afBvn6+noBgAAYAHAcB9f95rryFVvXj3628dnjt2zbUBZwgqdv3rhBFpaUFnd2dADGgyUFHFsgKAXyHYJtE7RHsCV0MGBBCAHf95FKkzCANLDQlQYSvoZvCJ4B3HAetO8llbL6Jk2qblm/YdvjJ5126rbu1i0PPfzww7uFEOkBL1cBdQAaNH9zjAM+Y+9wW6utrVWNjY1mb5C3bXzyU2dN6etJnfTa8uUz4vHMce3trVEhFSw/hVAAKAzaKA6TnxcMUpFtRDBoSUt5kNCwyEBqH5aEUCSFgACRgBQEIwgZIiJhU4YESDlIZ3zqSVnU6xnq7EnabSmJjl4PHhSE48BSll86qGx1aUG0afqU6Qtvvvbm11We2mWM2Zv5x2IxU19fb/jrZBzwGXvrbUwB8AHAtm1cdsl5M59ofPHwXW2dp6WTicPjvb1QglAakajKd1AWgVdmZ0TYtZQEII0vFBkYD9CakFaAl8u3lQCUzB4riAFh2Mjs4QOJ7O7FAHAEEFQCQgp4ZBEshYz2qStFujMt5IYeqVq70kiSBUiJstKytiFDhj8zuGrYLYsW3fdIOp0eWPLRuSMUxjjgs483IhJCCJkLjCCiwFmnf/LTS1e+Nn9n666jk329MmRLlOZZNLTQMeVRSQWOp1zSwmQ8aEHwvdyxgACkAAQBQuz7W/Zxc38TuSk3AiCTjcRSAnuTc8rudnyTu6vI3hcCsBQghYB0HEoZSR1p22zqMnJLR1J2JgjSCWFQcdGKg2qm/vlb3/nO3YccekgLCKirq1MN992nsw/EGAd89vGk+gP9iy+uzfva1z9z/rr1m7/S3dUzGl4CQwsdjCq09dA8A9eBMr4P43kgH5CUzcp9kcvOBwR25AK6NTBoY9/tCAN2AsjOwRS0b2fgC0DL3H0H7ghyt1MECAmQBITtgOwgdfX6Zt2elFi7x8iUcVBePig+a9acG//213u/J4SIA3vHJLjMwzjgs4+Puro61dDQAEDobc2rik/9zAWf3bJ126W729pGhiyNseXKn1DiiHxHSJFKCuUb6FyYFCobfHVuo7QIMOLNRZP+/+/LNwdrIwfcLhfcCQOOCHJBX1J2JwBk//tNRyQA9ID7KgFoDbg2IJRCu+2alj3SLGvpsxIUQGlxydLDDp75u/vuv/9uIYQ3cCfHGAd89r++HSkAvuM4OOuMMy59uem172za3DI0ZHmYPDikx+ZD5gtP+KkMdH+CLbPll/6NUNCADXJA8KX9noiwL4gL2vuf/3ybgfcVb/47AMgBOTn1HyHkjhbMwOt0NvN3AhbSMkArd6f10m2epQJ5GD5s5CP/79uXf+uCCy5Yffjhh1tLlizxiUs8jAM++x/O6g0A+t73Ysffe+9d31i/fsPRtiBMH2zpSZWOdLQnKOVB6OwAq2+y5RVj5TJuygZumfuXcqUX2j9657bWvSWd/eJq/30F9tXnB+4NjMhm8W+6j8neZ2D2T7n6vpSAkNk9gUUEASCjATui0JZ2zevbPLN+j2eNGjUmXl5SUffcS0seBSApO4DBUZ9xwGf/UywAPhG5hx9+5M9WrFzx9a7O3aiuCJppVZYoREr4CQ86FzyBf87GP1TkvkMKKYFMCuhLSqQA5IUNgi4gNeATICwJO+xifbvx/7E+bQllmXPPqfvNffc/9K14X1//oDUHffah28QZe1dyfWgkAP+yy75+8uChw1547oXnvo7kbnNSdUQfPkTIvGSvSPd52exZfvQyDGMAaQGRkEFB0Owt8QgAlgCEMUj0JjG8kKyza0oo5Aj89YFF3zzu2GMbiEgKITihYpzhs4+22tpaq7Gx0Sci6xOf+MT1ix574rxMos+qrgx4s4dK20qloJMaAQV4/QOvH6VfwoDZQEB2OihBwCOCEtkMX4ns6KyRgOcDYUugL1SIRSt7M52ecs448fgH773//rOFEJqIfM702YeF4o+Avdtgv2jRouojaufd+urrS+vyKSmOG59HE4q0ZfqSUD5BSiCdC4gf9YyCKDcekDujQOZ2AgLZQV8lAc8Ajp/C+Iqw2rI76S3fuKV65crl5W+sWfu37du22blGcIxxhs8+WsH+iiuuOOrPf77n/qVLX49OqIj6tVXGQjIFTRoqlxn7AvBErhex+d//wXgKCGjAEQK9bpT+8kba74qnVV44cG5PPPVn8JRN9iHBNXz2b9XU1NiNjY3+Fy+55Phr/vCHR5YufT16xOhif94QZZlUAh50dgaMzEY1aYAA/Q8Ee7nv0n8OWH+3t4GlKuln+0YkDMHy+sSp1QGrMGzDM/Luiy669FyllK6tjVm8JTEO+OxDn9k3NTV5Z5919sn3/e2Bh3Zs2eKeMDlgJhTHLeruyraOV9l56mbA2a6KPuIb18CTAOifryPse7/9/SO0Asg3iGa6xdFjQoLSSXrq6cfv+G4sNqGxsd7PDXYz9qE6QmUMABCLxawf/ehH/ve/v+C0m26+8a+7tm8VJ06OUGWwT/p92TIGWVyrMDK7g+ufc5oxgBsKYHuvYx5a0yPy8wtX/Pnmq0468azzdvAcfcYBn33o5E6o0vfcfvvU2E9/+traNWvESVPLqNLtkn48A1tk6/WGhyNhZLaM1X8SGRSQ8oFQXgiv73b8lzbHrelTJt7/2rLlZ5IxFnKdQxn7oPEsHfZWZHNzs7z253flf/n/fenenTu3Vx05rsAMi/Qq6ssgYLLB3pOcNQC5s3v7G7blWj1YCkjGPVQVKbmtK5PZtLN70mc/9/ntr7/68qu1tbVWS0sL7yoZZ/jswxHwAZgZ02Y8+vqyZccfNCzPnzrItyjVi4Cf7TvgEZC2sxmD/JjXdPoz/P4OnRLZ+r6vAdcFdlPELFzWJyoGD926bWvL+NyKWm81OsDYAf9hM/amoz7bts2UiVO++drS144fU+L6B1WSlerrhTCAAWVr9jI7C0fyZMN9mT6yM3h8AKa/PUMayHe1nFgV1jt37hx61LzDLwJg6urq+LfHOMNn/011CmjQZ5113vQlS554zY+306lTg8LpjefWHJEgIghF2UZnuV7G+3emHDiF8e0iY/+ZrLRfwBTvdKOlAeUU/FN/tX9+7txz0oD++ABgci03349h1L392sS+1+LnZjBpWWTuXd4l8ksrtu7cvm28ECL1di+VMc7w2Qew828gIgqtXNHU0N7eag4fHaVwJgEpcmcOmewWY7Bv0REf+/rIW7kLIVvf1/0rVeXqHEbklh60s4HQU7nFRnIboo19XSt1/0IkYl+ZpD86egrwLCBjZx/PF9nbGgBpCWTUgO6bAIzKdub0JCAtCakFPAkkJWAbgqP3lWT+o4Av9gX7vf8fgE4DUdMjp5W7urW1dehBc+ZcCoBqa2t5DI1xwGf/nVIOADN9wqQL1q5fM2ry0JApD6Sk6KFsJg/AFgbKECydze4NsgF5bx/7XFXakgIWJKQPKB8Q6WydQ/X3ms8tdOLJ7E5EGsAFoEy2P74RA+a451ai6m+dDAKsXIsDCMDOtTfWJjsPXgyYG28T4Jjc4+ZuTx5BgWAEEAxYCMl8aMdFJrxfP/738mPKvca9F5Mte7kCMJ6P0SVCWkabjevXX37jFVdEGxsbNR9lsw/6R84+5mKxmGxsbKTb/vrXorvuuPNe4afDx4yNCurrE0JhX9vgtyitBCmb1aclkFLZbFv6QEQTgq6ACVqwA4IghCbpEJFtCAFyhDRRKSngKqkJSBogIQAdyO5IAl42UBvsO6Loz/htDbh+Lpjq7A4gLAU0gLwU4ABIutmjACA7zmBE9nUqD1DKgnRdrNwp8MjWNF7r0hhSrBA1Bu/31BkDQCmAMoDrWkIEw2bd9q6CTTt3yY7OjidNdpomz9hhH9RhPGPZvvYTJ0/+v1UrV/300FEFfk0kaWWSSfghAB7eVOOmATX4/nJMf2AWCpBOiDxj6R0ZLVs6U7I7rqF9IJEUEBAgAEFHIhpUABkMLrV0ZYFGvmWU3+tnSyyUfTwvVwYCcp0rBeABcA2QkYCQCh0ZhaiwoCIeIp4PL0HwnNzsmdxIqvIEEg6hVLho6yvE33a0QRmB8wpL8GJHAp2RBE4dKdGX8KD2Gxcw4p+XRHyntMoeDQUISPsAiopx37Ju4+SVyG/+8AcHfeuyy16tq6uTDQ0NPPzNPpAfOvsYyy3UoZ/929+ip198yRdcG2ZUCRR2J2FZQIIAZ0D0I8pmrFpnA7AvBIwhBG0J5bi0vQ/+G7t8e3t3xurzCPl5EZQPqtyzZs3q58eMqRJKKSIB0da+h3ZkVH44YB2+eVOvcqWHyhBw8OCADjha+Z4HM3C8IDe/nSgbPINJQOQprO6WaNyYgSMycPIFZlRFMDWsEOzogiWBdEggo4B8ACpi4e/bgTda2nBGYSUujBKqrDTykIerO/vgGQmS+/JtId5i1a338hnn3oNrAX6qG7OGRemJN3bR3TfdtEApdVJbWxsnXowDPvsADvGEkAD0b2644UtdnZ1DJg8O6oAfl0ZlB06VeXOwkzK3OEiu/m4RwY4EsDEZ0K+t7VVdKWVHotH0kCrn3gmjBz8+aFDp69fe/ki3FGLH+nXb3jQTJxoN42sXnT5eysJjHm986Yh1Gzedfm9zu5pYFdLTKqXyk2k4yJZuiPY1LUtZ2ROblOWgpcPDQQVl+HzFCCzeuA73r+7F9mILJ46KIJFJoTVlIekr2Ehi7SZCuhW4urICk40FryuOnVYcpdEA0mmgN2Xg2rn3iexYw39K6uyDebnSl5/yMbyAVHlewGzYsPHEn//854d8+9vffq7/zGbeIhmXdNiBpADokpKil7t3d8w8Z0axcTN7lMwNrpr9mqD1r/WqNRBygR47j57bmBIbO32UlZVsHTqk5A8/+PplD55+3ldW+77eP7nYf+al7t+dBFwHv4p9efZvrr/3m9t37f5Eedino8bkQ/V1CteYvTN/0hJIBYCCXgDREO5f42G2KMKPAqWwkp14pkTi51vbQPkW4ukM4n0eomEHvSmBjJfG76uqcbC/GW1eAo6IIkgKa9xCfG7nZpw92UJEeiAPCMjc+8e+E6ve6w9MC8CX2bEFWwNaWWjxC7xHm/dY06dPu3np0qWfIyJuucAOOJ6l8zGW696oL7roouO7euMzxpVHKZ98Rbn6uBGARQCp3PTKXLg2BASCNnZ7tr6nqUfsSNupE+fNuWpxw2/nvfRK8xUnf+qy1b6vVR2gYoDMPY+fC/D+gAvFYpB1dXUqlc6oL/3fr1/auautbv7Js/+wrUf6f2+OCxnMIwHAyc3W0RIoSAHhpEBQa9gAOnUcvWo3Nso2zOhqxe+GDce29jhOPmYUXrz9EDT9cRiW33sshg+PYlnvbmhhI88LIJJIwUEcxveyb0xY2VlD/aWkgTWZ/zCrEgB0bgdqfB+DwxmrOCixcdPm0xfdd3sFAO6myT6Q7I59TDU2Nioiop/+9Gf1W7dsnTp7qK2LZK/snzYpdXa6ZFJkyyoBkZ1N4wRdbEoG9YNrMmrM6Kq2+cdOP+muh569/qqb7uusqamxL7nkEjQ2NppmgBoBamxspLd/DaDm5mYCQHV1dWrZ8hVy+eotj0wYNfiVDTv2nNaaNvboqgBEyhMwgFYCGQtIGgchB9jcq1GobRynbCQMoEUSHSnCs0S48yfFqA5vhzAdqBoSx3PLk0iuBWqjAp3GhhY28kUCO1UADyaSOGiQAwuZvTV3yP98qmZ/wO+fWkoy+9ghSgsthd7QYSItW3eubdmypQmA4h47jDN8dqC+e71q1arCXa2tJ4QcicKIrQZWYfoXNAmZ7MlLfT4QDVjY4gX142t6VXFR9OEH7vzlzN/d9vfntNZWLBaTTU1NXn19/XsKWrkatgaR3by25bHK0ujxrT2gB1d7uq80j1IOEE0Qgh7gCh/wfUTCAp2JNHwrAFtrhCgPQc+FNga+JiCzG8YkABPAnp0aUTsBTZ1IiD5ol5CUFhJGwSED1/eyJ37lylgHpIlxrpG+JmBISVgaP431mzZ9hohkbl4+Yxzw2furrq5OAKC77rpr6o4dOwtHlFhk66Tw9JtTUy83Q8XXgBOUaNW2WbSiW5SVFm7/5Y8u+MKYgz61tba21gLgv9dA/xa82tpaq70r+fxXPnPWbxMUtB5emfSRlwepsidbOTCAb5AXCmGHNtgtBEIaiBsPQyOEoRkbX/pTB7pLD/cLS8f49zxZgKdXJDGqtBx5pgpDk8Ww+wTilsAeN4WwS3CRgWWy2fgBC/YALBtIpoGwA1le4JpEPDn3xz/84XQiApd1GJd02PsuGAxaO3fuNB0duz+3e0/H4TUV0o+KtFLyzf1gsm0TJGwQPNvBg6tT2g1H1Sc/efLnvxe7/oW6umpn0aJXvff79bW0tJAxxn51xRuP1Z1Ym7dizY5Dt+5JeyOHuTKT8oQCoCDQBwsrdhscWVKIyr4edLkObBPHxMIi3L6iHbf/o10sXByX196zQRREXDzT3olV0kaoaBDGmigqhYtmKfFiuhezSrM7Nnrbhjz/eW1H5MZAhACk8AE3YN7Y1i3zolHvU5/+9KLGxkYJ7q/DOMNn76empiZDRCqZ9kYJ38MgVwsQIePn5tqbfYONaTKwAxaWbPD97rSwRo8eetf1199zT01Njd3Q0Jw5QC+RBOB5vm/def8T3/jkiYde2atd+4nNUqMgH6ls7QfFdrZ/QUs6DlgWAh7g9KUwMaMwtWQI1m/qEZQgceIkhfkTIjhobBjPiy58detKfCm5Hb/ShLvb+yCVANkKHmVPHjMHKORSrj2EEIBOGwyPSmFJQavWrDuWiPIBEBHx7DnGAZ+9X0GHBLLl+WBp6aBTwq5AnquUMYDM9aNR2LdsX54tsS5hY223UZUVJfrrl32m3vN8MXLkyAM6wJiLuVobY9103+PfPnz6yJ9v2t5nLdlgtMyLwPOBvICErQTWJXshXBt2xgJZNrY5aTzbug3HDbdxbCSOkoCPZHI3pkQS+PRYB8ePD2FTfhduE1vQndeHOYMcxMnAk7m5kQc45BIAWwAhk5FDChza1dY25rLLLpsKwMyfP59/l+yA4Ezi4/u905Qpg8IrVu7eMiiqis4eragvlRSUm5Fji33zKPMDNh7aEdBrd/bKEVVF17Xs6LzUfPDzxi0Avi2wwCPE5gx1vcNKje0Z4OFtDvL3xHFVeRmSHXGkBxfhpq5e/K2rC5dNt5FIeCABhDWgbcBkgICt4AUJSQB5BrDihD02ZX8QOjs1U5gD+wMRGrACChszBf6jzXvUtGnTrl+6dOkX+t8rb6aMM3z2vmltbQUZLRwyEMaHNNkWxSSyJzjpXLOyTmFjV0dS5OeFxMSRZTcYogEJ+AfGr6mpsT3CgmGDS294eYdvL+0UmYgEKvMFVgiJ7b5ARdDFqxmDv+7uwWGjBiGTkdBWtmsmNOCZ7IlUca2R6TNQfQbxhEGPoOyArclGW2kOfDZEFuBpjYqAUWGlxKaWTSctXHhDEQDNZR3GAZ8dsHzfyH097gcuEAIJJAxMT9qXkXB4zUNLXmoBIIjoA5svTkSitrbWKi3tltXV1c7mrf/4wWE101b8fbNxNvfZenqBRsYQmq0IlhcPxZVbtmN8mYMZ4TTSOo1Abi59wtl38pjY7wKxr63xB/KeACiZ3Qk5KiHGlLt+Ip4afP/9T50HgGbOnMltTxgHfPb+mTJoEKS0KEWAsQS0GBAMKdub3rYltnT4BADlZYWtQuTvASCF2BcaiUjU1UH1X973/ZEQ1NjY6D/22Pp0c3NzRogprVOGjjxKQC69b01CGuGYYfkSi5J9+Na2jbAjARw2QsJLdiHPZMtSKevDVb8UAIyfHScxfhrjy4UwXoYWPfbEmZay0NTUxHPyGQd89v55YtkuMWrkaDed0SCZTeu13rfQiECupJObhxOJhB57q1KDEIIaGqD7L+/X64vFstvnHdd+ddxZR1XfftjU0ru+fvGxc+vq6tTVDQ3tv/nZt88pGVYl7l3RQ1OHFdLLna1I2j04a6wD2ZeA52YbvKVzATagP1zzHQm5sQIPyLc8NaLEMvF43+EHHzTjSGS7O3CWzzjgs/ctyfRKS4vXpDOEVMYnEtlZOhgwddAzEq2d2Wn2jc8tfWH/zF4AePKB3w2qnVxV94OLj/v2JWfOOYWIJNH7kVDXSgBo3bT5sICjJs+cObM6PxIe1NDQoOuqq51vfu/nq+dMLT+/w7fU2k7fnDKzCqeNduFmerJnB2tgtyvgeBLhTG7pww/ZN+DnegRRMoOawSGQ72Hjlm0/siwF8MIo7H3GGcTHU3ZWoBBpW6lHicSMrrjQhSEpTdpk14Pt7wWvLCQNAPhwlApn9L4Efv58IZVl6Scefuq34bzCsxX8ByZPHGsAPPJ+vMj6+kYfAL555QM3ArgRWLH3uobm5gwA+dBjK24/89jaExcuevLsUfmeLlC+SnjZAWdfAEIRIpqgJZC2sitpfViyfJ3r1WPpbN+iwmhKjSl3/XWtu+fOmDL1uFdee+1x5LqZ8ibLOMNn71lNTQ0A4HMXXJAhy6HOjAVhnGyZoT/YG0BCQIo37Sj2Bd0G6O9535NjKvN++MizK0oW3PCPM7/849t/JYQwQrx/cTUWi1nIdhd2ckmKAqBqamrUnIMz1r2P/P0zU8aPa218Iy67HNs4uVWxMi5QmMneIWllp1l+qPa6A1bzsgHodAaTq5QgnRFr1m6oF0KgtraWZ+swDvjsP9M/KKiCwTsCAVes61S2DITJMrlSjurvA0+gXOzOaJ36pyxc1JuL6+9cL4TojNXWWnV1de/3oK2or6/3AWSEEBnbsvpPD9BNTU1eY2O21fIJ86ackxaueHabBIUCsDKAnZTos4G4C1hGwNLiQ1XD71+I3cvNkFIZQpnw1LSKsN/T1z37kMMOjjU2Nvp8JM444LP3o6yjrr766h1lJcWNWzvj1JMhI5XYe5atAGCM2ZsZn/epU04QQrxVBi4X1tWpneP6RENDg8xtV1Ys21TtvUd6IRAMBuiGX3zpoNOOmX3BKUdMfcyGeaokIh8969iZj333svN+3736H+OEEOaX1zU8VTNh+KK1O5Ky3VjaCgGWICg/t2qXyO64Pkzpssy1sCBkm9QpG0jE05haFVJ5jjKvL135zV//+tcHAdALFy7kvlfsP8+e+CP4+KqtrbUaGxv9Sz534RduvPWuP1YXQ9cOFcr0pSBzLQYsV+GBdaS39Rp10nEHPbvoiZcPI9pXV47FYnL/LpmhYACptAdj/uPSszzrmDnPrtvafvDqdRtBQsFxHCQSCQBAOOhi3MiqzNgheZfc89jS2+74/bfnfCX2pxeiMmlOHiNkqi8Dh7LdNTNW9gUr+vDU8GXuB+jlyjsy15nUshW2JMP6kTd61OjRI19at27DXJHd0+634CRjnOGzd2jx4sUagPzlr35z7+RJ1TtXtaZVh3aNsQVAAqQBKSSKC8MAgLb2npQx+5KEWAyyvr7e5OdFcOvvvznqaxed8oOKYvfHUyeNu2fSsILffu6TR3+NiNx3+7rq6uqUADDvoDEnvPja8le/+PmvPGkgvVPP+ETmU+edr0tLyzKlpaV+PJl+bs221hOalq6luro6de5XrnhpUvWEv23t8OQu3/ItlR0Q7V+qEPLDEy3713pUuV2lzi2pqAiglMawiFFjBxf56zdsnn3WWaf/lYiopqbG4iSNccBn77VkQgBEQUFB59yDZ31b2Y55sSWlEY4iY2hvylkgs5n6K6+9oQcMxor6ephnHvzF0OqRpQ/84Ipb11x356M/2rkn/f0XXll29rhpc782fPiIL1/xlSNrAIDonfd5b2hoMATg25+/4OVdncmvFOSF7i4uKrQfuP8v4pYbrlNzDz5YTZk6zQqHAhUmY55atytxe//7uez8c39cUlrqv9KihR0Kk0+Ar7LLNX7YTryC2bdm7sAT3iwBeKk4Dh5mW6Vhy1/06N9PmzZl4qVNTU1edXW1/VZlNT7iZ/wFs3ecUTc0NOjZc+bc/9JLL58+Z3ieV1OSslO9KdgW0K0C9OdlKZo6ZUz30mX3HSzE1LVEhO9+cf6Ml1asf3X5qvXY09lrzr/wwhXbt+4s27R+TfGwYcN6/vH0U1VCiExuO3uPyXWNTfSq+8nTj37loceXjE+mfRARBpflZwpKii5c2bzpz8jO2vEAKKWkPmTO9HuWPNd09iemRv1S6rMSyNagHP3hmtguKdcDWmU/IcvPriGsRfZ1CimQcKL08KqE35XyhS1xvmdwdy5Ro/ezvNNf3vvPvivGGT770GtoaDC1tbXW1CnHfToUCj7z8qYue3OPlQnnB+ER4ColHCmwY/uuwmPnnpHtryYEdrV1DhtUNuQHM6ZPa1BKyUcXPR5cs+aNyLjxExxHUf6zj9wdzmb37zl+CKJXfSFE3z23f+fQcaMqq4lovOM41X/4/nnjVzZvviubJ8PLlZhIayN+dsU3vl5SVtr9zBtxJUM2eSJbv98bIcWHI6IZkVtgRuTWvM393RfZheNtj+B6cXHM1DKrKD+iPIO7xo4dezllP1Cq/Q8HxQfGgcbGRp+IFAd7Dvjsfx+VlZXR9dfXJ1555uWLhg4fsfKRNX3OP7Y7pjs0yNh5eagsi1L7nl4aOWHaUdmMEOrWvzz513v++uBPzj3l4NiE0UPWBS09tmP3TmdZ05JXxw0Lf+LQk87pisXe3HfnnR521tbWWnV1++4r8o/Z8/qqltUA1mQymdWnfeWaTdmwuE99PUxdXZ087LBP76g9ePrP27USS3dJnWcLSACeBWiVDbJa5jLp/pHT/9IvQRKgdPYcAYPsa1KU3Y2lbQC+Rn5qlzh1nIPSqKs3b9n6m7lzD38iFrsu1D9l870ui5ibQqssyzLnn3/+xbNmzVq9YMGCi7I7zxhPBeWSDvsYJAAmdkksdP9zDbeuXruhTug0SvNd2hP302nPuONGD214Y13L2cjODde1tbUqlx3a/3jgprPCofCyI045f3Uq/fYLYfW3XXiHJ2cJ5FaBEgOK17FYDG+1hm7/7YjIHjd26JotG7YO/eSsIKlEUkqT20X0Pyvt+wXI97VA8v79Oi3KrpKlpUQ6VIjGtX3+5q60VVhY+vohc+b+6OFHH/hb/3dXV1cnGhoa/t1MHlFXVycbGhoAQAshMHny5J9u3br1/zo7O/1LL730pD/+8Y9/z92Gz/DlgM/+l/VPswwFgzjntNM+9fKK5u9s2LxpiudlkMmkMXH8yO0rVy+aJsT4PbFYTOSCrsQ/l8ffdUuAXPseUOvT4YmHX3j86KFlWx968qWXcjuIdxyO++vRP/1u3Sd+ftXDDZPLXX9GQdwyCQ861zVzYHNnk6uIyw9ZwJe5D1HmZhmlpQCCITTvMfq1LWmV8oUeNWr4nccff+ZVf/rTb17T+9peKNTUyBpkz6huampCU1NT/y7OBwApJX7wgx/MvOuuu36xfv36o8LhcKeU8qTe3t4X3ub7ZP8D+GQO9iaNjY0EQHi+L19buXLFrrZdN/Xs2nm/E85PbNy4fkgqmRq8Z0v7bS80rWhvbGzsD8QEQDwdi1nD583rf4y3DJ9KSjxz/1WVxx9xUGHDw419sVhM5G4PxGKysbGRykdVle7YtP3F9Ru2XXTRJ05a+Nzrq3bHcte9k/fQ0tJiAMh/PLOq+a9/vfXI15t3jZhYXqKViUvK5b9K7Et5jNgXYD80NTZkB3T3/ptrXe1lPAwuIDm02DXJjFEbd3RMW71m9YVlZVXjzzv//MDLL76w5Re/+HlSb91mdu7caZqamszOnTsNAGPbttFaR40xta2trV9pbGy8Ztu2bWOnTZvWcuGFF572xBNPvBSLxazGxkbO7DnDZx83dYBqGJClHzz38BtffeW5C0854eAf/PXBZ39WU1NjNTU1ee/myOHGn39h+k/+8NdnZtdMvOTeB56+G0LkVvbOuu7/1eVXja0uPunCBTuDgcALsa999sXvXvGnL1xySY19/fXv7LkGPB/94VeXDq6/4t5VVrwncsa0AHr39ImgKyA0gShb4tG5CKs+RBm+EfumksoB5ScS2S6gAQGIQAib+oRe3ppU2zoN3HAUlRVlXV46/ZDjhtqOqK0VxYWFtHnLDvHkU3+nvr5ed+Tw4Z/cvn1rSW9vLwAgHA7f+tJLL3150qRJfeBGbRzw2ccbEYn+1ZeGDh06b9GiRU8Mrih6df2mHXNyA6rv6NC/BrCbAG90ZeHtRshhG7fvqQ1Y1tyU728CsLO6Gk5zMzIjywt/bodCX39jw52DyopP3Tx5/Ngznn6h6emBZ/fuXwJ6u6OJuro6dd999+lzjp5x/l1/b7plwiCHDhvqylSiF4Hcma26/w18yAJ+f9Dvn39pxL6Sk0D2hDINgGwJBF1qSymzqc3Dls606k0BvrRgOy6klNBaw0+nUFach954EslUGvn5+RgxYsQtK1asuDBXCuJg/zHAs3TYv84IhKBXX33Vb2pq8r/3xe+9HAlHW9r3dM28+U8LxgEw77RZWhMAKQW27kkUu8Hgc0SUH4mGnjvjmDl/JyLZ3JwNNts7E9cfdfjsb8ybcPLgqWPKXzv7mJoVuQMAMzDQ5wLfvxxqbWho0ERk3f3ka7fV1EyLretUsml7xg9GwvD0gAeiD2fq4+TGFfp77ogB/6YsADZg+QZWV1IM9uLqsHJSn5zi0vzpAf/UcZZ36ijtHVOV8k4dY3lnzarwJg8vTFmWBdd1e0856aRfvPHGGxdqrWVulg8He87wGdtLCUDPmHXQH1Yue/2Lxx81+xcPPPrsdwecsPOmzHtA+k3AvoHUL3z6qPMbn195qwXr61+67IxNeaFw6NNfuvJu/YMfSLHfrBvXcZDOvPVsH3r1wVB3cpubX1gSF5Pmv+2UoKefjllHHFFPS568+4wLLv52w8ZN2/SsEYViVmlKmt5k9qxWlW1rENC5tX0pOxfe5FoxiP/CgC4h+/wC2Smb/YO3Mjdfv/81QwCen10fN9vsDqBg9jaOBlwngDYKmWc2xWVLRxrV1dXbDj10zvzrr7/5Bc7qOeAz9pZyAVuf99nzjrrvnr88kheyt+3avWG6ECU9udhOA8osA1bFguifftl/3a++d96hfT3pYQuuXnjXW22TdXWQDQ3Zk02xXxa/ZeHCYH7hliGZJKq10eWCEA+6gaboCV9d/TbTPJUQQs+dMbp+6eqtPxgyZHhy7dq1oTkjInpqWUZRXwoiNwumf/B271kDct/C5v+NKSuUa7VgxL5PYu/BSP+i6xhQ59cCUhLSAGC7SNshemOXr1/b1mvBcvypkybdfdfdd31pwoQJvW+1o2Yc8Bl7cxAiUqNHj9nQ07V72IKvnnvWZT+85v5YrFb1r04FAO1/uzHqFsUDXZbfN3TuN5L7PcTeKX91dXWqDsD8t5jvPXBHsfdvTz9ttaZWzlKp5CFeJlMNrQuFkH1WwH3WD4n7K477Vtubdj5EYoEQYgG1hytLx26QbrjnyQceOWP6oQf9KJVKnz623PEOHWbbdm88WyZxsq9sYDbd311T/xd+Kf21Mp07I9eI3Fm4uXq+bQCXskcAngaEAqQtINwAre+w9HNb+qy4b6Gisqp5xtSJX3/88ccf930fnNl/fHENn72rLN+yLD1mzOi793T14p4HFp8upaL6+kYDZGfG9D19TblQnccl9vhnOm04vvPxK0fQmxMLU1dXpxbm+vcMDPYEiKdra62FgBICtHC/acPrksuVpb2wTnuDZNovlxnKkz7Z8E005Nr5uTV29+4k5s2bp+oBM3PCzM919SVLRw0f9sMJM6eumD17Tp0S4t61uzL2sp3Ks6ORbID1gCABNu17Yj93Vu5/Q/9KLyIX3G0CXAM4PhDI1fNNrj+QFXHg5+XT+nTI/9saXzyxvs9yIkXxk08+9eodWzdNf+SRRx73fT/XtYeDPWf4jL2zBIHuuuu64i996Tsbyc/4S+6/YcKUo89pA4D2Z6+IoEscaZL+YdpDgRDw7aD9UiIgHxh6/Dc63vlWKUFGu0KI9Jsy/FjM6p5dNj2T6D7WpDKzyVCelNZOBOxlwYLgg9Gj9pV1ckcI4om7ryiv+3z9S3kFJfEtW1omz5s3jxobGw0AowTu1IRPjx8UzBw+2LaDXp9IZQwsBehcYzM/VzORNKDU8wHo77OjTPaUZjtX4tEEaJOt7zuOAimXeo1lNnYRmnfGVVcScEPh+KjhVTd99rOf/t23vvWDTfsfWTHO8Bl7R3GotrZWnfvpz+8eNWrMr5IZr/BrP/zlF7KxOCZknyqQPlWYjF8mM3qQMJlSY9KVeXCL+oPwW5aJcqVoInIbzzv2a3eMLbn9/oOnLr328OpvEJGM9W+nCxbotOt3kJTd5NobyFErpWNvtGy1MarydgwsAc2bV6sspcyV199/tW/E4CMOn/d9IYRXVlZGAKiurk4Zwrkjhw2+vaVXOXcv7xHr0mFNeYXwHSs7aCsGzOL5gAdtRa5UA8oOxHoAPAiQ60BEo5QKFfvNvUG9aH1G3LO0V73YklGBgoqOqZOqf3X6KWdOWr16zVdzwb6/hz4He8YZPnt3+nvVvPrqG0XHHHvYG/mulpvWPVotIrPbNvz9umhJovewTCJ1pPGoSlomgZD9kh0oXVhw/MUdb1WXB4AYIOulMNfXjHm8bGvbsWVJQmd3L/ZMGZ4879n7hom8Gbspe2dau2iRW4LVc2BEAZQhQzKljb980Mnf3tX/eLl2z+bxO6+ZevYXv/Na+ZBRS1evXHqwEMIXQuhc904BQASDQTNv3pHfePaFl2O9Xe3R8oKgmVGlaGgkLS3PFzpNMDpb1ulf3P29/mj2nmOW+1cIke0kOvBvudtaErAsmR1DUIrSpGhX2tLbe43c0avVnriPlBaI5uX7BQUFjaOGDL/hmt9e8cKUgw7aYoxBLtAbDvSMM3z23jOE3KIpM2eO3z152uTz+jKm8NPnL/gSAHPhT+5OK0c26YD1ajKgnkE4+jdXOosLjr+4Ixfw3jpPjsUAAgZPGL5jT8BKr0Im3nvY+O2lpflHibwZ7TFA9HfNHHviiZlCZV51A8FXrUD0+eK+7sUDgz0AtLW1Cdd16Ue/v2mBsgPi/HM/82MhRLqurm5gq2YCQMlkUjz66CO/vvD8C6dMmzblrjgCctGqPvWXVb5Y3hX0e52oUZEouWEF2NmBUaVyUyVNrsc+ZTNwf+CFAI+yPXv2Dv7qfQucKAEIIrgO4LoSbtCCHXZAoYDR4bDpcgJ6WbrQX7zH0fdtMOL2ZSn5wOqkvbSdVI8IJkJ5+X8+95NnfevC8y+c1Lpj69GLn/nHvZNmztxijOmv0/sc7Bln+Oz9YjmO45eUllwljf/lr3/u9JO/8ZMbHnn8qi9WjplU0hHUTr7JREzliV9tfycbIQGwHBs3fvKwqtdefV39ftVTPUJM73q3L6p/MZfP1R0zbeGi514vLa+4f/369XXz58/H23V/7J+iGAqF8MMf/t9Jjzz694uWrVh1ZG93d74Njco8hcGFli4NS4RdC5ZOwXWUkARptIYjCLJ/X0Yim6nLbEbvCQkjLfjaGGNAQiikPAFhA75vIZnOIJ426PAVevv60JcWqtsHEmkDgkAkvwCpRLJ92rTpu1vbtt33mXM/vSFt9Tz+259ct2tAszQJQMRiMXqrDqKMMfYfyZ2dKYioqHrC+DdGDB5EF80/5pT+ncHTT//n/dRjb38E2j89XuxfbgJgEVFg5OCSpwOuG7/885+veodHs/2d8eG6Lu64447Bs+fOvnTwsOHPhqIF3YBDUkiypKKigKTyqKCqAmlGlLlmTKljxhbbZkyJbcbmLqMKpRmRDzMkT5myiDQV+TYNLnSpNKQoYltkWRZZlk1CZBszSydAQ0eMIaHs1cOGjV1x6imfuL8wP/K5n/zwe3WvPvhgKLc4yUCqtrb2PffCZ4yx9xL08cvYN8uLiotXKgkKOurMgZnzuz2KjAEyBsi3G+D9V6qrqx0AOOXoOV8rKsing2bMuEoKgXezMlSuVcTeIKqUwq23/nXU8MHDjzvjtLprq6qGPQ7g0WEjxmypnjiVSkoqKJhXTG5eMQVyl7ySCqoYNppGjJtE46on08xZc6isoqoZwGMAHgfwWFlZ5aKzzznnsbM+WVevFI6bPXvmCY888sgxRCRz7Q/e6uXZ7+UzZYxLOux90V9C+eRFnxz0wj9e+kfL5k0TZ0we972m5W9cJYToAyDqALmQyLzbla/eKSISE4Wwm4HM//vSuZ+57ra/3uYb8fLa1585uXLsjI5cxci828cUQvSfoLT3dYvcyKshKtz6xsbBd9x+O728ft2+35ENDB40BDU1NRg5ciQGhcMYP2U8AKyTUqT6R2fp3/8uBQCZW+ilv3bDyw8yxv77QR8AHn/88bJDDz30+YDr0IxJY9b8MvbNY4OBN2Wq6p02W3unCUttLfZm7wu+cf5FQypKqKi4eMsll3yqZOBRyPtwJKP2u7wX6u0udXV1auHChbw+BeMMn30kSADGcRxUj5/8lQ2b1v9EQkcrSgqemj1t9G9u/evTzyklu4yh/TLYWtTXv2nBDfp3wXfx4sWy/+SpXDYeOvXYw+qffXnpN5MZveLOO+6YP3/+/DfOOussdaCW6SMisWDBAgEA9fu/xv3+/4IFC4Dswu+coTPG/jfkBk2llBLf/e5PB02aMuWWispKKoiGaPTgsu1HHz7rN1/57OmHOo4N17Hf7mHsd5KVB1wHRBQ+64QjvzB8SPnagrw8GjZ02JJT586NDtgBMcYYO8AUAAQCAfzoih+NmzJl2ndHDB/VHgwEqaQwj6JhZ/28Q6Y8UpIvP3fr7y4/9/zzzw8QkZvbYbztzoRikM89fuOkC+uOvXjeodMeKC3Oay8syKchQ4bqmTNnXkJELrCvxMQYY+yDIQZm2UQUueQzFx4xccLEn0+sntAWCIZMZUU5lZcWEoDkyCHlyTkHTV4zuLLsZ480XD0TeFP9XQEQQ0qtQ/MibnpQWTGFwhEaMWLMinnzjvzq1rVbByulBj4vY4yxD1ouaO8dWLUsC0QkVqxYN+TzX/zyfNsOnPuJM898Lr+weKmyrJbysiK68FNHfQvAwOmUSggBQB01atQYOuusc77wt789Oi7gBvY/quBgzxhjH4aMP1dqedOceCEEXDe79uodd9x0xoTxozJHzx33hf0DvpQSAI6Ye/BcQ0R5ub9LPvmIMcY+5ME/FovJXEC3cidMyS999UufmjBuFH3p08d/MXt0sH+Gj6ML8qN04om15bFYTHKgZ+zd4R8M+2+g+vp6k1tiz6+rqzMATGVlpeU4DhLGy95qcfaf/qZnP45dkMiLhiFlwSH19fVYvHgxb7+MMfZREqNspv7ss8/OHDliGB06a8JXAOzfEkEQkTW8sqh1zKixDwayrQf62wzYA0o7XMdnjLEPsew6I9lpmWkA38r9fW/A7w/+px0782sjhw+jU08+/XuWZSESDr/V43G/GcYY+zAH/JwEgG/uH/ApV/cnIveskw//8+CKEsrPj3YcNHvOcwC+V1t76Je/8pWvDO2fiw+8P20VGGOMvY8GtFp28/MiyVFDSv4vm9XDeqsdQyAQwM1XxY6cNnnMr+fNnrRdAp01UydRSXGRHjt23JqxY6svb1+9ms+4ZYyxD5vjjz/elVLiy1++7Jvlg0rpsgtOm5zdEbx9P3wAkFIiEgpCCIHX//HnY6vKBz0JgGzbpkAgsO6CCy6YYVkWB33GGPtv61+wBADOP/+0gkGDSnuqR1UuD7jOvw3SuTn9/afX9jfm+bUQwhQVhX5QUVbYN2TIYIp9//unD7g9Y4yx/4K9dfuvf/3rJ0ul1iiB16sHoygXyN9NVm6vXbvIzY+G7lYAjSsuHte3aWH5sKr8Z6KRUGt19fTRucfjTJ8xxj5I/dk2EYXmzj746oryMho5uGTp1GH5Bbn9wLudYaOINgWGVpU+4SjQ5CprTu7xnZKiwpbi4rIluV47nOUzxtgHyAKAKVOmhMsHlS+pGFTWVnfyEd8ioqgQ4r3OrOkv6fy+rDhMl9bNrul/nGnjqv48buyYVGJPYgjAM3cYY+yDIgHgyCOPrALwHACSwJcHXPeuMnsiEnV1dWrw4MHB3J/+MGJombnuiktm9F//7cs+/fWxY8bQL37xi8kc8Bn/ABn7ACysq1NKSfPLX/78Mzt3bFk/Y9rEuVJKY4BQdXW1M3r0aBv/YrWrhQvrVN1+ywIKIaihoUFv27YtSUQqEgmGHNsWg0qqbACwlKJf/uGuRZl0GgGlebUpxhg70HI1e/nrX/+6tnr8GBoxOO+LF332k5cDoDNOOPopx3H2v4vY77LvCgFIAVhKgGj5oB9/7xtHzpp2+J9GjRr7SjAU8kcNH7KLiIb03+/kwybPGDN8CM2cOXMSJzmMMfYBHEkGg0FMnTxh3dgR5Y8rJXHSEYefmheNUvXo4btv/ckXTiBqjxKRFQ7aCDgSri0QcCQcWyIaCeLh63589NzhRccCOPb4T8xbGC0rezS/sKg1EMqjEeUunXZMGU0cXUgA/g4ANTU1NgA8fuc108aPGUEAJkkpOOAzxtiBDPYAMHHixCHDh5TTjb//7hEAJBEVHzRrygYAprKsjIQMtgBiDSBXBYOBZZZjLQsGAssAsQyQq6sGVVA0FCY3EKZx5QE6ZVYhfeOMYfTU1cfo7X8b5tG2KZmLPzGG8vML3sj1y1cA8Prjd06bWj02F/AlB3z2sWbxR8AOMEFE4rC5B12T7Nnz4qXfvPLp6upqRwix5+hDJ940tGrQT29cMC+1Y+NrQze2S0BkQJkU0ukMQAEEIhYcS2JIgdaTRk5ASUkZwvY2KnYcDcd3dGKdTO3xpbd+D7pTninMLx3Xs75xIoAXACBUUIAByx8yxgGfsQPICCFo+JCKg+dOHXHVxq27ZN2sWbK+uVlcMv+0ZbFr7tFTqzbZx4xqNaAywEkCng8IFxAhQHUD2gGSpGBWIZNeD9hppFL5Vlt3GnY4hbJgBZSyke/EsWXbZpxw2jlJIQSICA7AfTMZ44DPDrRYLCbr6+vN3/72t9lf+tKXA8GCUfcI8aKpv+22jBCg+V/52T/CQbdrT3dBcSgjyIv3iaSdQNBXUMKHZ7VCCw0rE4alPGgnBcetwopVE/DyK4PRptLQgQ6MDdk45ritGDtKkzEe5tbOPfa55vuWCYAy8EDEE3QY44DPDqiJEycKAHjhhZfLBxVHo/feeWdXf+glAhbGqq1Lfr5abGiJY0JNAL0pg4AtEJQWtCZAeZAALAvwqQt2IIy1b5Tg1kdnIOXWIBNQoGQfdrTsxLq2PejQ3QRchUcee2b2r3JTPB1kZ/YwxngAi30AhJGktUbpiLDKZv7Zv9ctWIWqoaPV5k4BKAckCFIIgAAlDSRcKNiA7IZ04pAowqa1pTBWHuyCDYhiFyqSwGC3GF7vLPjpCiWFhUC04CAiGgQA4cKIUIojPmMc8NkBVVdXRwBw+BFzO7rjmcSmTXHKLkYe67+JV1ZZtYdSKUDZBKEB0V9y9wFtQxBgSw0bCsYHBpW5IC3h6woAgIKPuNTY4xhYBUXihCM/h+3b2gd/4ZNzggBQOmy4CAVD/GUwxgGfHdDMXggDQJx44onPdu3Z3X7tz7/1WSLCvFwbheLCaHpHa9dqP5UGpCAjCCQ0JEmALAgJSJGE9EOQiWEgP47xs5ZhRNUKpLsy0FYU3bZBRziJ7nA3/J4AhpbUUMYESMuCcQAAZ/Se3kQijmx1hzEO+Iwd6NgfDNnuCy+/NBgA/rxzpwAgtDboiSeSvrEBIyBhYPsOtNAg6UFqC9KE4JGEcdIACThiCy48thHTCx6BFV8HJTScdACFaYECVYy8YIVfXFAm1jRvOiH33H19PYkuAIoHbxkHfMYOMNu2afCQoc6d9y9JAQLXX389AMh0JoNdrTt29SU0AEGCNCzfhhYGvvIAkhA6BG0ZJAPbYGDBihehLNSGs+e3oaw0Cc+PImpZCIsUXtj8ENq91aq8eCQ6095MIgoASBOBIz1jHPDZB5HdSykxqLyyxXacYG4AlQAI39cgry++dWccgEWAAGWrQBAmCJIZkOqDZSQcLwoLKZDqRZ87FC8uK0Hb7hKQjCJp+nDXk9/H869fh3v/+mMBmUJvb9/sBRdcAABprbWxLIvPvmIc8PkjYAd6G/M8Dw89tOja446Yc67vawuAD8AEAwFUDRk1bPs2DZAlSAhAaAgSgAnCCA+QKQhNsP0wQBnIYBgvrgmj8YUh0HoMAgUe1uxYgj1dbbBtF/FkD3bu2Go83/EKx5aOBWCFw6H82bNnV+ZKOjxlh3HAZ+xAISLYUsrOjt352LfqlHEcB0Mrist7MoTsqC2BQNnpmUaApIGWPhQMlA7ASB9dqQo81XgUjDsOIvIGtI6jIDIZAOB5aQAQEyfO9osLSoIPP/T4kQBSjmNHKssrCwCgrq6OvxDGAZ+xAyEWqwUR4ZzzPhlYu3EHhBDp7NRM0O6OrsCgkqJxSSJA2cIAICEAGEhhQCShoSCkhu+n4YSjWLk2D3v6xkPKSkhtQ6dbUVU6BvNmXoyigkrUTDoZU8ccL71MFG3dfVMBRHytTTQajQJAW1sbZ/iMAz5jB8Y8I4TAaWd/4hE3GIr//a7fHTrgSrVt+/ZASEoYDwIiW8MXMBDkwZcWjLDgIwXbEUjDxZqWQcg4fYDqgZMaCtvPQ8rbhcljTsG5x/0Cc6fUoafTlVWDJqN1d/eRAEpc17aSiXQKAMrKyngAl3HAZ+xAqK+vJwA488QzN6QSvc79Tzxx6N5a+q5fYcPGjTSoSEFCAxCwjIEPCZJJWMZA6RAgbaRlHEZHoNI2bGkhZfUg5e4BUQSytwCpvg7E0xa6+wRSHsnBZZN0KuWV3XvzT0Zt2rK9KZyXV8AZPuOAz9gBRkQgIjFi1Fi69rZFnf3jpnf86g70JlOorNIAUoAEHN8gowLIWAQbGTheCCAXadUHS9sYXbIDdlcvhK5AQgCetwpjy1ejSHQiIyxIR0OnepEXLUJZ0ajAlb+755SermR7Xp5byt8E44DP2AGO9wAs13Vox86220467ohPhYIuANCKzoj0fS0Hl0cAGIAEjCBIEhA6AiILJJMApWEbAeidmD4rienjn0Fx/GkMpyacMHsxzvnkEhSKXQj6KURNNyIe4PiOHD/8YLR1ttdNnjJkRm9vbyV/Fezjjrtlsg+CyGQ8bNu+tbWyJPhpbTQA4Ixzv3Dq1fe+kZ8fydeApyRJGAkIMgBZgEgC8CHgIKDykPaTCDjNqDtzM/bs3gDXCaC0oBXK3olJ1QXY8kIF7PxC+FYaHUkSVYMPx+vrnihfv6FFhKLRFH8NjDN8xg6wSy65BADwrW9+LdmyoyOd2vhCCAD+cMvtpX4qLioi0sBkIAkwUsECASKTPTgQlJ2tk4pC6TxILw07mUZ5/h6UuGuAzl74rUNw0CFrMHrEYnR3uUg6IXiBODwRxpzpF/pdXWlasrhJAkBjYyN/IYwDPmMHyvXXX+8LIbBq1dqbC/JChfc8+MAxAPDXvy4RjiRMGhZEJt0LJQW0lIAwgEgBsEGwskEfNqAjAIUB48JkMkC6CLDiIKlhIYEzz9yE8ZMfBGVeRaBXwOrIoEgFRDSYJ4YPG+0BQG1tLX8hjAM+YwcSEeGRR27qFUqmf3fDPWXRSBjHz5t9juuEUVFaoDw/AWEAbQDbeFAmA+gICAEYqxdk9YAkwUDBqDiE1QuyukAiDFgpWLQDRdSKi05ZivOOfhJzKhpRXbAIU4evFJ4fR3lVSQkR2Twtk32c8RQ19kGxHMf2Lcv+yxEHTxq5+Pml00sHRbZEU3LIqzePziTjLzmRaD6SwgWlXEi3B36yADKTgqX64AsJIxQsowFyQAhCks5twT6E1QnK5EMaBSvkwLPTiKd7UTL4IDr+smbxwgYyjz99U+XBU05rzSU6hr8Sxhk+YwdATU2NyGQ8HDZnZvfzr6wKpzIZbN7ckTpkloJTsMYSziS8uH4c7l00Ezc/cDD+2liNNjMEltsHx3NhRAgZy4PtCygCpIgDMpUt/QgfpPMAZSBUBvFMHH3pNJx0AGhfKi47s8Tv2bNbfPOrvzuPiCRqa3m7Zx/PrIs/AvZBaGpq0lIKdHfHryksyvv0q/9Y9KUJB59WXjnCQdwqFPc8NAErN9cgqUfDdVzQ6lZs3/wSLprfinxnPSDzoLxSCJMG1FtNuMlWagxsSOnBAmBbCqkegSMOqpIjh24XLRs2XQ7gt2hs1LmjWy7vMM7wGXu/xWIxGEM47pjaPqVs55LLvjc87IpoRVkl3XrbFPHamtOQyq+AV96KRP5WoMrGmtYJeGXZBKhQBYwxgOgFyV4QfLxtNZJsQPiQwgfIB3lBhOVOeeHphXrbls0ltbWHHE687TMO+IwdOLkWC2rBz3+9vbs39azIE2cl/T69aeORYvnaWqjCEIzJwEpUQKYL0Su6oYNF2LhLIoNuKD8ESQJGidxmS/9ikzYQhiAgAUik+rbh3CMKUBgIOHu64jHXtglcw2cc8Bk7YAiAEELEhw8dsvOlF5uGu1Y5JfxZCBRXwZfb4BqBgCfh+AIBqoLQ5fAz+bCgYFMCijQMhbJTNd/uSaSGIgmLJIgsyIBGMhnHkCJfnnFYmVm1ctWU7371nPLc6+Htn32s8CpA7IMkANDkKVPR3Lz6E75OYf2256QVSKOiYCp0MgDjdMPYfXB9Cc9LYeKolZha3gPpd8JXDkh5kDB4u5KOQH95XgIUhLE6IZQDG0IUVlTpWxftCkM6zpat2x/7N4cKjHGGz9h/6sknn9xq25bQJoP23S34+5Jbsbu3GbZVBA8SniUhiBAMPIFJU18G0AEyQcAvBAkPJPS/2HQ1BGU3bSLKLoiuFeLdCdRMMnLq+Ci9+lrzGcaYEBEZIp6azDjgM3bA+L7v+b6GlAqWsiGFQseeXQjYBpanYWei6EyuxNFTWzExapCmTsRdC1pl4HgupLHxdiV4EjK3iAogVBKWDsOGgiCDiF4nv3J6iYnH+4Ycc2Tt6UIImjePj3IZB3zGDphTTjn9YCKCMRq+9mBIIxU3sGUz8sxrGCJfxKcPX4njp3kQ8QSEiYCgYGQaxkrlFjp/NwhSCSQ6gdMPLUFFgYXN23d9l4jCjY3ZsQX+VtjHAWc37IPe3kw6nfxBQaRibM34Y0xvolcWFVZi1uR5mDX7FZx42HIcMXUzqoduhkpuhjKAhgVfAVJ4UNT/MO8uRgsJ+AmFgnIht/eF6fEl2wZt3bq84bXXmnfmHpBr+YwzfMbeR0REwT0de0L5wSGYV/N5cfZxP8HpR/wCIj0KPbt7MKy0FwW0BsnEVviWj4wtoC0NhTQcLWFnohCk3sMTA64l4HW047Mn5hlFKXr11Q3fISKLM3zGAZ+x91EsFpMA9IIFv6nKi0aOLMwvQUfHbpWJp5DuUYAIYlfLMCS7ApA6DCPLkBIhJBWghYYigvItgGzQez1JVvlI9mlMHJ6QR88pFRs2rD/z0YafFQL/6kwuxjjgM/aevPDM40U7duyikopK0oZgiSSU6IQK7kBn3yB06j5otxdKW1DwoCgDW1uwvTCMAFKBLpDQELn/5fL3/XYA++8MsruINCSEq6B7e8RX5g/ze3t71HcW/Pkz/bsD/nYYB3zG3gcPP/ywAoBgKHiO6wiRF5E6TQBgQcBkY7Q3Hr3JPBjhwjZJ2CYFmzQs34E0DrTykbH7oKUPHwSd65ZJxgYZByQAIwQMbBABBAMDASIHgghSSviCkOgmHD5VyKnDw3Ln7s6vE1EeZ/mMAz5j75OmpiZyHBuP/+PJvGFlIdRU7UJv2gdZQcCJQ5l8WH4GDtJQdh88KWBEEAQXnp1BxumDBCGQzgfIBVEAkAYGfbCUgjB50B6QEgn4iEJKF7Di0HBhYMEyGravIciH9NMIpnfJL35itN/e3lZ5+pmnnCuEQG1tLWf5jAM+Y/8hAcBPpzN5Bfklpw6uCGNwSVjZ3Xmw/BIQBaBFBmS1ww0E4WdcCCEG3HVfmUZCwEn5CJFA0HYgA0H4tguyBQJRgWhUQOk4hI5DpRVs34KwdyBtCxhTBkukQG4a6U6D+UeH5OAygcWNL52rpERjYyP312H/0zijYR9UwIff21b26N+f+taFZwxXo8p9rFpTLpRbCM/2QaYXg4qX47ApHXDTfTDyrQosItsps7gbrYkRaHx5Op54ZiKeXzERS9+oxKptRUh0l6K0zIHtJoC0C1t4IBDS0oU0BkKk4CkCpaLIL+4WaT+sFz3TVjX3yIOe37Jp2wbwFE32P4z74bMDrqbmEqup6Xpv3Zaes6QM2rNGKS8v1GNnnA7IkA+ty4HeQRhWvRZhux0ymXnzppmblEPGwHJdLN85EQ88OBmtbXXwIxF47hYoQ0BHAZaveQPPrXgFJxxfhLGlm6B7O+HqKDyVgrC6If18COlBOGmYPT24+ITxuPL2NrVja8cPiWixEIKDPeOSDmPvVVPT9URE6vmXXxwfDaREzUhflBVnEHLaoeIVsOIOomIZDpq4E7YXh6AUxIDsnkx2no1UgJJBPP/kwejpnIlwWRdkuBm2E4dlOQiE4tDRCdjU+2nc9NcxaG4bDpVvIeN3wdZudnM3QdheBEIlkEy4KMnz1LnHD9HbWrYd9qMf/l8tAF1XV8dHvowDPmPvsZzju46jhRRnjBocQWHEksVqJ+oOfwNl6eWosB7CJ056DMMLO5GKO0jbEdCAqgrlplUKIaC1jx6vCMIZBt0TQTCTj1AyD4F0ALanQBkCBSXi3mF4/MlhSFAIypGADiEtNUilEPQ0IDwYOwLq7cEln4gAfhJ33fuXzwBAQ0MDz9ZhHPAZe7disZgAgCceuXfC1paWwBGzyknJjBA9BodNWI7LLr0dl1ywGDNGt0DEbcDxkJbhXIjPbp6SACIBbTSSXgbt6EOP40O7QWiyoZUH34rDVxk4sgsB04lQmNC+pxRr1wyDFQ7Ds3pgpAOjeqBkBoJsIOCjL96B8UPSOOagSn/j5q1n/eY33xkJQOdOFGPsfwofurIDvo21tLSY5Ws3n9y2q+3sr9W5uroio1IZA+gkXJVEEGlQRgNCQEgfktKAIBBFIEUS0hhIcuG7ErviYby0fA4UlUGQgZYSGSsNiAwcPwINF8oPwFbd6NMObLcDk0ZvgUkIBFUKynMQtyLQ8BCgJBQMLCcpygYV69sW7Q7G0/HE1pZd/+jt7bV27tzJs3YYZ/iMvVONjY3Gti3YUpxuyTRmTy8QfiINKXwIaQG+A2gFKRUgsidgSQDCOLne92mQ1DAyBUsVo7NtHJLpEMgygOqDEHEoI6B0EEQKviL47m74iMPyxyG+ayREOghHxCG8OIRQEJYGZBpeJgCJ4ehuV2Lu9Dxr8ug8vPLymk8YY9ympiY+EYtxwGfsXaJMxlOrVjVXz55UhtKwJdKZPkgJAASI3GXgTEiyIKAgRBJGEkg40DIJI4G2nfnwdRG0cGBkGkrE4WgB6QdhpA9P+dDCgkAERsQhwzsh8jogw/lIqQnoUYVImEKo4FiY/DiS1hYoGUFI98gvnlbpp1PpMSfXHXsGEfGJWOx/Dk/LZAdMXV2damho0D/64eVztY9hB08s0wGRVn1GQ0mCebv8WRgISkPAhzFhGJ0HOElAtsFx2uDAAzwHZAUA8mFpC0QKadULJTSsdB6ACDLWNsjSPLy+4SA0vzwYu7uHIKG3w7Y9FERc1MwKYNKoN0AdrTB7wjjrsLHie9dJND619NPKUvcYbbikw/6ncAbDDpjm5mYJADs7e47YtX3bWT+9aDBVRbolmQRg7H9xfGkghIYWEgQXUueBKAFyulFQVIjVawLQpgxp4wDCh002DNnw7R5IpOH6ARgo+ME0ujvDWNFUjM17DsEuMxZxbwp6vQq0dwxB89IRcJwMRo5og9+VREFVUKzd7plXV6dG/N93vvbQkiXPtdbV1anm5maem8844DP2b0gAJpyXf2VIJ0bWf7aUrMwe6Ys0JAVypRzgrUrlwjjZs21lAjY5kL4NEnEEQgaOlFizpg8mOAxa+ZAGkCYI307BwIKiJAw8eJaESRUhbIfgh9NIh7ZDWb0Qdh/gBECYiU0be1E5qAflgyR0pk0MqagwNz+4y+lNe7Rr+7ZHVq1q5oXO2f/UD5Kx911uWqPpo03lu3a1jj9oYhUVRNPS8wGh3Ozas+hvXGwGbI4CoGxmT2RBihSE7ICCA5eKYOkMDpvTizkHSWi/CyQ1tNIwEiAvAMstgIoYqAAQsErgUhhSp2D7QbjJCgQyNuxUCeC78KLLkbSHYMkLo9ADB+kEMGtsQNZODZtVK9ac8tRTTxdkXxzx4C3jDJ+xt9PY2CghYFa+tmzimjc2f/0Lx7k0Z2qX7IlHoMwg2HIHPOGA4MI47SBIkC6GhA8jUkgFU1CpIMKZImjRDYpKdKRHYNnaAjRuCKArMwJ9nXmADgEiAaP6EAkMwra21/DEc3/CK6sfQXGhi7KiYYgnQ4AUsFUn0lSGtKXgYjeUJnhWAUw3YdLIjYi6fXBkjxCRKt3w910FHV07e9euWf8MUG/h7VZNZ+wjhAdt2QFRW1srGhsb0dmdPlV7mg6bYxsktktlGwijIWAgSYF0BNABgAQkMoBIA+RCxcNwVAZJ2gNVaGH5puF4+MFadCfKkLEyMAjCDRRDmhB8CsN2k+joXYqHn/4lNGUAAE8+dysqTpoM5QyCkClISkNRMjs2IAwgCVK56E0kEfc1bMdHssfHKbUFcliloueeb/oMEf1KCOETQQjBpR3GJR3G9icaGxuJiMKr12yoHVVeKMZWjBRePALHEIh8kCmAhAeLJJSXD8tYELI3u1FKQtDqhfbTEAU2Vm+rwV0PzMAucwS6whMh7NlwgsOQEt0gKwUv4yLoFGLd5ldgkIFl2VBKIZVOYsfuFthu7jn9Qtjkw/IloEthIQrRFUY02onooN0gGPRCosDdLC89oZw6dneOO/msww4HYObP598K44DP2D+JxSAA6J/9/nMRbbxDZowqQ9hNqbRJwnEVnEg3UlYHjEiCVBekkCBjIJEGIGGMBaMNtK2QVCE89fRoJL150NEWyNBmeHYbUqoVcHrhyTY4bjfSqR5UDBoNIsD3PWitYSkH5aWDkfE8kLGhKQ8eAlB2F0BJ6N0aZfQkTj9sLUosCT/tQrk+Mju78NnjS6jQ9dC8YsePiEg2NPD3yj76uIbPDkRBR7W0tJhJE+ad0viPZ8789nn5etrELaLHLxebNk1Ae28+goX5cKQHkr2QUCDyICRgKAiiEIQuAuV3Ys2WQrzw/LEQwXIQ4nAyUZCQAAUgTB6UkRAyBW1SKC0ag0S6F4l0B8KBEhx1yLkoyRsNLy2gyIZxDLRKQGgfgfBuTBz9DE6vfQ7ThrRD9xIgBYRKAPEICiq03NlRoP/xavtQynS/tHjJc2tra2utlpYWruUzDviM9SspKVG7du40O3e1Xegn++b+9Ksj9PadFeq2B4bj9aZZeG3ZZGzdGUT1KA1h7wFlCJa0cwVyBxBJSOND5mXwctM0rN10EnReHPAicPwAtJAQJgKlo5BGAPAglUQiBYwdPgOTRh+GyeOOQkl4BFKJDJRUIAH4Vg+kScLxBkGjFyeeshhTKtYh05oHE9kNgoTjSwgh4aMHY6vH0B8XbhCte7qruru7btuwYSPAUzQZl3QY20s0NTX5hiiglDpu1NACxDuq1M231GJj59noKKhEsngCmltGYk1zCLALoKUDMjZAdvYsW2sPJMVhUhXwdAie2410YAe84G74dgLCboeyt0KpVkiRhAUX2lcgoZHpA6ivABQPI9HjQwkFiBRIpiG1hOsNgiWTSHaX4Mn7JiMZL4IJJRGXIUB6cHwXsNPo8jMYW9WrPnXUGPPGmo3zrr76V0cSEXGvfMYBn7E3o7vvvj6yfVvL8KLiatz73CzRFxyFoGvDGAVf9YKsIrSmw7ADKVgmBZCCjyCEARRZ6HMCgNWN4mAPHNMORSXw0Q1hfBC58CDhCR++RUjBAxwByyFo1QEpBSw/DJdCMEZBqx5I0pDkgCChIWDlB9DWPhWtu8OAKyFJwDJJpGwNTWGEvTCSbSlc/tlSCD8hrr/xlm/btkXV1dWc4TMO+IwBQE1NjQUA99//2OmWUoGCSLUXT1UKaSkIz4Pth2BpCw5SKAxKUG8AjnYhjA8hUyAhAK8SNnmQqVZMH9+Nivx10O2FcJNTYCsB1yjYOgyBIIwMQKogyCek43FIm2BEBiT7QFY810zfhSQ324FTpuEJCd/qhGcEPC8NS6RgaQPSFUgrAa164aoe+MlWTByyXZ57fIV+9eXXDz71uINH1tfXG/7dMA74jAFoamoyRCQaGxsnCBORQ4trRKrXgyQXStiQZGB8IBBaj1HDVkLqJAQIShAkpUEyBUMugjINJzEIRcE2nF33PCaPvQEB/wX4iV3o8nahj1JIpm2YHh9O13oM0U/h/NnPY3heB1KeC+30wXM6QcJA6giIJKSxAeHDVwQyCgGHYIV9wCRgIwMjfRgIaATh+1EoQzDx7eJ7XyhHwLXzlq7e/msiUnV1dXzmLftI4hOv2PtNu24A0Ty3bkjFdIQjZZLQCWF8ZFI+bEVIptIYPzWKquECiV4f5PuQ2oKCA0/2QFs90MKDgzyIZA8GF27G+afvwNZtPdi2JYjurhL0JiWMkggHU6gs7cC4wR0YVrENK+8JQnizoENJ+KIHFgkonc3sCRIkNUiEIfvCKC1+GflFGjoRgkMGPpKQ5EIrH57jw5YF2NE+Crvj1eqoOSX6Hy8+e/r3v/md2oaGhqdqa2utxsZGn79uxgGffSz1t0P+/v9bUPOzX9UX1c6eZNbvfE7sbF2NwaXjUZY/BjplYDtptO4owe23T8Tg0W2YOp4QttcDSR9KKmghkZFRGLcDtvEh+yIIkcb44tWorszATUYAyiDjpuE7HjQEMhmFRFIhL5hEUPQg44dAbhgwApIEPOVBEYGIQFIjmEpi4ujlCLg+Mt0RhEQCtsjAFwoke0FuH3Yny3DHX8dg856pmDwyKDZt2U13/2Xhr4lojhCif4EUrumzjwyeccDeN83NzYqI6Auf//xJyZR3Vnn5UP3g49eoLTvfwBsbX8XYETNhyUIIYdDXU4YdbVOxemsG7e3AuHEZOCYJS1gwxoakEIzwAOFBkQVbu0DGhp8mJMUe+PBAaQfoC8COO7CTFoLKQVJLrFwvoAKjkEEGjhGwjIIvPQgASjnQZg+q3CU486hNkCYBTS4cuxckerPLKhoFR+Zj47YCPLv0IPjFM2FSnhg6eKR5ddXiyqcff+qN9ZvWLV+8eLHiefnso4Rr+Oz9ZISQ5OvMWcUFQxBPJAUAuI4L36TQsmMT3FAhyI/AcwSSZYCXNxfL1szCyrUunEAetA9Yogdh3QVHKxAEfJWGpyxoZUO7CWjbhS+CACzY0oKwFChI6BFxDJvQhqFDt6GnbzeUdKCkgIKEECEQXKTTEkbvwoknbkZxoAcmGQY5SWSkhwyVg4SBhW4EtI8Rg4agID8CY+2EQDGKohMxZshs89LS539oWTY1NjYSeBlExgGffdwQkQBAD7zw90HbW7eNK4iU0/Txx4rCvCFIZ9KIhvMwflgRTGIPfBJQwoGT7oVEGo5Vhe72QRDKh0cCKUvAkwYyl91LEwCEB1J9kAS4XhCutiCkhrbS8K0kfOHDaIV8sQVnH7MONUP/AbdnIxIJD926F4l0G1TmeUwpuRtfPW0ZqgdvQCLZCmX1Qosk4kqBIBHw0rCUhRYTwF0vBtFtD4ef6cbq1r9g9fYX1CE1Z5LU4bHjRo3+iVKW5t8Q+yjh7IS9XxQAXTO7Zt7yZcufPn32j/Tw8skqTjvQsmMLBhWWoyBQgVRCIOPGoWUfbDKQqhBoX4/Pnv4iZox8Gek+FxkHcJCCoIHl8f5kemD/fLHfxiygvDTskIteUYwN2/KxfVce4kmDSL7BkHKJIWVJuGIrRLoLgoIwJgjP0vBUCspYCCcFnDyBB56dgoeWnIy8qnG4r/Fr2Nq+GoDERWf+jFp3rzNLli6kiz/zlbG/vuanm3JBn0s77EOPB23Z+5o8eOnE8WE1iIaWD6NUzx4YEcLIITOR9vrQm0oA2oblKwgrAq0jSPY049CZL2DchDege3bDsgqhyfkXucnbV1EIBF/lw08CrrUb04btwvQRGcBYgJ8PQ0DCdMH3fdgIgHQEgiw4phsKaXgSyNgGUAVIpVzYtgNyE2jt2dRfsULbnu1i0pjD6MVlj1l3LPzTFY7jzs9k0hzw2UcmK2Ps/Qj2gojCP/j+D35cXjq2cuyYqRT3OqUMZJD0eiD8QgRlOwYPWg3q2oFAipDnvobDZ63GcbWrEYjvgZWJQDsJeEJAkXhPh58pSyNjSYCi8JIWtKeQTgsktQJpgq0BkgpaShipARmHUNmAr8iDEEn4pgyihLBq5zZ0p8vgBgrheV0YUl6D6qHHg/yQDIeDunnjC5Mu/uxnl7/S1NSc+y3xjB3GAZ/9b4vFYrKxsdForUe82vTST4eUTaeyvFqZ8aIwlIEj8iDi7Zg08jmcc/ZLmDjyNUwdvR2HHrQGU0dthJPYCjsxAiQtZOxuGFMMCxrvZb0RQQQlE1CiA7YgEKLQMgjP6YGQBKnD0NKHrzIwMgMjkDsTNwJhXFgIQegECsNxTBkaRKG/GdXleYiWnorxw4+CEvmAsGnk6JH6jfUv6GWrmmZfcMGZd7z66ooUbwmMSzrsf159fb0EYJ589OFD9+zupmPqoia+pUn5iRFQ1nCYxA6MHvkoTjtiC/J62pEX8qHyV4PSCrLbh5AutNsO3+qCgIGrJUT2mAHvdpgp6FlQaRckojAqDrK2woaC9AoAIeDZPYAALJNdP5fIhtERJH0H0hAEMrADWxDxCxEp2ojhdQT0dtLyW6eaRKYdPYnd2Lpzrdr9yga7N7EbpWXFVSNHTqwA0BmLxWR9fT1n+exDfSjO2H9KEpEqrxi6MoyOsWsePUIve2GdWvz8SKRUFOOHdKC2pgMFtAFIO0hLG56dgAULMu1CqwR8CxAUQlCnYFECaRV4T5unJAGChCcIRgqQIFhawNIOtEzAWB5UOgrpCUAkIawMVNCC7QYAJ0AICST6bL29tQjbd0M+v3qneGVtUqzbOhhbd2yFR70Qkvoi4eiyivLBt19xxRWPHnfccdsAQAjBwZ5xwGf/u/rPrr3gc58+7NYb71pSGLWx4Isj9aePDspIgMSevnY4sht2SkF5AUgS8JWEMSk4fhJShEBCgmADFIIkH0LEkVECJAQEASQGlmyQbXVMAJDtcilIQhkBQQIpNw5PCpAfhBIOtNEQSiCV8mA7adhWBgG3GAEVAVTEwEhq2dFpVu4IyxfXptWLzbuwe4+PDVs89KazP5HKwUMTO3esX3LiCcdvWbNh9V+uverqTSeeeOY63/d4A2Bc0mEfH9XV1QIAho8cM/TguXPjW7fswlev2Bi+6hYL1317hH9UTaFCJiI8vxueIWjjwVAflLJgZAG0ICgJAB4Ie6BJAJBQpLE3X35T3kzwKdviWIBAMtvwGFIDRDAZCcsEYZGCRDccNwmpHKC8Ckg7JqUVrdmYoWc3OPL5ZdvlK2uT2LMnpTriFoBEqrxsiLerbed9Bx9ysD9j8oTFry17cfnzz7+UtKzIhkWPPAYC4dhjT+lPllQsFjO5DpqMcYbPPj6Wrl9ftntzQtxx6x9OeOSJx67c07al5MSDBmH+KWW6diJhWIEHSKnQ4wGURI9MwUtnAN+Hhexkdols92EjsiUdAQJE7r8oW9NXvg0CgYSBgQ8DDWFLWI6FkHAB4QLhMKAJ7UnbbN5B9GQTsGJdl1q8Yje6uhJIIgLoxI6xo6vXb9nV9vdz5p+549XFtz387GMNVFx9Srvn6/3f3t4JDrFYjDjIMw747GOLiMTAGvaiRU9WL/hZ7PLVzevO7O1oLwq5NmaMKcb4oSEcNcejMSOEHhwlDCrOB6SlkEkDxge8DEAaEHEBIpARMCYbW5WU2bArDEAKUA5gRwEZQTqpsb0jg10Zos1bEnjxtYDZsDOjXn+jDTu705AyCKMTq6rGTd7V2b7jjm998/L2Bd/97hORcNiPJxL/dORbU1MjRo4caRoaGigWi4EDPOOAz9g/B33U1taqxsZGXwiBPXtWDps374xRkWjJuc8//1pVKBo9NtHTDssKY1DIoGpwCaQwGFEMjBquUT4oiOL8AFzb96K2QnlQQ7ouiAjpVAbtfZDdNiky8Fq2dGHDugDWtyl09iTV5q2dsjPlv6kGNK56ymtlBflXjxs5bssNd9zwtG3bpH1//wmfdm1tLTU2NmoiQAieT88YY+9YLBaT2O88j2DAxfXXXz32ovPPnnfJ5y65FnD+AGHdOrlmRq8dCccB5C7KF24BKRWmgrwoRcPZf/MiEQIcykX0vRehbAIUAfAtKeIzRgzvO+GYQ+4+5ODpSSkxX8o3tbuRAKzc2rSc8DDO8Bl7PwN/fX39wL4Ie0sjQgCObSOVzhRdc/uXxH1X/VW0xvvo7PMuGZTQ9ilvrF2Hzs44NmzaiOLCIlk5uMrs3Lh+euuGdWenMplYKBARiVSf/9nzzvDXbmg54dkXlo6pqiqZ8vLlV4oJCy7fPXXymLWLnnjuVwsXLrzp//7v/6z169en+RthjLEPcAdQVwdVU1NjA7DxLmeK/ej7350/bHBFdlKmlBAiuy/5xLEHxUpCgd39tyMiNbSq/MFpU6b9RikF8FnljPG0TPbB2jf42aQHBGfRH7hzOwWxc+dO1dTUlL0lgLqRSVFYeChNmTn7We+mW7tu/O0Vp37u8v+3qK62NlA4ri9tp4aEhb2agJSoBmylVIaIdsw76uhDV69phtaa6/KMMfZR0b9LKMoL9174iZN/BACXX14XBIDvfeWzvyguLGjP9eW3czuQq88447RtjuMA3LeeMf4RsI8Oyh0NjB43zrn5voc7hRB44YWtAID8aBQAUf/UUCKCAMRrr72ufZ/XGmeMAz77qFGBgEt98dSdJxw979xwKISenh4NAHl5haayYlABxVdXAvCFEAgqoLu7UxBxNYcxDvjsI7e9ptMZNDc3r9q8cePk3r4+MXHiRA0Alh3aUlkxyN62rW06ABJCwLUBL5MGx3vGGPuIueSSS2wAuPALX/xJXn5eD7BvwHfkyJFl48cMo/tuueJ0AICQqCjENUpiCyc3jPGPgH3EVFRUaCEEZk6Z9nBFWWnk0T9fe5gQgoQU2Lhxo9fW3om//G1R9sZkEA4EoASfasIYYx9F/eFbRcMBfc4p8y7K/lGgenBeUUHEoWGDy07vv/Gh04dc4zoWZ/iM8Y+AfRTlZuqEhw4dLe9+aHGvlBJEhOefj2FQeSG1bGuDyvZbxuixo2HbNn9ojHHAZx+5YE/Uv82mnIC7tO60I8+zrey5g/lDvi6HDx0iTj2hdo6VPbMWFRUVwrL4BFvGOOCzj5zcHHslhMi8/nrT4paWlhla+/3bcV9vr7fJofRR/Em9Wa6RHQ9mMA747KOlpqYGAHDU4ceWvL5yS8LXBsieWZt6/pVlz7Zs2hTyteYPCsDvf//7PGBvOwuenMo44LOPlpEjRxoBoHrqjCcmVY8c8sZzf5gFICOFQH7QsTdt3U2+r0V24zagj99ZVwIAnn766YLOzs6v/uY3v3nhj3/84zU///nPC3PXcabPAZ+xj4aGhgaCELj66l883rJlq3v+xT9xhRBkiDB76gTandC6v72CFI4OB0MhIrL/FzPchQsXvtUABQFAe3t7YsGCBT8Oh8Pndnd3/6G8vDyJfWsIZG9IJHK9hxCLxWT/f/dft3DhQjXwwlsfY+yDFYMEIJ5terZyxMiR3XWnHf1//YHq0vM/cfe40cN3E1ExAFx/5fd+N37sqBQRRfuD2H8zOPcH1Q9b8MzV+Pe+zn/1+mKxmMVHCYyxD5IlhIBlycemTBz2Uv8fL//ihRcfetBUWvHUPYcAwK2/+8lV48eOyRBR/n8a8N/vncXAIPtWrrvuulAu8O7/vKL/+ptuuunkxx9/PPyvHuu6666zc0H6n44MrrnmmkN/+ctf/gwAbr755lk33nhjZf9tbrrpppHXXnvt/X/84x///Lvf/e7cK6+8ct67ef3sw4n31Owjp7a21mpsbPSPOf7427esX33kG+s2TxFCdAAYXRgJrj127rRD733ihedvuCK24He33vPdlc1vVAkhdu+/0Pq7Cfbv4H4iFouJt1rsfOHChSqVSp3S19f3Sdd1o5Zl/fH8889/+K2e45ZbbgkkEolXQqHQgs9+9rN/EUJg4DBEbgUxc+WVV44oKSnZGIlEptbV1S0nIimEMO/w/UghhLntttt+7zjOqr6+vhql1NCenp7hRPRcJBJJeZ5XSUSelDJNRCONMTXGmI1a69svv/zyK97F58I+RHgvzT5yGhsbCQBaNm65Pt7bXfWZE6eWAMDZR0+0hSBx7xMvZAdtFQLBUMi68547JwBAQ0PDe9rehRC0cOHC/FdffdX+F9k61dfXm7c6Ehg5cqRMpVI/A7Dcsqw/JhKJW2644Ybv3HHHHXlEJHPPASIS4XDYcxznJa3156699tpzLr300sjA5Ky+vt7EYjHZ19fX4nnejzo7Ox+64oorZgghzMCsu/+/f/e735181113HTfwKKWhoUEAQDqdfj2dTl/nuu7uCy+88ITCwsLjPM9rSyaTLUuXLj37sssuO/vSSy/9zBe/+MVDo9HoYMdxrg4Gg6fceOOND910001TFyxYIDjTZ4wdUP1B5qqrrho/fOiw1MWfPv6LAPDkwp9WTxo3lAAcDAC/r//WEVUVgygSiRyWu+u7qp33B8hFixblXXXVVY9ef/31096unPH8888Hf//731e/3WNdeeWV4QGv37rhhhuuv+qqq744sMQy0G233Tb92muvve7qq69+JBaLOfuXZfpfwx//+McfXXfddctypRsJQPQPxv7iF7/Iv+GGG1K33HLLlwc+T//7uv3228tuueWW49/uNT/99NPWW9Xs//jHP37miiuumMmlHcbYB0UJIRAKuMvOPHb6IgD4x93fn5gL+AcJkQ1sJYWFL59xxok35VbAejcBXwAQl19+efCmm2568i9/+cukWCxm7RecBQBx0003HXrXXXeN/+1vf/vkn/70p1PeLojX1dWpdxIgY7GYAwB/+tOffnfLLbdkrr766sr9g2v/IPCdd955yK233kpXXnllWf9t+gP6TTfdVHrrrbcu/cMf/jDhXwXngTuKWCz2lkG+/7r/5sA3+8/xmrbso4qMMapsUElw/MTJG/HE66CQJgOdK8NICCGoZsrwtueef3b6e5mOH4vFRHNzc2b48OEjUqnUmfX19T8aeP3ChQvl/PnzdTwe/5plWTWu6z7uOM4bRCQWLFhA+wdMIUT/GWFvW+/PMbFYzAoEAq1KqbTjOOUAdjQ3N4sBOw8zf/58Wrhw4dre3t4tRUVFJQDa+ktQAHDhhRfuuf7664++7LLLdveXg/Z/TQ0NDXL+/Pm6v6wEwH+7shYAv76+vn+mjvkXr59xwGfs/bFw4UI1f/583draOaWqcuiYa+98tA4AWlftMF4iMzBI4dA5B63+818WjyDqtoUQ/rsYaKSJEyfK+vp6feyxx86Px+OP3nTTTSWZTOamSy+9dHluB2IAIBgMXkJEk1pbW5+tr683F154oei/br+Aufex6+vr3/Y1TJw4kebPn69vueWWYVLKSCgUigNAdXU1DXy8WCwm58+f337jjTcuBzADQPPEiRPFgNsYAG87WJ3727s+Lbm+vp7XjOSAz9gHo2H+fADAOaefFmhrWY94Z6+ura21fn/d4zKdTGP27AnipZdWCyKCEOK20aPGfvOu6/82HsCKBQsWSLzDk7Dmz5+vc8Gy6Y477piRyWRO6ejoyMvdf28QvfjiizsALBmQyb/nmSt1dXVq/vz5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" class="canvas-hint-char" alt="">
@@ -876,10 +700,8 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
       <div class="size-chip" data-w="1080" data-h="1920" onclick="setSize(this)">▯ 9:16</div>
       <div class="size-chip" data-w="1920" data-h="1080" onclick="setSize(this)">▭ 16:9</div>
       <div class="size-chip" data-w="1080" data-h="1350" onclick="setSize(this)">▯ 4:5</div>
-      <div class="size-chip" data-w="1179" data-h="2556" onclick="setSize(this)">📱 아이폰</div>
-      <div class="size-chip" data-w="1080" data-h="2340" onclick="setSize(this)">📱 갤럭시</div>
-      <div class="size-chip" id="customSizeChip" onclick="openCustomSize()" title="직접 입력">✏ 직접입력</div>
-      <button class="crop-trigger" id="cropTriggerBtn" onclick="toggleCrop()">✂ 캔버스자르기</button>
+
+      <div class="size-chip" onclick="enterCropMode()" style="border-color:#C4973A;color:#C4973A;flex-shrink:0">✂ 자르기</div>
       <div class="zoom-bar">
         <button class="zoom-btn" onclick="zoomCanvas(-1)" title="축소">－</button>
         <span class="zoom-pct" id="zoomPct">100%</span>
@@ -911,19 +733,23 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
           <button class="cctrl-btn" onclick="resetAll()" title="초기화" style="width:38px;height:38px;font-size:16px;flex-shrink:0">↺</button>
         </div>
 
-        <div class="addrow" style="grid-template-columns:1fr 1fr 1fr">
+        <div class="addrow" style="grid-template-columns:1fr 1fr 1fr 1fr">
           <div class="addbtn" onclick="addTextLayer()">
             <div class="addbtn-icon">✍️</div>
-            <div class="addbtn-lbl">텍스트 추가</div>
+            <div class="addbtn-lbl">텍스트</div>
           </div>
           <div class="addbtn" onclick="$('calliFileIn').click()">
             <div class="addbtn-icon">🖌</div>
-            <div class="addbtn-lbl">캘리 PNG</div>
+            <div class="addbtn-lbl">캘리PNG</div>
             <input type="file" id="calliFileIn" accept="image/*,.png,.jpg,.jpeg,.webp" style="display:none" onchange="onCalliLoad(event)">
           </div>
           <div class="addbtn" onclick="openStickerModal()">
             <div class="addbtn-icon">⭐</div>
             <div class="addbtn-lbl">스티커</div>
+          </div>
+          <div class="addbtn" onclick="selId ? duplicateLayer(selId) : showToast('복제할 레이어를 먼저 선택하세요')">
+            <div class="addbtn-icon">📋</div>
+            <div class="addbtn-lbl">복제</div>
           </div>
         </div>
 
@@ -1091,6 +917,12 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
         <!-- ③ 이미지 — 배경사진 갤러리 -->
         <div class="bgpane active" id="bgp-texture">
 
+          <!-- 배경 없음 버튼 -->
+          <div onclick="clearBgPhoto()" style="display:flex;align-items:center;gap:8px;padding:8px 12px;margin-bottom:10px;border-radius:10px;border:1.5px dashed var(--border2);cursor:pointer;background:transparent;transition:all .15s" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border2)'">
+            <span style="font-size:18px">🚫</span>
+            <span style="font-size:12px;color:var(--ink3)">배경 없음 (투명)</span>
+          </div>
+
           <!-- 선택된 배경사진 미리보기 (항상 상단 고정) -->
           <div id="bgCurrentThumb" style="display:none;align-items:center;gap:10px;margin-bottom:10px;padding:8px 10px;background:var(--warm);border:1.5px solid var(--border);border-radius:10px">
             <img id="bgThumbImg" style="width:48px;height:48px;object-fit:cover;border-radius:7px;border:1.5px solid var(--border)" src="">
@@ -1111,7 +943,6 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
             <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">좌우 위치</span><span class="ctrl-v" id="vBgX">0</span></div><input type="range" id="slBgX" min="-100" max="100" value="0" oninput="setBgX(this)" ontouchend="this.oninput({target:this})"></div>
             <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">상하 위치</span><span class="ctrl-v" id="vBgY">0</span></div><input type="range" id="slBgY" min="-100" max="100" value="0" oninput="setBgY(this)" ontouchend="this.oninput({target:this})"></div>
             <div style="margin-bottom:8px"><div class="togbtn" onclick="resetBgPos()" style="text-align:center;padding:8px;font-size:11px">↺ 위치·크기 초기화</div></div>
-            <div style="margin-bottom:8px"><div class="togbtn" id="bgCropTriggerBtn" onclick="toggleBgCrop()" style="text-align:center;padding:8px;font-size:11px;display:flex;align-items:center;justify-content:center;gap:5px">✂ 배경자르기</div></div>
             <div class="slabel" style="margin-top:4px">배경 조정</div>
             <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">밝기</span><span class="ctrl-v" id="vBright">100</span></div><input type="range" id="slBright" min="0" max="200" value="100" oninput="cv('vBright',this);_bright=+this.value;render()" ontouchend="this.oninput({target:this})"></div>
             <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">대비</span><span class="ctrl-v" id="vContrast">100</span></div><input type="range" id="slContrast" min="0" max="200" value="100" oninput="cv('vContrast',this);_contrast=+this.value;render()" ontouchend="this.oninput({target:this})"></div>
@@ -1225,16 +1056,7 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
         <div class="sgrid-ratio">4:5</div>
         <div class="sgrid-px">1080 × 1350</div>
       </div>
-      <div class="sgrid-item" data-w="1179" data-h="2556" onclick="setModalSize(this)">
-        <div class="sgrid-icon">📱</div>
-        <div class="sgrid-ratio">아이폰</div>
-        <div class="sgrid-px">1179 × 2556</div>
-      </div>
-      <div class="sgrid-item" data-w="1080" data-h="2340" onclick="setModalSize(this)">
-        <div class="sgrid-icon">📱</div>
-        <div class="sgrid-ratio">갤럭시</div>
-        <div class="sgrid-px">1080 × 2340</div>
-      </div>
+
       <div class="sgrid-item" data-w="2000" data-h="2000" onclick="setModalSize(this)">
         <div class="sgrid-icon">■</div>
         <div class="sgrid-ratio">2K</div>
@@ -1298,6 +1120,15 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
 </div>
 
 <script>
+window.onerror = function(msg, src, line, col, err) {
+  if (line === 0 && col === 0) return true;
+  const div = document.getElementById('_dbg') || document.createElement('div');
+  div.id = '_dbg';
+  div.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#8B0000;color:#fff;padding:8px;font-size:11px;z-index:99999;word-break:break-all';
+  div.textContent = `❌ ${msg} | line:${line} | ${src?.split('/').pop()||''}`;
+  document.body.appendChild(div);
+  return true;
+};
 /* ════════════════════════════════════
    STATE
 ════════════════════════════════════ */
@@ -1320,38 +1151,134 @@ let bgOffX = 0, bgOffY = 0;   // offset in canvas-fraction units (-1 ~ 1)
 let bgScale = 100;             // % scale (100 = cover fit)
 let bgMode = 'move';           // 'move' | 'layer'  — which thing canvas drag affects
 
-// ③ undo/redo history
+// ③ undo/redo history (최대 40단계)
 let undoStack = [], redoStack = [];
-function saveHistory() {
-  const snap = {
-    bgColor, bgOffX, bgOffY, bgScale, bgImg, currentFilter,
-    layers: JSON.parse(JSON.stringify(layers.map(l => { const c = {...l}; delete c.srcImg; return c; })))
+function imgToDataUrl(img) {
+  if (!img) return null;
+  try {
+    const tmp = document.createElement('canvas');
+    tmp.width = img.width; tmp.height = img.height;
+    tmp.getContext('2d').drawImage(img, 0, 0);
+    return tmp.toDataURL('image/jpeg', 0.7);
+  } catch(e) { return null; }
+}
+function dataUrlToImg(url, cb) {
+  if (!url) { cb(null); return; }
+  const img = new Image(); img.onload=()=>cb(img); img.onerror=()=>cb(null); img.src=url;
+}
+function makeSnap() {
+  // 캘리 레이어 srcDataUrl 확보
+  layers.forEach(l => {
+    if (l.type === 'calli' && l.srcImg && !l.srcDataUrl) {
+      try {
+        const tmp = document.createElement('canvas');
+        tmp.width = l.srcImg.width; tmp.height = l.srcImg.height;
+        tmp.getContext('2d').drawImage(l.srcImg, 0, 0);
+        l.srcDataUrl = tmp.toDataURL('image/png');
+      } catch(e) {}
+    }
+  });
+  let bgImgUrl = currentBgDataUrl || null;
+  if (!bgImgUrl && bgImg) { try { bgImgUrl = imgToDataUrl(bgImg); } catch(e) {} }
+  return {
+    bgColor, bgOffX, bgOffY, bgScale, currentFilter, bgImgUrl,
+    _bright, _contrast, _sat, _bgOp, _bgBlur,
+    _fBright, _fCont, _fSat, _fTemp, _vig, _grain,
+    layers: JSON.parse(JSON.stringify(layers.map(l => { const c={...l}; delete c.srcImg; return c; })))
   };
-  undoStack.push(snap);
-  if (undoStack.length > 40) undoStack.shift();
-  redoStack = [];
+}
+function saveHistory() {
+  try {
+    const snap = makeSnap();
+    undoStack.push(snap);
+    if (undoStack.length > 40) undoStack.shift();
+    redoStack = [];
+    console.log('saveHistory: stack=', undoStack.length, 'calli=', snap.layers.filter(l=>l.type==='calli').length);
+  } catch(e) { console.warn('saveHistory 오류:', e.message); }
+}
+function applySnap(snap) {
+  try {
+    bgColor = snap.bgColor || '#FFFFFF';
+    bgOffX = snap.bgOffX || 0;
+    bgOffY = snap.bgOffY || 0;
+    bgScale = snap.bgScale || 100;
+    if (snap.currentFilter !== undefined) currentFilter = snap.currentFilter;
+    if (snap._bright !== undefined) {
+      _bright=snap._bright; _contrast=snap._contrast; _sat=snap._sat;
+      _bgOp=snap._bgOp; _bgBlur=snap._bgBlur;
+      _fBright=snap._fBright; _fCont=snap._fCont; _fSat=snap._fSat;
+      _fTemp=snap._fTemp; _vig=snap._vig; _grain=snap._grain;
+    }
+    layers = snap.layers || [];
+    calliCache = {};
+    selId = null;
+
+    const calliLayers = layers.filter(l => l.type === 'calli' && l.srcDataUrl);
+    // 배경 + 캘리 모두 로드 완료 후 render
+    let total = (snap.bgImgUrl ? 1 : 0) + calliLayers.length;
+    let done = 0;
+    const checkDone = () => {
+      done++;
+      if (done >= total) {
+        refreshLayerList(); renderProps(); render();
+      }
+    };
+
+    if (total === 0) {
+      bgImg = null; currentBgDataUrl = null;
+      refreshLayerList(); renderProps(); render();
+      return;
+    }
+
+    // 배경 복원
+    if (snap.bgImgUrl) {
+      const img = new Image();
+      img.onload = () => { bgImg = img; currentBgDataUrl = snap.bgImgUrl; checkDone(); };
+      img.onerror = () => { bgImg = null; checkDone(); };
+      img.src = snap.bgImgUrl;
+    } else {
+      bgImg = null; currentBgDataUrl = null;
+    }
+
+    // 캘리 복원
+    calliLayers.forEach(l => {
+      const img = new Image();
+      img.onload = () => { l.srcImg = img; processCalliLayer(l.id); checkDone(); };
+      img.onerror = () => { checkDone(); };
+      img.src = l.srcDataUrl;
+    });
+
+  } catch(e) { console.warn('applySnap 오류:', e.message); }
 }
 function undoCanvas() {
   if (undoStack.length === 0) { showToast('더 이상 되돌릴 수 없어요'); return; }
-  const cur = { bgColor, bgOffX, bgOffY, bgScale, bgImg, currentFilter, layers: JSON.parse(JSON.stringify(layers.map(l=>{const c={...l};delete c.srcImg;return c;}))) };
-  redoStack.push(cur);
-  const snap = undoStack.pop();
-  bgColor = snap.bgColor; bgOffX = snap.bgOffX; bgOffY = snap.bgOffY; bgScale = snap.bgScale;
-  if (snap.bgImg !== undefined) bgImg = snap.bgImg;
-  if (snap.currentFilter !== undefined) currentFilter = snap.currentFilter;
-  layers = snap.layers; calliCache = {};
-  selId = null; refreshLayerList(); renderProps(); render(); showToast('되돌리기 ↩');
+  try {
+    const snap = undoStack[undoStack.length-1];
+    const calliInSnap = (snap?.layers||[]).filter(l=>l.type==='calli');
+    const withUrl = calliInSnap.filter(l=>l.srcDataUrl);
+    if (calliInSnap.length > 0) showToast(`undo스냅: calli=${calliInSnap.length} url=${withUrl.length}`);
+    let cur;
+    try {
+      cur = makeSnap();
+    } catch(e2) {
+      showToast('makeSnap 오류: ' + e2.message);
+      return;
+    }
+    redoStack.push(cur);
+    undoStack.pop();
+    applySnap(snap);
+    showToast('되돌리기 ↩');
+  } catch(e) { showToast('undo오류: ' + e.message); }
 }
 function redoCanvas() {
   if (redoStack.length === 0) { showToast('더 이상 앞으로 갈 수 없어요'); return; }
-  const cur = { bgColor, bgOffX, bgOffY, bgScale, bgImg, currentFilter, layers: JSON.parse(JSON.stringify(layers.map(l=>{const c={...l};delete c.srcImg;return c;}))) };
-  undoStack.push(cur);
-  const snap = redoStack.pop();
-  bgColor = snap.bgColor; bgOffX = snap.bgOffX; bgOffY = snap.bgOffY; bgScale = snap.bgScale;
-  if (snap.bgImg !== undefined) bgImg = snap.bgImg;
-  if (snap.currentFilter !== undefined) currentFilter = snap.currentFilter;
-  layers = snap.layers; calliCache = {};
-  selId = null; refreshLayerList(); renderProps(); render(); showToast('앞으로가기 ↪');
+  try {
+    const cur = makeSnap();
+    undoStack.push(cur);
+    const snap = redoStack.pop();
+    applySnap(snap);
+    showToast('앞으로가기 ↪');
+  } catch(e) { console.warn('redoCanvas 오류:', e.message); showToast('앞으로가기 실패'); }
 }
 
 const FILTERS = {
@@ -1368,8 +1295,20 @@ const FILTERS = {
 };
 
 /* ── 픽셀 기반 이미지 필터 (Safari/iOS Canvas filter 미지원 대응) ── */
+/* 픽셀 직접 조작 필터 (Safari/iOS Canvas filter 미지원 대응)
+   getImageData를 사용하므로 CORS 오염 가능성 있음 — try-catch 필수 */
 function applyPixelFilter(ctx, W, H, bright, contrast, sat, filterName, blur, temp) {
-  const imageData = ctx.getImageData(0, 0, W, H);
+  // 기본값이면 픽셀 처리 건너뜀
+  if (bright===100 && contrast===100 && sat===100 && filterName==='none' && blur===0 && temp===0) return;
+
+  let imageData;
+  try {
+    imageData = ctx.getImageData(0, 0, W, H);
+  } catch(e) {
+    // iOS Safari - 카메라롤 이미지 CORS 보안 오류 → 필터 없이 표시
+    console.warn('applyPixelFilter: getImageData 보안오류, 필터 생략');
+    return;
+  }
   const d = imageData.data;
 
   // brightness: 0~200 (100=원본)
@@ -1458,7 +1397,7 @@ const FONTS = [
 const PALETTE = ['#1C0F06','#FFFFFF','#C4973A','#E8C47A','#7A5535','#B84B3C','#2d5a27','#1a3a5c','#6b2d6b','#888','#FF6B6B','#4ECDC4'];
 
 const $ = id => document.getElementById(id);
-const mc = $('mainCanvas'), mctx = mc.getContext('2d');
+const mc = $('mainCanvas'), mctx = mc.getContext('2d', {willReadFrequently: true});
 
 /* ════════════════════════════════════
    CANVAS SIZE & DISPLAY
@@ -1538,20 +1477,323 @@ function setSize(el) {
   showToast(`캔버스 크기: ${outputW}×${outputH}`);
 }
 
+
+function cropCanvas() {
+  saveHistory();
+  // renderToBlob 방식으로 오염 없이 캡처
+  const doRenderClean = (cleanBgImg) => {
+    const tmp = document.createElement('canvas');
+    tmp.width = outputW; tmp.height = outputH;
+    const tctx = tmp.getContext('2d');
+    tctx.fillStyle = bgColor || '#FFFFFF';
+    tctx.fillRect(0, 0, outputW, outputH);
+    const origBgImg = bgImg;
+    if (cleanBgImg) bgImg = cleanBgImg;
+    render(tctx, outputW, outputH);
+    bgImg = origBgImg;
+    tmp.toBlob(blob => {
+      if (!blob) { showToast('자르기 실패'); return; }
+      const reader = new FileReader();
+      reader.onload = e => {
+        const dataUrl = e.target.result;
+        const img = new Image();
+        img.onload = () => {
+          const id = Date.now();
+          bgPhotos.push({ id, label:'자르기', dataUrl, imgObj: img });
+          bgImg = img;
+          currentBgDataUrl = dataUrl;
+          activeBgPhotoId = id;
+          bgOffX = 0; bgOffY = 0; bgScale = 100;
+          layers = []; selId = null;
+          refreshLayerList(); renderProps();
+          renderBgPhotoGallery();
+          render();
+          mc.style.outline = '3px solid #C4973A';
+          setTimeout(() => { mc.style.outline = ''; }, 800);
+          showToast('✂ 캔버스 자르기 완료');
+        };
+        img.src = dataUrl;
+      };
+      reader.readAsDataURL(blob);
+    }, 'image/png');
+  };
+  if (currentBgDataUrl && bgImg) {
+    const clean = new Image();
+    clean.onload = () => doRenderClean(clean);
+    clean.onerror = () => doRenderClean(null);
+    clean.src = currentBgDataUrl;
+  } else {
+    doRenderClean(null);
+  }
+}
+
+/* ── 배경자르기: 배경사진만 현재 크기로 자르기 (레이어 유지) ── */
+function cropBg() {
+  if (!bgImg) { showToast('배경사진을 먼저 선택하세요'); return; }
+  saveHistory();
+  const tmp = document.createElement('canvas');
+  tmp.width = outputW; tmp.height = outputH;
+  const tctx = tmp.getContext('2d');
+  // 배경색 + 배경이미지만 (레이어 제외)
+  tctx.fillStyle = bgColor || '#FFFFFF';
+  tctx.fillRect(0, 0, outputW, outputH);
+  const baseSc = Math.max(outputW / bgImg.width, outputH / bgImg.height);
+  const sc2 = baseSc * (bgScale / 100);
+  const bW = bgImg.width * sc2, bH = bgImg.height * sc2;
+  const ox = bgOffX * outputW, oy = bgOffY * outputH;
+  tctx.drawImage(bgImg, (outputW - bW) / 2 + ox, (outputH - bH) / 2 + oy, bW, bH);
+  const dataUrl = tmp.toDataURL('image/png');
+  const img = new Image();
+  img.onload = () => {
+    const id = Date.now();
+    bgPhotos.push({ id, label:'배경자르기', dataUrl, imgObj: img });
+    bgImg = img;
+    currentBgDataUrl = dataUrl;
+    activeBgPhotoId = id;
+    bgOffX = 0; bgOffY = 0; bgScale = 100;
+    // 레이어는 유지
+    renderBgPhotoGallery();
+    render();
+    // 하늘색 테두리 플래시
+    mc.style.outline = '3px solid #5ba4d4';
+    setTimeout(() => { mc.style.outline = ''; }, 800);
+    showToast('✂ 배경 자르기 완료');
+  };
+  img.src = dataUrl;
+}
+
 window.addEventListener('resize', initCanvas);
+
+/* ════════════════════════════════════
+   CROP MODE (파워포인트 스타일 자르기)
+════════════════════════════════════ */
+(function() {
+  let cropActive = false;
+  // 크롭 영역 (캔버스 내 비율 0~1)
+  let cx = 0.1, cy = 0.1, cw = 0.8, ch = 0.8;
+  let dragType = null; // 'move' | 'tl'|'tc'|'tr'|'ml'|'mr'|'bl'|'bc'|'br'
+  let dragStartX, dragStartY, dragStartCx, dragStartCy, dragStartCw, dragStartCh;
+
+  function getRelXY(e) {
+    const box = $('cropBox');
+    const shell = $('canvasShell');
+    const r = shell.getBoundingClientRect();
+    const src = (e.touches && e.touches.length > 0) ? e.touches[0] :
+                (e.changedTouches && e.changedTouches.length > 0) ? e.changedTouches[0] : e;
+    return [(src.clientX - r.left) / r.width, (src.clientY - r.top) / r.height];
+  }
+
+  function updateCropUI() {
+    const overlay = $('cropOverlay'); if (!overlay) return;
+    const W = 100, H = 100; // percent
+    const x = cx * 100, y = cy * 100, w = cw * 100, h = ch * 100;
+    $('cropBox').style.cssText = `position:absolute;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,0.3);cursor:move;box-sizing:border-box;left:${x}%;top:${y}%;width:${w}%;height:${h}%`;
+    $('cropDark-top').style.height    = y + '%';
+    $('cropDark-bottom').style.height = (100 - y - h) + '%';
+    $('cropDark-left').style.cssText  = `position:absolute;background:rgba(0,0,0,0.55);top:${y}%;height:${h}%;left:0;width:${x}%`;
+    $('cropDark-right').style.cssText = `position:absolute;background:rgba(0,0,0,0.55);top:${y}%;height:${h}%;right:0;width:${100-x-w}%`;
+  }
+
+  window.enterCropMode = function() {
+    if (cropActive) return;
+    cropActive = true;
+    cx = 0.05; cy = 0.05; cw = 0.9; ch = 0.9;
+    const overlay = $('cropOverlay');
+    overlay.style.display = 'block';
+    // 리사이즈 핸들 숨기기
+    ['rh-tl','rh-tr','rh-bl','rh-br'].forEach(id => { const el=$(id); if(el) el.style.display='none'; });
+    updateCropUI();
+    showToast('드래그로 자를 영역을 선택하세요');
+  };
+
+  window.cancelCrop = function() {
+    cropActive = false;
+    $('cropOverlay').style.display = 'none';
+    ['rh-tl','rh-tr','rh-bl','rh-br'].forEach(id => { const el=$(id); if(el) el.style.display=''; });
+  };
+
+  window.applyCrop = function() {
+    if (!cropActive) return;
+    saveHistory();
+    // 크롭 영역 → 새 outputW/H
+    const newW = Math.max(100, Math.round(outputW * cw));
+    const newH = Math.max(100, Math.round(outputH * ch));
+    const offX = cx; const offY = cy;
+
+    // bgOffX/Y 조정 (크롭된 만큼 배경 오프셋 이동)
+    bgOffX = bgOffX - offX + (1 - cw) / 2;
+    bgOffY = bgOffY - offY + (1 - ch) / 2;
+
+    // 레이어 위치 조정
+    layers.forEach(l => {
+      l.x = (l.x - offX) / cw;
+      l.y = (l.y - offY) / ch;
+    });
+
+    outputW = newW; outputH = newH; saveW = newW; saveH = newH;
+    document.querySelectorAll('.size-chip').forEach(c => c.classList.remove('active'));
+    initCanvas();
+    const lbl = $('sizeLabel');
+    if (lbl) lbl.textContent = `${newW.toLocaleString()} × ${newH.toLocaleString()} px`;
+
+    cancelCrop();
+    render();
+    showToast(`✂ 자르기 완료 — ${newW}×${newH}px`);
+  };
+
+  // 이벤트
+  function onCropDown(e) {
+    if (!cropActive) return;
+    const dir = e.target.dataset && e.target.dataset.dir;
+    const [fx, fy] = getRelXY(e);
+    dragStartX = fx; dragStartY = fy;
+    dragStartCx = cx; dragStartCy = cy; dragStartCw = cw; dragStartCh = ch;
+    if (dir) { dragType = dir; e.stopPropagation(); }
+    else if (e.target.id === 'cropBox' || e.target.closest('#cropBox')) { dragType = 'move'; e.stopPropagation(); }
+    else { dragType = null; }
+  }
+
+  function onCropMove(e) {
+    if (!cropActive || !dragType) return;
+    e.preventDefault(); e.stopPropagation();
+    const [fx, fy] = getRelXY(e);
+    const dx = fx - dragStartX, dy = fy - dragStartY;
+    const MIN = 0.05;
+    let nx = dragStartCx, ny = dragStartCy, nw = dragStartCw, nh = dragStartCh;
+
+    if (dragType === 'move') {
+      nx = Math.max(0, Math.min(1 - nw, dragStartCx + dx));
+      ny = Math.max(0, Math.min(1 - nh, dragStartCy + dy));
+    } else {
+      if (dragType.includes('l')) { nx = dragStartCx + dx; nw = dragStartCw - dx; }
+      if (dragType.includes('r')) { nw = dragStartCw + dx; }
+      if (dragType.includes('t')) { ny = dragStartCy + dy; nh = dragStartCh - dy; }
+      if (dragType.includes('b')) { nh = dragStartCh + dy; }
+      if (dragType === 'tc' || dragType === 'bc') { nx = dragStartCx; nw = dragStartCw; }
+      if (dragType === 'ml' || dragType === 'mr') { ny = dragStartCy; nh = dragStartCh; }
+      // 최소 크기 제한
+      if (nw < MIN) { if (dragType.includes('l')) nx = dragStartCx + dragStartCw - MIN; nw = MIN; }
+      if (nh < MIN) { if (dragType.includes('t')) ny = dragStartCy + dragStartCh - MIN; nh = MIN; }
+      // 경계 클램프
+      nx = Math.max(0, nx); ny = Math.max(0, ny);
+      if (nx + nw > 1) { if (dragType.includes('l')) nx = 1 - nw; else nw = 1 - nx; }
+      if (ny + nh > 1) { if (dragType.includes('t')) ny = 1 - nh; else nh = 1 - ny; }
+    }
+    cx = nx; cy = ny; cw = nw; ch = nh;
+    updateCropUI();
+  }
+
+  function onCropUp() { dragType = null; }
+
+  window.addEventListener('load', () => {
+    const overlay = $('cropOverlay');
+    if (!overlay) return;
+    overlay.addEventListener('mousedown',  onCropDown);
+    overlay.addEventListener('touchstart', onCropDown, {passive:false});
+    window.addEventListener('mousemove',  onCropMove);
+    window.addEventListener('touchmove',  onCropMove, {passive:false});
+    window.addEventListener('mouseup',    onCropUp);
+    window.addEventListener('touchend',   onCropUp);
+  });
+})();
+
+/* ════════════════════════════════════
+   CANVAS RESIZE HANDLES
+════════════════════════════════════ */
+(function() {
+  let resizing = false;
+  let resizeCorner = '';
+  let startX = 0, startY = 0;
+  let startW = 0, startH = 0;
+  let startRatio = 1;
+  const MIN_SIZE = 200;
+  const MAX_SIZE = 8000;
+
+  function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+  function onResizeStart(e, corner) {
+    e.preventDefault();
+    e.stopPropagation();
+    resizing = true;
+    resizeCorner = corner;
+    const src = e.touches ? e.touches[0] : e;
+    startX = src.clientX;
+    startY = src.clientY;
+    startW = outputW;
+    startH = outputH;
+    startRatio = outputH / outputW;
+  }
+
+  function onResizeMove(e) {
+    if (!resizing) return;
+    e.preventDefault();
+    const src = e.touches ? e.touches[0] : e;
+    const dx = src.clientX - startX;
+    const dy = src.clientY - startY;
+
+    // 화면상의 캔버스 크기 → 실제 px 비율 계산
+    const dispScale = mc.clientWidth / startW;
+
+    let newW = startW, newH = startH;
+    if (resizeCorner === 'br') {
+      newW = clamp(Math.round(startW + dx / dispScale), MIN_SIZE, MAX_SIZE);
+      newH = clamp(Math.round(startH + dy / dispScale), MIN_SIZE, MAX_SIZE);
+    } else if (resizeCorner === 'bl') {
+      newW = clamp(Math.round(startW - dx / dispScale), MIN_SIZE, MAX_SIZE);
+      newH = clamp(Math.round(startH + dy / dispScale), MIN_SIZE, MAX_SIZE);
+    } else if (resizeCorner === 'tr') {
+      newW = clamp(Math.round(startW + dx / dispScale), MIN_SIZE, MAX_SIZE);
+      newH = clamp(Math.round(startH - dy / dispScale), MIN_SIZE, MAX_SIZE);
+    } else if (resizeCorner === 'tl') {
+      newW = clamp(Math.round(startW - dx / dispScale), MIN_SIZE, MAX_SIZE);
+      newH = clamp(Math.round(startH - dy / dispScale), MIN_SIZE, MAX_SIZE);
+    }
+
+    outputW = newW; outputH = newH;
+    saveW = newW; saveH = newH;
+    initCanvas();
+    const lbl = $('sizeLabel');
+    if (lbl) lbl.textContent = `${newW.toLocaleString()} × ${newH.toLocaleString()} px`;
+    // 사이즈칩 active 해제
+    document.querySelectorAll('.size-chip').forEach(c => c.classList.remove('active'));
+  }
+
+  function onResizeEnd() {
+    if (!resizing) return;
+    resizing = false;
+    saveHistory();
+    showToast(`캔버스 ${outputW}×${outputH}px`);
+  }
+
+  window.addEventListener('load', () => {
+    ['tl','tr','bl','br'].forEach(corner => {
+      const el = $('rh-' + corner);
+      if (!el) return;
+      el.addEventListener('mousedown',  e => onResizeStart(e, corner));
+      el.addEventListener('touchstart', e => onResizeStart(e, corner), {passive:false});
+    });
+    window.addEventListener('mousemove',  onResizeMove);
+    window.addEventListener('touchmove',  onResizeMove, {passive:false});
+    window.addEventListener('mouseup',    onResizeEnd);
+    window.addEventListener('touchend',   onResizeEnd);
+  });
+})();
 
 /* ════════════════════════════════════
    RENDER
 ════════════════════════════════════ */
-function render(targetCtx, TW, TH) {
+function render(targetCtx, TW, TH, transparent) {
+  try {
   const c = targetCtx || mctx;
   const W = TW || mc.width;
   const H = TH || mc.height;
 
-  // BG solid
+  // BG solid — transparent=true 이면 배경 투명
   c.clearRect(0,0,W,H);
-  c.fillStyle = bgColor;
-  c.fillRect(0,0,W,H);
+  if (!transparent) {
+    c.fillStyle = bgColor;
+    c.fillRect(0,0,W,H);
+  }
 
   // BG texture overlay
   if (bgMode === 'texture' && bgTextureStyle) {
@@ -1594,21 +1836,25 @@ function render(targetCtx, TW, TH) {
     const ox = bgOffX * W, oy = bgOffY * H;
     const dx = (W-bW)/2 + ox, dy = (H-bH)/2 + oy;
 
-    // 오프스크린에 이미지 그린 후 픽셀 필터 적용
-    const off = document.createElement('canvas');
-    off.width = W; off.height = H;
-    const oc = off.getContext('2d');
-    oc.imageSmoothingEnabled = true;
-    oc.imageSmoothingQuality = 'high';
-    oc.drawImage(bgImg, dx, dy, bW, bH);
-    applyPixelFilter(oc, W, H, totalBright, totalCont, totalSat, currentFilter, _bgBlur, _fTemp);
+    // CSS filter로 배경이미지 렌더 (getImageData 없이 → 캔버스 오염 없음)
+    let filterStr = `brightness(${totalBright}%) contrast(${totalCont}%) saturate(${totalSat}%)`;
+    if (_fTemp > 0) filterStr += ` sepia(${Math.round(_fTemp*1.2)}%) saturate(${100+_fTemp}%)`;
+    if (_fTemp < 0) filterStr += ` hue-rotate(${Math.round(-_fTemp*0.4)}deg) saturate(${100+_fTemp}%)`;
+    if (_bgBlur > 0) filterStr += ` blur(${_bgBlur}px)`;
+    const filt = FILTERS[currentFilter] || '';
+    if (filt) filterStr += ' ' + filt;
 
     c.save();
     c.globalAlpha = _bgOp / 100;
-    c.drawImage(off, 0, 0);
+    c.filter = filterStr;
+    c.imageSmoothingEnabled = true;
+    c.imageSmoothingQuality = 'high';
+    c.drawImage(bgImg, dx, dy, bW, bH);
+    c.filter = 'none';
     c.restore();
-    mc.style.filter = 'none';
+    if (!TW) mc.style.filter = 'none';
   }
+
 
   // Vignette
   if (_vig > 0) {
@@ -1631,12 +1877,69 @@ function render(targetCtx, TW, TH) {
   // Layers
   layers.forEach(l => {
     if (!l.visible) return;
-    if (l.type==='text') drawText(c,W,H,l);
-    else drawCalli(c,W,H,l);
+    try {
+      if (l.type==='text') drawText(c,W,H,l);
+      else drawCalli(c,W,H,l);
+    } catch(e) { console.warn('레이어 렌더 에러:', e); }
   });
+
+  // 선택된 레이어 핸들 그리기 (미리보기 캔버스에만)
+  if (!TW && selId) {
+    const l = layers.find(x=>x.id===selId);
+    if (l && l.visible) drawSelectionHandles(c, W, H, l);
+  }
 
   // Empty hint
   $('canvasHint').style.display = (bgImg||layers.length>0)?'none':'flex';
+  } catch(e) { console.warn('render 오류:', e.message); }
+}
+
+function drawSelectionHandles(c, W, H, l) {
+  const sc = W / mc.width;
+  const cx = l.x * W, cy = l.y * H;
+
+  let hw, hh;
+  try {
+    if (l.type === 'text') {
+      const fs = (l.size||40) * sc;
+      c.font = `${l.weight||'700'} ${fs}px ${l.font||'sans-serif'}`;
+      const lines = (l.text||'텍스트').split('\n');
+      const widths = lines.map(ln => c.measureText(ln || ' ').width);
+      const maxW = widths.length > 0 ? Math.max(...widths) : fs * 3;
+      hw = Math.max(maxW / 2 + 8*sc, 20*sc);
+      hh = Math.max(lines.length * fs * 0.75, 20*sc);
+    } else {
+      const cache = calliCache[l.id];
+      if (!cache) return;
+      hw = l.size * sc * ((l.scaleX||100)/100) / 2;
+      hh = l.size * sc * (cache.h/cache.w) * ((l.scaleY||100)/100) / 2;
+    }
+  } catch(e) { return; }
+
+  c.save();
+  c.translate(cx, cy);
+  c.rotate((l.rotate||0) * Math.PI/180);
+
+  // 점선 테두리
+  c.strokeStyle = 'rgba(196,151,58,0.9)';
+  c.lineWidth = 1.5;
+  c.setLineDash([5*sc, 3*sc]);
+  c.strokeRect(-hw, -hh, hw*2, hh*2);
+  c.setLineDash([]);
+
+  // 4모서리 핸들
+  const hs = 7 * sc;
+  const corners = [[-hw,-hh],[hw,-hh],[hw,hh],[-hw,hh]];
+  corners.forEach(([hx,hy]) => {
+    c.fillStyle = '#fff';
+    c.strokeStyle = 'rgba(196,151,58,1)';
+    c.lineWidth = 1.5;
+    c.beginPath();
+    c.arc(hx, hy, hs, 0, Math.PI*2);
+    c.fill(); c.stroke();
+  });
+
+  c.restore();
 }
 
 function drawText(c, W, H, l) {
@@ -1665,8 +1968,9 @@ function drawCalli(c, W, H, l) {
   c.rotate(l.rotate*Math.PI/180);
   if (l.flipH) c.scale(-1,1);
   c.globalAlpha = l.opacity/100;
-  const dW = l.size*sc;
-  const dH = dW * (cache.h/cache.w);
+  if (l.shadow) { c.shadowColor='rgba(0,0,0,0.5)'; c.shadowBlur=18*sc; c.shadowOffsetX=4*sc; c.shadowOffsetY=4*sc; }
+  const dW = l.size*sc * ((l.scaleX||100)/100);
+  const dH = l.size*sc * (cache.h/cache.w) * ((l.scaleY||100)/100);
   if (l.tintColor) {
     const tmp = document.createElement('canvas');
     tmp.width = cache.offscreen.width; tmp.height = cache.offscreen.height;
@@ -1693,17 +1997,18 @@ function onBgLoad(e) {
     r.onload = ev => {
       const img = new Image();
       img.onload = () => {
-        const id = Date.now() + Math.random();
-        const label = file.name.replace(/\.[^.]+$/, '').slice(0, 12);
-        bgPhotos.push({ id, label, dataUrl: ev.target.result, imgObj: img });
-        done++;
-        if (done === files.length) {
-          // 마지막 사진을 자동 적용
-          const last = bgPhotos[bgPhotos.length - 1];
-          applyBgPhoto(last);
-          renderBgPhotoGallery();
-          showToast(`${done}장 추가됨 ✓`);
-        }
+        try {
+          const id = Date.now() + Math.random();
+          const label = file.name.replace(/\.[^.]+$/, '').slice(0, 12);
+          bgPhotos.push({ id, label, dataUrl: ev.target.result, imgObj: img });
+          done++;
+          if (done === files.length) {
+            const last = bgPhotos[bgPhotos.length - 1];
+            applyBgPhoto(last);
+            renderBgPhotoGallery();
+            showToast(`${done}장 추가됨 ✓`);
+          }
+        } catch(err) { console.warn('onBgLoad:', err.message); }
       };
       img.src = ev.target.result;
     };
@@ -1712,7 +2017,17 @@ function onBgLoad(e) {
   e.target.value = '';
 }
 
+function clearBgPhoto() {
+  saveHistory();
+  bgImg = null; currentBgDataUrl = null; activeBgPhotoId = null; bgHidden = false;
+  const thumb = $('bgCurrentThumb'); if (thumb) thumb.style.display = 'none';
+  const props = $('bgOverlayProps'); if (props) props.style.display = 'none';
+  render();
+  showToast('배경 없음 (투명) ✓');
+}
+
 function applyBgPhoto(photo) {
+  saveHistory();
   bgImg = photo.imgObj;
   currentBgDataUrl = photo.dataUrl;
   activeBgPhotoId = photo.id;
@@ -1908,13 +2223,14 @@ function buildFilterThumbs(gridId) {
 
     const cv2 = document.createElement('canvas');
     cv2.width = 120; cv2.height = 70;
-    const ctx2 = cv2.getContext('2d');
+    const ctx2 = cv2.getContext('2d', {willReadFrequently: true});
 
     if (thumbSrc) {
       const sc2 = Math.max(120/thumbSrc.width, 70/thumbSrc.height);
       const dw = thumbSrc.width*sc2, dh = thumbSrc.height*sc2;
+      ctx2.filter = FILTERS[f.id] || 'none';
       ctx2.drawImage(thumbSrc, (120-dw)/2, (70-dh)/2, dw, dh);
-      applyPixelFilter(ctx2, 120, 70, 100, 100, 100, f.id, 0, 0);
+      ctx2.filter = 'none';
     } else {
       // 소스 없을 때 색상 데모
       const DEMO = {none:'#F0EBE0',bw:'#888',sepia:'#c8a96e',warm:'#f5c87a',cool:'#a0bfdc',vintage:'#b5926e',fade:'#ddd8cc',vivid:'#f08030',dramatic:'#444',matte:'#bcb8b0',soft:'#e8e0d8',cinematic:'#3a3a4a'};
@@ -1958,13 +2274,16 @@ function onCalliLoad(e) {
   r.onload = ev => {
     const img = new Image();
     img.onload = () => {
-      const id = ++idCtr;
-      layers.push({ id, type:'calli', name:f.name.replace(/\.[^.]+$/,''), srcImg:img, size:Math.round(mc.width*.7), x:.5, y:.5, rotate:0, flipH:false, opacity:100, thresh:200, visible:true, tintColor:null });
-      selId = id;
-      processCalliLayer(id);
-      refreshLayerList(); renderProps(); render();
-      hideLoad(); showToast('PNG 오버레이 추가됨 ✓');
-      setTimeout(() => buildFilterThumbs('filterThumbGrid2'), 50);
+      try {
+        saveHistory(); // 레이어 추가 전 상태 저장
+        const id = ++idCtr;
+        layers.push({ id, type:'calli', name:f.name.replace(/\.[^.]+$/,''), srcImg:img, srcDataUrl:ev.target.result, size:Math.round(mc.width*.7), scaleX:100, scaleY:100, x:.5, y:.5, rotate:0, flipH:false, opacity:100, thresh:200, visible:true, tintColor:null });
+        selId = id;
+        processCalliLayer(id);
+        refreshLayerList(); renderProps(); render();
+        hideLoad(); showToast('PNG 오버레이 추가됨 ✓');
+        setTimeout(() => buildFilterThumbs('filterThumbGrid2'), 50);
+      } catch(err) { hideLoad(); console.warn('onCalliLoad:', err.message); }
     };
     img.src = ev.target.result;
   };
@@ -1977,18 +2296,23 @@ function processCalliLayer(id) {
   const img = l.srcImg, thresh = l.thresh;
   const off = document.createElement('canvas');
   off.width=img.width; off.height=img.height;
-  const oc = off.getContext('2d');
+  const oc = off.getContext('2d', {willReadFrequently: true});
   oc.drawImage(img,0,0);
-  const id2 = oc.getImageData(0,0,img.width,img.height);
-  const d = id2.data;
-  for (let i=0;i<d.length;i+=4) {
-    const lum = .299*d[i] + .587*d[i+1] + .114*d[i+2];
-    if (lum > thresh) {
-      const soft = 45;
-      d[i+3] = Math.round(Math.max(0,1-(lum-(thresh-soft))/soft)*255);
+  try {
+    const id2 = oc.getImageData(0,0,img.width,img.height);
+    const d = id2.data;
+    for (let i=0;i<d.length;i+=4) {
+      const lum = .299*d[i] + .587*d[i+1] + .114*d[i+2];
+      if (lum > thresh) {
+        const soft = 45;
+        d[i+3] = Math.round(Math.max(0,1-(lum-(thresh-soft))/soft)*255);
+      }
     }
+    oc.putImageData(id2,0,0);
+  } catch(e) {
+    // CORS/보안 오류 시 원본 이미지 그대로 사용
+    console.warn('processCalliLayer getImageData 오류 (CORS):', e.message);
   }
-  oc.putImageData(id2,0,0);
   calliCache[id] = { offscreen:off, w:img.width, h:img.height };
 }
 
@@ -1996,18 +2320,40 @@ function processCalliLayer(id) {
    TEXT LAYER
 ════════════════════════════════════ */
 function addTextLayer() {
-  saveHistory();
-  const id = ++idCtr;
-  layers.push({ id, type:'text', text:'', font:FONTS[0].v, size:Math.round(mc.width*.09), color:'#1C0F06', weight:'700', align:'center', x:.5, y:.5, rotate:0, opacity:100, shadow:false, visible:true });
-  selId = id;
-  refreshLayerList(); renderProps(); render();
-  showToast('텍스트 레이어 추가됨');
-  setTimeout(() => { const t = document.getElementById('pe_txt'); if(t){ t.focus(); t.select(); } }, 80);
+  try {
+    saveHistory();
+    const id = ++idCtr;
+    layers.push({ id, type:'text', text:'', font:FONTS[0].v, size:Math.round(mc.width*.09), color:'#1C0F06', weight:'700', align:'center', x:.5, y:.5, rotate:0, opacity:100, shadow:false, visible:true });
+    selId = id;
+    refreshLayerList(); renderProps(); render();
+    showToast('텍스트 레이어 추가됨');
+    setTimeout(() => { try { const t = document.getElementById('pe_txt'); if(t){ t.focus(); t.select(); } } catch(e){} }, 80);
+  } catch(e) { showToast('오류: ' + e.message); console.error('addTextLayer:', e); }
 }
 
 /* ════════════════════════════════════
    LAYER OPERATIONS
 ════════════════════════════════════ */
+function duplicateLayer(id) {
+  const l = layers.find(x => x.id === id);
+  if (!l) return;
+  const srcImgRef = l.srcImg; // JSON 복사 전에 미리 빼두기
+  const copy = JSON.parse(JSON.stringify(l));
+  copy.id = ++idCtr;
+  copy.x = Math.min(0.9, l.x + 0.03);
+  copy.y = Math.min(0.9, l.y + 0.03);
+  if (srcImgRef) copy.srcImg = srcImgRef; // 원본 Image 객체 참조 복원
+  const idx = layers.findIndex(x => x.id === id);
+  layers.splice(idx + 1, 0, copy);
+  selId = copy.id;
+  if (copy.type === 'calli' && copy.srcImg) processCalliLayer(copy.id); // calliCache 등록
+  saveHistory();
+  refreshLayerList();
+  renderProps();
+  render();
+  showToast('레이어 복제됨 ✓');
+}
+
 function delLayer(id) {
   saveHistory();
   layers = layers.filter(l=>l.id!==id);
@@ -2044,11 +2390,12 @@ function refreshLayerList() {
         <div class="litem-sub">${l.type==='text'?'텍스트':'PNG 오버레이'} · 투명도 ${l.opacity}%</div>
       </div>
       <div class="litem-btns">
+        <div class="lbtn" title="복제" onclick="event.stopPropagation();duplicateLayer(${l.id})" style="font-size:11px">⧉</div>
         <div class="lbtn" title="위로" onclick="event.stopPropagation();moveLayer(${l.id},'up')">↑</div>
         <div class="lbtn" title="아래로" onclick="event.stopPropagation();moveLayer(${l.id},'down')">↓</div>
         <div class="lbtn del" title="삭제" onclick="event.stopPropagation();delLayer(${l.id})">✕</div>
       </div>`;
-    div.addEventListener('click', ()=>{ if(lyrCropActive)exitLyrCrop(false); selId=l.id; refreshLayerList(); renderProps(); });
+    div.addEventListener('click', ()=>{ selId=l.id; refreshLayerList(); renderProps(); });
     list.appendChild(div);
   });
 }
@@ -2064,8 +2411,10 @@ function renderProps() {
   const l = layers.find(x=>x.id===selId);
   if (!l) { hint.style.display='block'; return; }
   hint.style.display='none';
-  if (l.type==='text') buildTextProps(area,l);
-  else buildCalliProps(area,l);
+  try {
+    if (l.type==='text') buildTextProps(area,l);
+    else buildCalliProps(area,l);
+  } catch(e) { console.warn('renderProps 에러:', e); }
 }
 
 function buildTextProps(area, l) {
@@ -2115,7 +2464,7 @@ function buildTextProps(area, l) {
 
   $('pe_txt').addEventListener('input', e=>{ l.text=e.target.value; refreshLayerList(); render(); });
   $('pe_txt').addEventListener('change', ()=>saveHistory());
-  $('pe_txt').addEventListener('focus', ()=>{ setTimeout(()=>{ const p=$('pe_txt').closest('.panel-body')||$('pe_txt').closest('.panel'); if(p) p.scrollTop=0; }, 100); });
+  $('pe_txt').addEventListener('focus', ()=>{ try { setTimeout(()=>{ const p=$('pe_txt')?.closest('.pane'); if(p) p.scrollTop=0; }, 100); } catch(e){} });
   $('pe_font').addEventListener('change', e=>{ saveHistory(); l.font=e.target.value; render(); });
   $('pe_size').addEventListener('input', e=>{ l.size=+e.target.value; $('pe_vsize').textContent=e.target.value; render(); });
   $('pe_size').addEventListener('change', ()=>saveHistory());
@@ -2134,6 +2483,8 @@ function buildCalliProps(area, l) {
     <div class="prop-title"><div class="prop-dot"></div>PNG 오버레이 속성</div>
 
     <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">크기</span><span class="ctrl-v" id="pe_vsize">${l.size}</span></div><input type="range" id="pe_size" min="30" max="${mc.width*3}" value="${l.size}"></div>
+    <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">가로 비율</span><span class="ctrl-v" id="pe_vscaleX">${l.scaleX||100}%</span></div><input type="range" id="pe_scaleX" min="10" max="200" value="${l.scaleX||100}"></div>
+    <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">세로 비율</span><span class="ctrl-v" id="pe_vscaleY">${l.scaleY||100}%</span></div><input type="range" id="pe_scaleY" min="10" max="200" value="${l.scaleY||100}"></div>
     <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">회전</span><span class="ctrl-v" id="pe_vrot">${l.rotate}°</span></div><input type="range" id="pe_rot" min="-180" max="180" value="${l.rotate}"></div>
     <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">투명도</span><span class="ctrl-v" id="pe_vop">${l.opacity}%</span></div><input type="range" id="pe_op" min="10" max="100" value="${l.opacity}"></div>
     <div class="ctrl">
@@ -2149,17 +2500,25 @@ function buildCalliProps(area, l) {
       <input type="color" id="pe_tintPicker" value="${l.tintColor||'#000000'}" style="width:28px;height:28px;border-radius:50%;border:2px solid var(--border);cursor:pointer;padding:1px;background:var(--parchment)" title="직접 선택">
     </div>
 
+    <div class="ctrl-row" style="margin-top:10px">
+      <span class="ctrl-n">그림자</span>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+        <input type="checkbox" id="pe_calli_shadow" ${l.shadow?'checked':''} style="width:16px;height:16px;cursor:pointer">
+        <span id="pe_calli_shadow_lbl" style="font-size:12px;color:var(--muted)">${l.shadow?'켜짐':'꺼짐'}</span>
+      </label>
+    </div>
     <div class="btnrow">
       <div class="togbtn" onclick="l_flipH()">↔ 좌우반전</div>
       <div class="togbtn" onclick="l_center()">⊕ 가운데</div>
-    </div>
-    <div style="margin-top:10px">
-      <div class="togbtn" id="lyrCropTriggerBtn" onclick="toggleLyrCrop()" style="text-align:center;padding:8px;font-size:11px;display:flex;align-items:center;justify-content:center;gap:5px;color:#4ECDC4;border-color:#4ECDC4">✂ 이미지 자르기</div>
     </div>`;
   area.appendChild(box);
 
   $('pe_size').addEventListener('input', e=>{ l.size=+e.target.value; $('pe_vsize').textContent=e.target.value; render(); });
   $('pe_size').addEventListener('change', ()=>saveHistory());
+  $('pe_scaleX').addEventListener('input', e=>{ l.scaleX=+e.target.value; $('pe_vscaleX').textContent=e.target.value+'%'; render(); });
+  $('pe_scaleX').addEventListener('change', ()=>saveHistory());
+  $('pe_scaleY').addEventListener('input', e=>{ l.scaleY=+e.target.value; $('pe_vscaleY').textContent=e.target.value+'%'; render(); });
+  $('pe_scaleY').addEventListener('change', ()=>saveHistory());
   $('pe_rot').addEventListener('input', e=>{ l.rotate=+e.target.value; $('pe_vrot').textContent=e.target.value+'°'; render(); });
   $('pe_rot').addEventListener('change', ()=>saveHistory());
   $('pe_op').addEventListener('input', e=>{ l.opacity=+e.target.value; $('pe_vop').textContent=e.target.value+'%'; refreshLayerList(); render(); });
@@ -2183,6 +2542,7 @@ function buildCalliProps(area, l) {
     render();
   });
   $('pe_tintPicker').addEventListener('change', ()=>saveHistory());
+  $('pe_calli_shadow').addEventListener('change', e=>{ l.shadow=e.target.checked; $('pe_calli_shadow_lbl').textContent=e.target.checked?'켜짐':'꺼짐'; saveHistory(); render(); });
 }
 
 function setLP(prop, val, el, rowId) {
@@ -2204,6 +2564,8 @@ function setTextColorFree(c) {
   document.querySelectorAll('#pe_cols .csw').forEach(s=>s.classList.remove('active'));
   render();
 }
+
+/* ── 레이어 복제 ── */
 function l_flipH() {
   const l = layers.find(x=>x.id===selId); if (!l) return;
   saveHistory(); l.flipH=!l.flipH; render(); showToast('좌우 반전');
@@ -2256,21 +2618,73 @@ function resetBgPos() {
 /* ════════════════════════════════════
    DRAG LAYERS ON CANVAS
 ════════════════════════════════════ */
-let drag=false, dsx,dsy,dlx,dly;
-let bgDrag=false, bdsx,bdsy,bdox,bdoy; // bg drag
+// 드래그 상태 변수
+let drag=false, dsx,dsy,dlx,dly;           // 레이어 드래그
+let bgDrag=false, bdsx,bdsy,bdox,bdoy;     // 배경 드래그
+let handleDrag=false, handleDragStartSize=0, handleDragStartX=0, handleDragStartY=0, handleDragStartSX=100, handleDragStartSY=100; // 핸들 드래그
 let pinchStartDist=0, pinchStartSize=0, pinchTarget='layer'; // pinch zoom
 
 function getCanvasXY(e) {
   const r = mc.getBoundingClientRect();
-  const src = e.touches?e.touches[0]:e;
+  const src = (e.touches && e.touches.length > 0) ? e.touches[0] : (e.changedTouches && e.changedTouches.length > 0) ? e.changedTouches[0] : e;
+  if (!src || src.clientX === undefined) return [0, 0];
   return [(src.clientX-r.left)/mc.clientWidth, (src.clientY-r.top)/mc.clientHeight];
 }
 
+function getLayerBounds(l, W, H) {
+  const sc = W / mc.width;
+  const cx = l.x * W, cy = l.y * H;
+  let hw, hh;
+  try {
+    if (l.type === 'text') {
+      const fs = (l.size||40) * sc;
+      mctx.font = `${l.weight||'700'} ${fs}px ${l.font||'sans-serif'}`;
+      const lines = (l.text||'텍스트').split('\n');
+      const widths = lines.map(ln => mctx.measureText(ln || ' ').width);
+      const maxW = widths.length > 0 ? Math.max(...widths) : fs * 3;
+      hw = Math.max(maxW/2 + 8*sc, 20*sc);
+      hh = Math.max(lines.length * fs * 0.75, 20*sc);
+    } else {
+      const cache = calliCache[l.id]; if (!cache) return null;
+      hw = l.size*sc*((l.scaleX||100)/100)/2;
+      hh = l.size*sc*(cache.h/cache.w)*((l.scaleY||100)/100)/2;
+    }
+  } catch(e) { return null; }
+  return { cx, cy, hw, hh };
+}
+
 function startDrag(e) {
+  try {
   const [fx,fy] = getCanvasXY(e);
+  const W = mc.width, H = mc.height;
+
+  // 핸들 드래그 감지 (선택된 레이어 모서리)
+  if (selId) {
+    const l = layers.find(x=>x.id===selId);
+    if (l) {
+      const b = getLayerBounds(l, W, H);
+      if (b) {
+        const hs = 14 / (W / mc.width); // 히트 반경 (정규화)
+        const corners = [
+          [-b.hw/W*1,-b.hh/H*1],[b.hw/W*1,-b.hh/H*1],
+          [b.hw/W*1,b.hh/H*1],[-b.hw/W*1,b.hh/H*1]
+        ];
+        for (const [chx,chy] of corners) {
+          const hx = l.x + chx, hy = l.y + chy;
+          if (Math.abs(fx - hx) < hs/W*3 && Math.abs(fy - hy) < hs/H*3) {
+            handleDrag = true;
+            handleDragStartX = fx; handleDragStartY = fy;
+            handleDragStartSize = l.size;
+            handleDragStartSX = l.scaleX || 100;
+            handleDragStartSY = l.scaleY || 100;
+            return;
+          }
+        }
+      }
+    }
+  }
 
   if (bgMode === 'move' && bgImg) {
-    // BG drag
     bgDrag = true;
     bdsx=fx; bdsy=fy; bdox=bgOffX; bdoy=bgOffY;
     mc.style.cursor = 'grabbing';
@@ -2278,38 +2692,59 @@ function startDrag(e) {
   }
 
   // Layer drag
+  const W2 = mc.width, H2 = mc.height;
   for (let i=layers.length-1;i>=0;i--) {
     const l=layers[i];
-    if (Math.abs(fx-l.x)<.28 && Math.abs(fy-l.y)<.28) {
+    if (!l.visible) continue;
+    const b = getLayerBounds(l, W2, H2);
+    const hitW = b ? b.hw/W2 : 0.28;
+    const hitH = b ? b.hh/H2 : 0.28;
+    if (Math.abs(fx-l.x) < Math.max(hitW, 0.05) && Math.abs(fy-l.y) < Math.max(hitH, 0.05)) {
+      const changed = selId !== l.id;
       selId=l.id; drag=true; dsx=fx; dsy=fy; dlx=l.x; dly=l.y;
-      refreshLayerList(); renderProps(); return;
+      if (changed) { refreshLayerList(); renderProps(); }
+      return;
     }
   }
+  } catch(e) { console.error('startDrag err:', e.message, e.stack); }
 }
 function moveDrag(e) {
-  if (!drag && !bgDrag) return;
+  if (!drag && !bgDrag && !handleDrag) return;
   if (e.cancelable) e.preventDefault();
-  const [fx,fy]=getCanvasXY(e);
+  try {
+    const [fx,fy]=getCanvasXY(e);
 
-  if (bgDrag) {
-    bgOffX = bdox + (fx - bdsx);
-    bgOffY = bdoy + (fy - bdsy);
-    // sync sliders (clamped display)
-    const sx = Math.round(bgOffX * 100);
-    const sy = Math.round(bgOffY * 100);
-    if ($('slBgX')) { $('slBgX').value = Math.max(-100,Math.min(100,sx)); $('vBgX').textContent = Math.max(-100,Math.min(100,sx)); }
-    if ($('slBgY')) { $('slBgY').value = Math.max(-100,Math.min(100,sy)); $('vBgY').textContent = Math.max(-100,Math.min(100,sy)); }
-    render(); return;
-  }
+    if (handleDrag) {
+      const l = layers.find(x=>x.id===selId); if (!l) return;
+      const dx = fx - handleDragStartX;
+      const dy = fy - handleDragStartY;
+      const dist = Math.sqrt(dx*dx + dy*dy) * (dx+dy > 0 ? 1 : -1);
+      const newSize = Math.max(10, Math.round(handleDragStartSize + dist * mc.width * 1.5));
+      l.size = newSize;
+      const ps = $('pe_size'); if (ps) { ps.value = newSize; $('pe_vsize').textContent = newSize; }
+      render(); return;
+    }
 
-  const l=layers.find(x=>x.id===selId); if(!l) return;
-  l.x=Math.max(0,Math.min(1,dlx+fx-dsx));
-  l.y=Math.max(0,Math.min(1,dly+fy-dsy));
-  render();
+    if (bgDrag) {
+      bgOffX = bdox + (fx - bdsx);
+      bgOffY = bdoy + (fy - bdsy);
+      const sx = Math.round(bgOffX * 100);
+      const sy = Math.round(bgOffY * 100);
+      if ($('slBgX')) { $('slBgX').value = Math.max(-100,Math.min(100,sx)); $('vBgX').textContent = Math.max(-100,Math.min(100,sx)); }
+      if ($('slBgY')) { $('slBgY').value = Math.max(-100,Math.min(100,sy)); $('vBgY').textContent = Math.max(-100,Math.min(100,sy)); }
+      render(); return;
+    }
+
+    const l=layers.find(x=>x.id===selId); if(!l) return;
+    l.x=Math.max(0,Math.min(1,dlx+fx-dsx));
+    l.y=Math.max(0,Math.min(1,dly+fy-dsy));
+    render();
+  } catch(err) { console.warn('moveDrag err:', err); }
 }
 function endDrag(){
-  if (drag || bgDrag) saveHistory();
-  drag=false;
+  if (drag || bgDrag || handleDrag) saveHistory();
+  if (drag) { refreshLayerList(); renderProps(); }
+  drag=false; handleDrag=false;
   if (bgDrag) { bgDrag=false; mc.style.cursor='grab'; }
 }
 
@@ -2442,16 +2877,36 @@ function saveToGallery(dataUrl) {
 
 function doneCanvas() {
   showLoad('갤러리에 저장 중...');
-  mc.toBlob(blob => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      saveToGallery(e.target.result);
-      showToast('갤러리에 저장됐어요 ✓');
-      const tab = $('ptab-gallery');
-      if (tab) switchTab('gallery', tab);
-    };
-    reader.readAsDataURL(blob);
-  }, 'image/png');
+
+  const doSave = (cleanBgImg) => {
+    const sc = document.createElement('canvas');
+    sc.width = mc.width; sc.height = mc.height;
+    const sctx = sc.getContext('2d');
+    const origBgImg = bgImg;
+    if (cleanBgImg) bgImg = cleanBgImg;
+    render(sctx, mc.width, mc.height);
+    bgImg = origBgImg;
+    sc.toBlob(blob => {
+      if (!blob) { hideLoad(); showToast('⚠️ 저장 실패'); return; }
+      const reader = new FileReader();
+      reader.onload = e => {
+        saveToGallery(e.target.result);
+        showToast('갤러리에 저장됐어요 ✓');
+        const tab = $('ptab-gallery');
+        if (tab) switchTab('gallery', tab);
+      };
+      reader.readAsDataURL(blob);
+    }, 'image/png');
+  };
+
+  if (currentBgDataUrl && bgImg) {
+    const cleanImg = new Image();
+    cleanImg.onload = () => doSave(cleanImg);
+    cleanImg.onerror = () => doSave(null);
+    cleanImg.src = currentBgDataUrl;
+  } else {
+    doSave(null);
+  }
 }
 
 /* ════════════════════════════════════
@@ -2474,27 +2929,60 @@ function setFmt(el) {
 
 function renderToBlob(cb) {
   showLoad('고화질 렌더링 중...');
-  setTimeout(()=>{
-    const sc = document.createElement('canvas');
-    sc.width=saveW; sc.height=saveH;
-    const sctx=sc.getContext('2d');
 
-    // PNG-배경포함: 배경색 먼저 채우고 렌더
-    if (saveFmt === 'png-bg') {
-      sctx.fillStyle = bgColor || '#FFFFFF';
-      sctx.fillRect(0, 0, saveW, saveH);
-    }
-    render(sctx, saveW, saveH);
+  // 배경이미지를 dataUrl로 새로 로드해서 캔버스 오염 방지
+  const doRender = (cleanBgImg) => {
+    setTimeout(()=>{
+      try {
+        const sc = document.createElement('canvas');
+        sc.width=saveW; sc.height=saveH;
+        const sctx=sc.getContext('2d');
 
-    let mime, q, ext;
-    if (saveFmt === 'jpg') { mime='image/jpeg'; q=0.88; ext='jpg'; }
-    else if (saveFmt === 'jpg-hq') { mime='image/jpeg'; q=1.0; ext='jpg'; }
-    else if (saveFmt === 'webp') { mime='image/webp'; q=0.92; ext='webp'; }
-    else { mime='image/png'; q=undefined; ext='png'; } // png, png-bg 모두
+        const isTransparent = (saveFmt === 'png');
+        if (!isTransparent) {
+          sctx.fillStyle = bgColor || '#FFFFFF';
+          sctx.fillRect(0, 0, saveW, saveH);
+        }
 
-    const dataUrl = sc.toDataURL(mime, q);
-    sc.toBlob(blob=>{ hideLoad(); cb(blob, mime, dataUrl, ext); }, mime, q);
-  },100);
+        // 임시로 bgImg 교체 후 렌더
+        const origBgImg = bgImg;
+        if (cleanBgImg) bgImg = cleanBgImg;
+        render(sctx, saveW, saveH, isTransparent);
+        bgImg = origBgImg;
+
+        let mime, q, ext;
+        if (saveFmt === 'jpg') { mime='image/jpeg'; q=0.88; ext='jpg'; }
+        else if (saveFmt === 'jpg-hq') { mime='image/jpeg'; q=1.0; ext='jpg'; }
+        else if (saveFmt === 'webp') { mime='image/webp'; q=0.92; ext='webp'; }
+        else { mime='image/png'; q=undefined; ext='png'; }
+
+        sc.toBlob(blob=>{
+          hideLoad();
+          if (blob) {
+            const reader = new FileReader();
+            reader.onload = e => cb(blob, mime, e.target.result, ext);
+            reader.readAsDataURL(blob);
+          } else {
+            showToast('⚠️ 저장 실패 — 다시 시도해보세요');
+          }
+        }, mime, q);
+      } catch(e) {
+        hideLoad();
+        showToast('⚠️ 저장 오류: ' + e.message);
+        console.error('renderToBlob:', e);
+      }
+    }, 100);
+  };
+
+  // currentBgDataUrl이 있으면 새 Image로 클린하게 로드
+  if (currentBgDataUrl && bgImg) {
+    const cleanImg = new Image();
+    cleanImg.onload = () => doRender(cleanImg);
+    cleanImg.onerror = () => doRender(null);
+    cleanImg.src = currentBgDataUrl;
+  } else {
+    doRender(null);
+  }
 }
 
 function doDownload() {
@@ -2595,14 +3083,36 @@ async function doCopy() {
    RESET
 ════════════════════════════════════ */
 function doResetAll() {
+  // 캔버스 크기 1:1 초기화
+  outputW=5000; outputH=5000; saveW=5000; saveH=5000;
+  document.querySelectorAll('.size-chip').forEach(c => c.classList.remove('active'));
+  const chip1 = document.querySelector('.size-chip[data-w="5000"]');
+  if (chip1) chip1.classList.add('active');
+
+  // 모든 상태 초기화
   bgImg=null; layers=[]; selId=null; idCtr=0;
   bgOffX=0; bgOffY=0; bgScale=100; bgMode='move';
   activeBgPhotoId=null; currentBgDataUrl=null; bgHidden=false;
+  bgPhotos=[]; bgPhotoPage=0;
+  currentFilter='none';
+  bgColor='#FFFFFF';
+  bgTextureStyle='';
+
+  // 슬라이더 변수 초기화
+  _bright=100; _contrast=100; _sat=100; _bgOp=100; _bgBlur=0;
+  _fBright=100; _fCont=100; _fSat=100; _fTemp=0; _vig=0; _grain=0;
+
+  // undo/redo 스택 초기화
+  undoStack=[]; redoStack=[];
+
+  // calliCache 초기화
+  Object.keys(calliCache).forEach(k=>delete calliCache[k]);
+
+  // DOM 슬라이더 초기화
   const vis=$('bgVisToggle'); if(vis) vis.innerHTML=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
   const vis2=$('bgVisToggle2'); if(vis2) vis2.innerHTML=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
   const thumb=$('bgCurrentThumb'); if(thumb) thumb.style.display='none';
   const props=$('bgOverlayProps'); if(props) props.style.display='none';
-  Object.keys(calliCache).forEach(k=>delete calliCache[k]);
   if($('slBgScale')){$('slBgScale').value=100;$('vBgScale').textContent='100%';}
   if($('slBgX')){$('slBgX').value=0;$('vBgX').textContent='0';}
   if($('slBgY')){$('slBgY').value=0;$('vBgY').textContent='0';}
@@ -2617,18 +3127,23 @@ function doResetAll() {
   ['vFBright','vFContrast','vFSat'].forEach(id=>{if($(id))$(id).textContent='100';});
   if($('vFTemp'))$('vFTemp').textContent='0';
   syncSlider('slVig2','vVig2',0); syncSlider('slGrain2','vGrain2',0);
-  currentFilter='none';
   document.querySelectorAll('.fthumb').forEach(t=>t.classList.toggle('active', t.dataset.filter==='none'));
   document.querySelectorAll('.fchip').forEach((c,i)=>c.classList.toggle('active',i===0));
-  bgColor='#FFFFFF';
+
+  // 캔버스 크기 재설정 후 렌더
+  initCanvas();
+  const lbl = $('sizeLabel');
+  if (lbl) lbl.textContent = '5,000 × 5,000 px';
+
+  // 배경 갤러리 갱신
+  renderBgPhotoGallery();
   refreshLayerList(); renderProps(); render();
 }
 
 function resetAll() {
-  openConfirmModal('캔버스를 초기화할까요?', '배경·레이어가 모두 지워져요\n(갤러리 작품은 유지됩니다)', () => {
-    doResetAll();
-    showToast('초기화 완료');
-  });
+  if (!confirm('캔버스를 초기화할까요?\n배경·레이어가 모두 지워져요 (갤러리 작품은 유지됩니다)')) return;
+  doResetAll();
+  showToast('초기화 완료');
 }
 
 /* ════════════════════════════════════
@@ -2641,7 +3156,7 @@ function cv(id, el, suffix) { $(id).textContent = el.value + (suffix||''); }
 ════════════════════════════════════ */
 function showToast(msg) {
   const t=$('toast'); t.textContent=msg; t.classList.add('show');
-  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2400);
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),5000);
 }
 function showLoad(msg) { $('loadTxt').textContent=msg||'처리 중...'; $('loading').classList.add('show'); }
 function hideLoad() { $('loading').classList.remove('show'); }
@@ -2968,16 +3483,8 @@ function applyGradient(c1, c2, dir) {
   else gObj=ctx2.createLinearGradient(sz,0,0,sz);
   gObj.addColorStop(0,c1); gObj.addColorStop(1,c2);
   ctx2.fillStyle=gObj; ctx2.fillRect(0,0,sz,sz);
-  const img=new Image(); img.onload=()=>{bgImg=img;bgOffX=0;bgOffY=0;bgScale=100;render();showToast('그라데이션 적용됨 ✓');};
+  const img=new Image(); img.onload=()=>{saveHistory();bgImg=img;bgOffX=0;bgOffY=0;bgScale=100;render();showToast('그라데이션 적용됨 ✓');};
   img.src=cv2.toDataURL();
-}
-
-function applyTextureBg(style) {
-  const sz=1000, cv3=document.createElement('canvas');
-  cv3.width=sz; cv3.height=sz;
-  drawTexture(cv3.getContext('2d'),style,sz);
-  const img=new Image(); img.onload=()=>{bgImg=img;bgOffX=0;bgOffY=0;bgScale=100;render();showToast('이미지 배경 적용됨 ✓');};
-  img.src=cv3.toDataURL();
 }
 
 function drawTexture(ctx, style, size) {
@@ -3570,14 +4077,26 @@ function loadWork(work) {
 }
 
 function restoreCalliCaches(cb) {
-  const calliLayers = layers.filter(l => l.type === 'calli' && l.srcDataUrl);
-  let remaining = calliLayers.length;
-  if (remaining === 0) { cb(); return; }
+  const calliLayers = layers.filter(l => l.type === 'calli');
+  const withUrl = calliLayers.filter(l => l.srcDataUrl);
+  let remaining = withUrl.length;
+
+  // srcDataUrl 없는 캘리는 srcImg로 직접 처리
   calliLayers.forEach(l => {
+    if (!l.srcDataUrl && l.srcImg) processCalliLayer(l.id);
+  });
+
+  if (remaining === 0) { cb(); return; }
+
+  withUrl.forEach(l => {
     const img = new Image();
     img.onload = () => {
       l.srcImg = img;
       processCalliLayer(l.id);
+      remaining--;
+      if (remaining === 0) cb();
+    };
+    img.onerror = () => {
       remaining--;
       if (remaining === 0) cb();
     };
@@ -3744,652 +4263,13 @@ document.addEventListener('touchmove', e => {
   }
 }, { passive: true });
 
-
-/* ════════════════════════════════════
-   ✂ CROP FEATURE
-════════════════════════════════════ */
-let cropActive = false;
-let cropRect = { x:0, y:0, w:0, h:0 };
-let _cropDrag = null;
-
-function toggleCrop() {
-  cropActive ? exitCrop(false) : enterCrop();
-}
-
-function enterCrop() {
-  cropActive = true;
-  const W = mc.clientWidth, H = mc.clientHeight;
-  cropRect = { x: 0, y: 0, w: W, h: H };
-  const ov = document.getElementById('cropOverlay');
-  ov.style.display = 'block';
-  ov.classList.add('active');
-  document.getElementById('cropConfirmBar').classList.add('show');
-  const btn = document.getElementById('cropTriggerBtn');
-  if (btn) btn.classList.add('active');
-  _updateCropUI();
-  showToast('✂ 드래그로 영역 조절 → 자르기 적용');
-}
-
-function exitCrop(apply) {
-  if (apply) _applyCrop();
-  cropActive = false;
-  _cropDrag = null;
-  const ov = document.getElementById('cropOverlay');
-  ov.style.display = 'none';
-  ov.classList.remove('active');
-  document.getElementById('cropConfirmBar').classList.remove('show');
-  const btn = document.getElementById('cropTriggerBtn');
-  if (btn) btn.classList.remove('active');
-}
-
-function _applyCrop() {
-  const W = mc.clientWidth || mc.width;
-  const H = mc.clientHeight || mc.height;
-  const cx = Math.max(0, Math.round(cropRect.x));
-  const cy = Math.max(0, Math.round(cropRect.y));
-  const cw = Math.min(W - cx, Math.max(10, Math.round(cropRect.w)));
-  const ch = Math.min(H - cy, Math.max(10, Math.round(cropRect.h)));
-
-  const rx = outputW / W, ry = outputH / H;
-  const full = document.createElement('canvas');
-  full.width = outputW; full.height = outputH;
-  render(full.getContext('2d'), outputW, outputH);
-
-  const ox = Math.round(cx * rx), oy = Math.round(cy * ry);
-  const ow = Math.max(1, Math.round(cw * rx));
-  const oh = Math.max(1, Math.round(ch * ry));
-
-  const cropped = document.createElement('canvas');
-  cropped.width = ow; cropped.height = oh;
-  cropped.getContext('2d').drawImage(full, ox, oy, ow, oh, 0, 0, ow, oh);
-
-  const dataUrl = cropped.toDataURL('image/png');
-  const newImg = new Image();
-  newImg.onload = () => {
-    saveHistory();
-    bgImg = newImg;
-    bgOffX = 0; bgOffY = 0; bgScale = 100; bgHidden = false;
-    layers = []; calliCache = {}; selId = null;
-    outputW = ow; outputH = oh; saveW = ow; saveH = oh;
-    currentFilter = 'none';
-    _bright=100;_contrast=100;_sat=100;_bgOp=100;_bgBlur=0;
-    _fBright=100;_fCont=100;_fSat=100;_fTemp=0;_vig=0;_grain=0;
-
-    ['slBright','slContrast','slSat','slBgOp','slFBright','slFContrast','slFSat','slBgScale'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=100;});
-    ['slBgBlur','slVig','slVig2','slGrain','slGrain2','slFTemp','slBgX','slBgY'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=0;});
-
-    const lbl = document.getElementById('sizeLabel');
-    if (lbl) lbl.textContent = ow.toLocaleString() + ' × ' + oh.toLocaleString() + ' px';
-
-    document.querySelectorAll('.size-chip').forEach(c=>c.classList.remove('active'));
-
-    const newId = Date.now() + Math.random();
-    bgPhotos.push({ id: newId, label: '자르기 결과', dataUrl, imgObj: newImg });
-    activeBgPhotoId = newId;
-    currentBgDataUrl = dataUrl;
-
-    const thumbEl = document.getElementById('bgCurrentThumb');
-    const thumbImg = document.getElementById('bgThumbImg');
-    const thumbName = document.getElementById('bgThumbName');
-    if (thumbEl && thumbImg) {
-      thumbImg.src = dataUrl;
-      if (thumbName) thumbName.textContent = '자르기 결과';
-      thumbEl.style.display = 'flex';
-    }
-    const props = document.getElementById('bgOverlayProps');
-    if (props) props.style.display = 'block';
-
-    refreshLayerList(); renderProps();
-    initCanvas(); render();
-    renderBgPhotoGallery();
-    setTimeout(() => { buildFilterThumbs('filterThumbGrid'); buildFilterThumbs('filterThumbGrid2'); }, 50);
-    showToast('✂ 캔버스자르기 완료 — ' + ow + ' × ' + oh + ' px');
-  };
-  newImg.src = dataUrl;
-}
-
-function _updateCropUI() {
-  const W = mc.clientWidth, H = mc.clientHeight;
-  let { x, y, w, h } = cropRect;
-  x = Math.max(0, x); y = Math.max(0, y);
-  w = Math.min(W - x, Math.max(20, w));
-  h = Math.min(H - y, Math.max(20, h));
-  cropRect = { x, y, w, h };
-
-  const setMask = (id, css) => {
-    const el = document.getElementById(id);
-    if (el) el.style.cssText = css;
-  };
-  setMask('cropM0', `position:absolute;background:rgba(0,0,0,.52);left:0;right:0;top:0;height:${y}px;pointer-events:none`);
-  setMask('cropM1', `position:absolute;background:rgba(0,0,0,.52);left:0;right:0;top:${y+h}px;bottom:0;pointer-events:none`);
-  setMask('cropM2', `position:absolute;background:rgba(0,0,0,.52);top:${y}px;height:${h}px;left:0;width:${x}px;pointer-events:none`);
-  setMask('cropM3', `position:absolute;background:rgba(0,0,0,.52);top:${y}px;height:${h}px;left:${x+w}px;right:0;pointer-events:none`);
-
-  const box = document.getElementById('cropBox');
-  if (box) box.style.cssText = `position:absolute;left:${x}px;top:${y}px;width:${w}px;height:${h}px;border:2.5px solid #E8C47A;cursor:move;box-shadow:0 0 0 1px rgba(196,151,58,.25)`;
-
-  const lbl = document.getElementById('cropSzLbl');
-  if (lbl) {
-    const rx = outputW / (W||1), ry = outputH / (H||1);
-    lbl.textContent = Math.round(w*rx) + ' × ' + Math.round(h*ry) + ' px';
-  }
-}
-
-(function _initCropEvents() {
-  function setup() {
-    const box = document.getElementById('cropBox');
-    if (!box) { setTimeout(setup, 300); return; }
-
-    document.querySelectorAll('.crop-handle').forEach(h => {
-      h.addEventListener('pointerdown', e => {
-        if (!cropActive) return;
-        e.stopPropagation(); e.preventDefault();
-        const r = mc.getBoundingClientRect();
-        _cropDrag = { type:'handle', dir:h.dataset.d, sx:e.clientX-r.left, sy:e.clientY-r.top, ...cropRect };
-        try { h.setPointerCapture(e.pointerId); } catch(_) {}
-      });
-      h.addEventListener('pointermove', e => {
-        if (!_cropDrag || _cropDrag.type !== 'handle') return;
-        e.preventDefault();
-        const r = mc.getBoundingClientRect();
-        const px = e.clientX-r.left, py = e.clientY-r.top;
-        const W = mc.clientWidth, H = mc.clientHeight;
-        const MIN = 20;
-        const {dir,sx,sy,x:ox,y:oy,w:ow,h:oh} = _cropDrag;
-        const dx=px-sx, dy=py-sy;
-        let x=ox, y=oy, w=ow, h=oh;
-        if (dir.includes('e')) w=Math.min(W-x,Math.max(MIN,ow+dx));
-        if (dir.includes('s')) h=Math.min(H-y,Math.max(MIN,oh+dy));
-        if (dir.includes('w')){ const nx=Math.max(0,Math.min(ox+ow-MIN,ox+dx)); w=ox+ow-nx; x=nx; }
-        if (dir.includes('n')){ const ny=Math.max(0,Math.min(oy+oh-MIN,oy+dy)); h=oy+oh-ny; y=ny; }
-        cropRect={x,y,w,h}; _updateCropUI();
-      });
-      h.addEventListener('pointerup', ()=>{ _cropDrag=null; });
-    });
-
-    box.addEventListener('pointerdown', e => {
-      if (!cropActive || e.target.classList.contains('crop-handle')) return;
-      e.stopPropagation(); e.preventDefault();
-      const r = mc.getBoundingClientRect();
-      _cropDrag = { type:'move', sx:e.clientX-r.left, sy:e.clientY-r.top, ox:cropRect.x, oy:cropRect.y };
-      try { box.setPointerCapture(e.pointerId); } catch(_) {}
-    });
-    box.addEventListener('pointermove', e => {
-      if (!_cropDrag || _cropDrag.type !== 'move') return;
-      e.preventDefault();
-      const r = mc.getBoundingClientRect();
-      const W = mc.clientWidth, H = mc.clientHeight;
-      let nx = _cropDrag.ox + (e.clientX-r.left) - _cropDrag.sx;
-      let ny = _cropDrag.oy + (e.clientY-r.top) - _cropDrag.sy;
-      nx = Math.max(0, Math.min(W-cropRect.w, nx));
-      ny = Math.max(0, Math.min(H-cropRect.h, ny));
-      cropRect.x=nx; cropRect.y=ny; _updateCropUI();
-    });
-    box.addEventListener('pointerup', ()=>{ _cropDrag=null; });
-
-    const okBtn = document.getElementById('cropOkBtn');
-    const cancelBtn = document.getElementById('cropCancelBtn');
-    if (okBtn) okBtn.addEventListener('click', ()=>exitCrop(true));
-    if (cancelBtn) cancelBtn.addEventListener('click', ()=>exitCrop(false));
-  }
-  if (document.readyState==='loading') document.addEventListener('DOMContentLoaded', setup);
-  else setup();
-})();
-
-
-
-/* ════════════════════════════════════
-   ✂ BG-ONLY CROP (배경사진 전용)
-════════════════════════════════════ */
-let bgCropActive = false;
-let bgCropRect = { x:0, y:0, w:0, h:0 };
-let _bgCropDrag = null;
-
-function toggleBgCrop() {
-  if (!bgImg) { showToast('먼저 배경사진을 추가하세요'); return; }
-  bgCropActive ? exitBgCrop(false) : enterBgCrop();
-}
-
-function enterBgCrop() {
-  bgCropActive = true;
-  const W = mc.clientWidth, H = mc.clientHeight;
-  bgCropRect = { x:0, y:0, w:W, h:H };
-  const ov = document.getElementById('bgCropOverlay');
-  ov.style.display = 'block';
-  ov.classList.add('active');
-  document.getElementById('bgCropConfirmBar').classList.add('show');
-  const btn = document.getElementById('bgCropTriggerBtn');
-  if (btn) { btn.style.background = 'var(--ink)'; btn.style.color = '#7EC8E3'; }
-  _updateBgCropUI();
-  showToast('✂ 드래그로 이미지 영역 선택');
-}
-
-function exitBgCrop(apply) {
-  if (apply) _applyBgCrop();
-  bgCropActive = false;
-  _bgCropDrag = null;
-  const ov = document.getElementById('bgCropOverlay');
-  ov.style.display = 'none';
-  ov.classList.remove('active');
-  document.getElementById('bgCropConfirmBar').classList.remove('show');
-  const btn = document.getElementById('bgCropTriggerBtn');
-  if (btn) { btn.style.background = ''; btn.style.color = ''; }
-}
-
-function _applyBgCrop() {
-  if (!bgImg) return;
-  const W = mc.clientWidth, H = mc.clientHeight;
-  const cx = Math.max(0, Math.round(bgCropRect.x));
-  const cy = Math.max(0, Math.round(bgCropRect.y));
-  const cw = Math.min(W - cx, Math.max(10, Math.round(bgCropRect.w)));
-  const ch = Math.min(H - cy, Math.max(10, Math.round(bgCropRect.h)));
-  const rx = outputW / W, ry = outputH / H;
-
-  // 배경만 렌더 (레이어 임시 제거)
-  const fullBg = document.createElement('canvas');
-  fullBg.width = outputW; fullBg.height = outputH;
-  const savedLayers = layers, savedCalliCache = calliCache;
-  layers = []; calliCache = {};
-  render(fullBg.getContext('2d'), outputW, outputH);
-  layers = savedLayers; calliCache = savedCalliCache;
-
-  const ox = Math.round(cx * rx), oy = Math.round(cy * ry);
-  const ow = Math.max(1, Math.round(cw * rx));
-  const oh = Math.max(1, Math.round(ch * ry));
-
-  const cropped = document.createElement('canvas');
-  cropped.width = ow; cropped.height = oh;
-  cropped.getContext('2d').drawImage(fullBg, ox, oy, ow, oh, 0, 0, ow, oh);
-
-  const dataUrl = cropped.toDataURL('image/png');
-  const newImg = new Image();
-  newImg.onload = () => {
-    saveHistory();
-    bgImg = newImg;
-    bgOffX = 0; bgOffY = 0; bgScale = 100; bgHidden = false;
-    currentFilter = 'none';
-    _bright=100;_contrast=100;_sat=100;_bgOp=100;_bgBlur=0;
-    _fBright=100;_fCont=100;_fSat=100;_fTemp=0;_vig=0;_grain=0;
-
-    ['slBright','slContrast','slSat','slBgOp','slFBright','slFContrast','slFSat','slBgScale'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=100;});
-    ['slBgBlur','slVig','slVig2','slGrain','slGrain2','slFTemp','slBgX','slBgY'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=0;});
-    const vbo=document.getElementById('vBgOp');if(vbo)vbo.textContent='100%';
-    const vbs=document.getElementById('vBgScale');if(vbs)vbs.textContent='100%';
-
-    const newId = Date.now() + Math.random();
-    bgPhotos.push({ id: newId, label: '이미지 자르기', dataUrl, imgObj: newImg });
-    activeBgPhotoId = newId;
-    currentBgDataUrl = dataUrl;
-
-    const thumbEl = document.getElementById('bgCurrentThumb');
-    const thumbImg = document.getElementById('bgThumbImg');
-    const thumbName = document.getElementById('bgThumbName');
-    if (thumbEl && thumbImg) {
-      thumbImg.src = dataUrl;
-      if (thumbName) thumbName.textContent = '이미지 자르기';
-      thumbEl.style.display = 'flex';
-    }
-    const props = document.getElementById('bgOverlayProps');
-    if (props) props.style.display = 'block';
-
-    render(); renderBgPhotoGallery();
-    setTimeout(() => { buildFilterThumbs('filterThumbGrid'); buildFilterThumbs('filterThumbGrid2'); }, 50);
-    showToast('✂ 배경자르기 완료 — ' + ow + ' × ' + oh + 'px (배경만)');
-  };
-  newImg.src = dataUrl;
-}
-
-function _updateBgCropUI() {
-  const W = mc.clientWidth, H = mc.clientHeight;
-  let { x, y, w, h } = bgCropRect;
-  x=Math.max(0,x); y=Math.max(0,y);
-  w=Math.min(W-x,Math.max(20,w)); h=Math.min(H-y,Math.max(20,h));
-  bgCropRect={x,y,w,h};
-  const s=(id,css)=>{const el=document.getElementById(id);if(el)el.style.cssText=css;};
-  s('bgCropM0',`position:absolute;background:rgba(0,0,0,.52);left:0;right:0;top:0;height:${y}px;pointer-events:none`);
-  s('bgCropM1',`position:absolute;background:rgba(0,0,0,.52);left:0;right:0;top:${y+h}px;bottom:0;pointer-events:none`);
-  s('bgCropM2',`position:absolute;background:rgba(0,0,0,.52);top:${y}px;height:${h}px;left:0;width:${x}px;pointer-events:none`);
-  s('bgCropM3',`position:absolute;background:rgba(0,0,0,.52);top:${y}px;height:${h}px;left:${x+w}px;right:0;pointer-events:none`);
-  s('bgCropBox',`position:absolute;left:${x}px;top:${y}px;width:${w}px;height:${h}px;border:2.5px solid #7EC8E3;cursor:move;box-shadow:0 0 0 1px rgba(100,180,210,.3)`);
-  const lbl=document.getElementById('bgCropSzLbl');
-  if(lbl){const rx=outputW/(W||1),ry=outputH/(H||1);lbl.textContent=Math.round(w*rx)+' × '+Math.round(h*ry)+' px';}
-}
-
-(function _initBgCropEvents() {
-  function setup() {
-    const box = document.getElementById('bgCropBox');
-    if (!box) { setTimeout(setup, 300); return; }
-    document.querySelectorAll('.bgcrop-handle').forEach(h => {
-      h.addEventListener('pointerdown', e => {
-        if (!bgCropActive) return;
-        e.stopPropagation(); e.preventDefault();
-        const r=mc.getBoundingClientRect();
-        _bgCropDrag={type:'handle',dir:h.dataset.d,sx:e.clientX-r.left,sy:e.clientY-r.top,...bgCropRect};
-        try{h.setPointerCapture(e.pointerId);}catch(_){}
-      });
-      h.addEventListener('pointermove', e => {
-        if (!_bgCropDrag||_bgCropDrag.type!=='handle') return;
-        e.preventDefault();
-        const r=mc.getBoundingClientRect();
-        const px=e.clientX-r.left,py=e.clientY-r.top;
-        const W=mc.clientWidth,H=mc.clientHeight,MIN=20;
-        const{dir,sx,sy,x:ox,y:oy,w:ow,h:oh}=_bgCropDrag;
-        const dx=px-sx,dy=py-sy;
-        let x=ox,y=oy,w=ow,h=oh;
-        if(dir.includes('e'))w=Math.min(W-x,Math.max(MIN,ow+dx));
-        if(dir.includes('s'))h=Math.min(H-y,Math.max(MIN,oh+dy));
-        if(dir.includes('w')){const nx=Math.max(0,Math.min(ox+ow-MIN,ox+dx));w=ox+ow-nx;x=nx;}
-        if(dir.includes('n')){const ny=Math.max(0,Math.min(oy+oh-MIN,oy+dy));h=oy+oh-ny;y=ny;}
-        bgCropRect={x,y,w,h};_updateBgCropUI();
-      });
-      h.addEventListener('pointerup',()=>{_bgCropDrag=null;});
-    });
-    box.addEventListener('pointerdown', e => {
-      if(!bgCropActive||e.target.classList.contains('bgcrop-handle'))return;
-      e.stopPropagation();e.preventDefault();
-      const r=mc.getBoundingClientRect();
-      _bgCropDrag={type:'move',sx:e.clientX-r.left,sy:e.clientY-r.top,ox:bgCropRect.x,oy:bgCropRect.y};
-      try{box.setPointerCapture(e.pointerId);}catch(_){}
-    });
-    box.addEventListener('pointermove', e => {
-      if(!_bgCropDrag||_bgCropDrag.type!=='move')return;
-      e.preventDefault();
-      const r=mc.getBoundingClientRect();
-      const W=mc.clientWidth,H=mc.clientHeight;
-      let nx=_bgCropDrag.ox+(e.clientX-r.left)-_bgCropDrag.sx;
-      let ny=_bgCropDrag.oy+(e.clientY-r.top)-_bgCropDrag.sy;
-      nx=Math.max(0,Math.min(W-bgCropRect.w,nx));
-      ny=Math.max(0,Math.min(H-bgCropRect.h,ny));
-      bgCropRect.x=nx;bgCropRect.y=ny;_updateBgCropUI();
-    });
-    box.addEventListener('pointerup',()=>{_bgCropDrag=null;});
-    document.getElementById('bgCropOkBtn').addEventListener('click',()=>exitBgCrop(true));
-    document.getElementById('bgCropCancelBtn').addEventListener('click',()=>exitBgCrop(false));
-  }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup);
-  else setup();
-})();
-
-
-
-
-
-/* ════════════════════════════════════
-   ✂ LAYER CROP (레이어 이미지 자르기)
-════════════════════════════════════ */
-let lyrCropActive = false;
-let lyrCropRect = { x:0, y:0, w:0, h:0 };
-let _lyrCropDrag = null;
-let _lyrCropTargetId = null; // 자르기 대상 레이어 id
-
-function toggleLyrCrop() {
-  const l = layers.find(x=>x.id===selId);
-  if (!l || l.type !== 'calli') { showToast('캘리/이미지 레이어를 선택하세요'); return; }
-  lyrCropActive ? exitLyrCrop(false) : enterLyrCrop();
-}
-
-function enterLyrCrop() {
-  const l = layers.find(x=>x.id===selId);
-  if (!l) return;
-  lyrCropActive = true;
-  _lyrCropTargetId = l.id;
-  const W = mc.clientWidth, H = mc.clientHeight;
-  // 레이어의 현재 표시 영역을 초기 자르기 박스로 설정
-  const cache = calliCache[l.id];
-  let bx = 0, by = 0, bw = W, bh = H;
-  if (cache) {
-    const sc = mc.clientWidth / mc.width;
-    const dW = l.size * sc;
-    const dH = dW * (cache.h / cache.w);
-    bx = Math.max(0, l.x * W - dW/2);
-    by = Math.max(0, l.y * H - dH/2);
-    bw = Math.min(W - bx, dW);
-    bh = Math.min(H - by, dH);
-  }
-  lyrCropRect = { x:bx, y:by, w:bw, h:bh };
-  const ov = document.getElementById('lyrCropOverlay');
-  ov.style.display = 'block';
-  ov.classList.add('active');
-  document.getElementById('lyrCropConfirmBar').classList.add('show');
-  const btn = document.getElementById('lyrCropTriggerBtn');
-  if (btn) { btn.style.background = 'rgba(78,205,196,.15)'; btn.style.borderColor = '#4ECDC4'; }
-  _updateLyrCropUI();
-  showToast('✂ 드래그로 자를 영역 선택');
-}
-
-function exitLyrCrop(apply) {
-  if (apply) _applyLyrCrop();
-  lyrCropActive = false;
-  _lyrCropDrag = null;
-  const ov = document.getElementById('lyrCropOverlay');
-  ov.style.display = 'none';
-  ov.classList.remove('active');
-  document.getElementById('lyrCropConfirmBar').classList.remove('show');
-  const btn = document.getElementById('lyrCropTriggerBtn');
-  if (btn) { btn.style.background = ''; btn.style.borderColor = ''; }
-}
-
-function _applyLyrCrop() {
-  const l = layers.find(x=>x.id===_lyrCropTargetId);
-  if (!l || !l.srcImg) return;
-  const W = mc.clientWidth, H = mc.clientHeight;
-  const cx = Math.max(0, Math.round(lyrCropRect.x));
-  const cy = Math.max(0, Math.round(lyrCropRect.y));
-  const cw = Math.min(W - cx, Math.max(10, Math.round(lyrCropRect.w)));
-  const ch = Math.min(H - cy, Math.max(10, Math.round(lyrCropRect.h)));
-
-  // 캔버스 좌표 → 레이어 이미지 원본 좌표로 변환
-  const sc = mc.clientWidth / mc.width;  // display → logical
-  const cache = calliCache[l.id];
-  if (!cache) return;
-  const dW = l.size * sc;
-  const dH = dW * (cache.h / cache.w);
-  const layerLeft = l.x * W - dW/2;
-  const layerTop  = l.y * H - dH/2;
-
-  // 이미지 원본 픽셀 기준 자르기 영역
-  const scaleX = l.srcImg.width / dW;
-  const scaleY = l.srcImg.height / dH;
-  let sx = (cx - layerLeft) * scaleX;
-  let sy = (cy - layerTop)  * scaleY;
-  let sw = cw * scaleX;
-  let sh = ch * scaleY;
-  // 클램핑
-  if (sx < 0) { sw += sx; sx = 0; }
-  if (sy < 0) { sh += sy; sy = 0; }
-  sw = Math.min(sw, l.srcImg.width - sx);
-  sh = Math.min(sh, l.srcImg.height - sy);
-  if (sw < 1 || sh < 1) { showToast('자르기 영역이 너무 작습니다'); return; }
-
-  const tmp = document.createElement('canvas');
-  tmp.width = Math.round(sw); tmp.height = Math.round(sh);
-  tmp.getContext('2d').drawImage(l.srcImg, Math.round(sx), Math.round(sy), Math.round(sw), Math.round(sh), 0, 0, tmp.width, tmp.height);
-  const dataUrl = tmp.toDataURL('image/png');
-  const newImg = new Image();
-  newImg.onload = () => {
-    saveHistory();
-    l.srcImg = newImg;
-    // 크기 비율 유지하며 size 재조정
-    l.size = Math.round(dW / sc);
-    l.srcDataUrl = dataUrl;
-    delete calliCache[l.id];
-    processCalliLayer(l.id);
-    refreshLayerList(); renderProps(); render();
-    showToast('✂ 레이어 자르기 완료');
-  };
-  newImg.src = dataUrl;
-}
-
-function _updateLyrCropUI() {
-  const W = mc.clientWidth, H = mc.clientHeight;
-  let { x, y, w, h } = lyrCropRect;
-  x=Math.max(0,x); y=Math.max(0,y);
-  w=Math.min(W-x,Math.max(20,w)); h=Math.min(H-y,Math.max(20,h));
-  lyrCropRect={x,y,w,h};
-  const s=(id,css)=>{const el=document.getElementById(id);if(el)el.style.cssText=css;};
-  s('lyrCropM0',`position:absolute;background:rgba(0,0,0,.52);left:0;right:0;top:0;height:${y}px;pointer-events:none`);
-  s('lyrCropM1',`position:absolute;background:rgba(0,0,0,.52);left:0;right:0;top:${y+h}px;bottom:0;pointer-events:none`);
-  s('lyrCropM2',`position:absolute;background:rgba(0,0,0,.52);top:${y}px;height:${h}px;left:0;width:${x}px;pointer-events:none`);
-  s('lyrCropM3',`position:absolute;background:rgba(0,0,0,.52);top:${y}px;height:${h}px;left:${x+w}px;right:0;pointer-events:none`);
-  s('lyrCropBox',`position:absolute;left:${x}px;top:${y}px;width:${w}px;height:${h}px;border:2.5px solid #4ECDC4;cursor:move;box-shadow:0 0 0 1px rgba(78,205,196,.3)`);
-  const lbl=document.getElementById('lyrCropSzLbl');
-  if(lbl){
-    const cache=calliCache[_lyrCropTargetId];
-    const l=layers.find(x=>x.id===_lyrCropTargetId);
-    if(cache&&l){
-      const sc=mc.clientWidth/mc.width;
-      const dW=l.size*sc;
-      const scaleX=l.srcImg.width/dW;
-      const scaleY=l.srcImg.height/(dW*(cache.h/cache.w));
-      lbl.textContent=Math.round(w*scaleX)+' × '+Math.round(h*scaleY)+' px';
-    } else {
-      lbl.textContent=w+' × '+h+' px';
-    }
-  }
-}
-
-(function _initLyrCropEvents() {
-  function setup() {
-    const box = document.getElementById('lyrCropBox');
-    if (!box) { setTimeout(setup, 300); return; }
-    document.querySelectorAll('.lyrcrop-handle').forEach(h => {
-      h.addEventListener('pointerdown', e => {
-        if (!lyrCropActive) return;
-        e.stopPropagation(); e.preventDefault();
-        const r=mc.getBoundingClientRect();
-        _lyrCropDrag={type:'handle',dir:h.dataset.d,sx:e.clientX-r.left,sy:e.clientY-r.top,...lyrCropRect};
-        try{h.setPointerCapture(e.pointerId);}catch(_){}
-      });
-      h.addEventListener('pointermove', e => {
-        if (!_lyrCropDrag||_lyrCropDrag.type!=='handle') return;
-        e.preventDefault();
-        const r=mc.getBoundingClientRect();
-        const px=e.clientX-r.left,py=e.clientY-r.top;
-        const W=mc.clientWidth,H=mc.clientHeight,MIN=20;
-        const{dir,sx,sy,x:ox,y:oy,w:ow,h:oh}=_lyrCropDrag;
-        const dx=px-sx,dy=py-sy;
-        let x=ox,y=oy,w=ow,h=oh;
-        if(dir.includes('e'))w=Math.min(W-x,Math.max(MIN,ow+dx));
-        if(dir.includes('s'))h=Math.min(H-y,Math.max(MIN,oh+dy));
-        if(dir.includes('w')){const nx=Math.max(0,Math.min(ox+ow-MIN,ox+dx));w=ox+ow-nx;x=nx;}
-        if(dir.includes('n')){const ny=Math.max(0,Math.min(oy+oh-MIN,oy+dy));h=oy+oh-ny;y=ny;}
-        lyrCropRect={x,y,w,h};_updateLyrCropUI();
-      });
-      h.addEventListener('pointerup',()=>{_lyrCropDrag=null;});
-    });
-    box.addEventListener('pointerdown', e => {
-      if(!lyrCropActive||e.target.classList.contains('lyrcrop-handle'))return;
-      e.stopPropagation();e.preventDefault();
-      const r=mc.getBoundingClientRect();
-      _lyrCropDrag={type:'move',sx:e.clientX-r.left,sy:e.clientY-r.top,ox:lyrCropRect.x,oy:lyrCropRect.y};
-      try{box.setPointerCapture(e.pointerId);}catch(_){}
-    });
-    box.addEventListener('pointermove', e => {
-      if(!_lyrCropDrag||_lyrCropDrag.type!=='move')return;
-      e.preventDefault();
-      const r=mc.getBoundingClientRect();
-      const W=mc.clientWidth,H=mc.clientHeight;
-      let nx=_lyrCropDrag.ox+(e.clientX-r.left)-_lyrCropDrag.sx;
-      let ny=_lyrCropDrag.oy+(e.clientY-r.top)-_lyrCropDrag.sy;
-      nx=Math.max(0,Math.min(W-lyrCropRect.w,nx));
-      ny=Math.max(0,Math.min(H-lyrCropRect.h,ny));
-      lyrCropRect.x=nx;lyrCropRect.y=ny;_updateLyrCropUI();
-    });
-    box.addEventListener('pointerup',()=>{_lyrCropDrag=null;});
-    document.getElementById('lyrCropOkBtn').addEventListener('click',()=>exitLyrCrop(true));
-    document.getElementById('lyrCropCancelBtn').addEventListener('click',()=>exitLyrCrop(false));
-  }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup);
-  else setup();
-})();
-
-/* ════════════════════════════════════
-   ✏ 커스텀 사이즈
-════════════════════════════════════ */
-let _customRatio = 1;
-
-function openCustomSize() {
-  const w = document.getElementById('customW');
-  const h = document.getElementById('customH');
-  w.value = outputW;
-  h.value = outputH;
-  _customRatio = outputW / outputH;
-  document.getElementById('customLock').checked = false;
-  document.getElementById('customSizeModal').classList.add('show');
-  setTimeout(() => w.select(), 50);
-}
-
-function closeCustomSize() {
-  document.getElementById('customSizeModal').classList.remove('show');
-}
-
-function fillCustomSize(w, h) {
-  document.getElementById('customW').value = w;
-  document.getElementById('customH').value = h;
-  _customRatio = w / h;
-}
-
-function onCustomWChange() {
-  if (!document.getElementById('customLock').checked) return;
-  const w = +document.getElementById('customW').value;
-  if (w > 0) document.getElementById('customH').value = Math.round(w / _customRatio);
-}
-
-function onCustomHChange() {
-  if (!document.getElementById('customLock').checked) return;
-  const h = +document.getElementById('customH').value;
-  if (h > 0) document.getElementById('customW').value = Math.round(h * _customRatio);
-}
-
-function applyCustomSize() {
-  const w = Math.round(+document.getElementById('customW').value);
-  const h = Math.round(+document.getElementById('customH').value);
-  if (!w || !h || w < 100 || h < 100) { showToast('최소 100px 이상 입력하세요'); return; }
-  if (w > 10000 || h > 10000) { showToast('최대 10,000px 이하로 입력하세요'); return; }
-  closeCustomSize();
-  outputW = w; outputH = h; saveW = w; saveH = h;
-  document.querySelectorAll('.size-chip').forEach(c => c.classList.remove('active'));
-  document.getElementById('customSizeChip').classList.add('active');
-  const lbl = document.getElementById('sizeLabel');
-  if (lbl) lbl.textContent = w.toLocaleString() + ' × ' + h.toLocaleString() + ' px';
-  initCanvas();
-  showToast('캔버스 크기: ' + w + ' × ' + h + ' px');
-}
-
 window.addEventListener('load', ()=>{
-
-
-  loadCustomData(); initCanvas(); render(); mc.style.cursor='grab'; buildGallery(); });
+  try { loadCustomData(); } catch(e) { console.warn('loadCustomData:', e.message); }
+  try { initCanvas(); } catch(e) { console.warn('initCanvas:', e.message); }
+  try { render(); } catch(e) { console.warn('render:', e.message); }
+  mc.style.cursor='grab';
+  try { buildGallery(); } catch(e) { console.warn('buildGallery:', e.message); }
+});
 </script>
-
-<!-- ✏ 커스텀 사이즈 팝업 -->
-<div id="customSizeModal">
-  <div class="modal-backdrop" onclick="closeCustomSize()"></div>
-  <div class="modal-box">
-    <div class="modal-title">✏ 캔버스 크기 직접 입력</div>
-    <div class="preset-row">
-      <div class="px-preset" onclick="fillCustomSize(800,800)">800²</div>
-      <div class="px-preset" onclick="fillCustomSize(1200,1200)">1200²</div>
-      <div class="px-preset" onclick="fillCustomSize(2000,2000)">2000²</div>
-      <div class="px-preset" onclick="fillCustomSize(3000,3000)">3000²</div>
-      <div class="px-preset" onclick="fillCustomSize(4000,3000)">4:3</div>
-      <div class="px-preset" onclick="fillCustomSize(2480,3508)">A4</div>
-    </div>
-    <div class="px-row">
-      <input class="px-inp" id="customW" type="number" min="100" max="10000" placeholder="가로" oninput="onCustomWChange()">
-      <span class="px-sep">×</span>
-      <input class="px-inp" id="customH" type="number" min="100" max="10000" placeholder="세로" oninput="onCustomHChange()">
-      <span class="px-sep" style="font-size:11px;color:var(--muted)">px</span>
-    </div>
-    <label class="lock-row">
-      <input class="lock-chk" type="checkbox" id="customLock">
-      <span class="lock-lbl">🔒 비율 고정</span>
-    </label>
-    <div class="modal-btns">
-      <button class="modal-cancel" onclick="closeCustomSize()">취소</button>
-      <button class="modal-ok" onclick="applyCustomSize()">적용</button>
-    </div>
-  </div>
-</div>
 </body>
 </html>
