@@ -305,6 +305,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:17px;heigh
   padding:9px 11px;cursor:pointer;transition:all .15s;
   display:flex;align-items:center;gap:8px;
 }
+.litem.locked{opacity:.6}
+.litem.locked::after{content:'🔒';font-size:10px;margin-left:4px}
 .litem.sel{border-color:var(--gold);background:rgba(196,151,58,.06)}
 .litem:hover:not(.sel){border-color:var(--border2)}
 .litem-icon{font-size:18px;flex-shrink:0}
@@ -2634,7 +2636,7 @@ function refreshLayerList() {
   list.innerHTML='';
   [...layers].reverse().forEach(l => {
     const div = document.createElement('div');
-    div.className = 'litem'+(l.id===selId?' sel':'');
+    div.className = 'litem'+(l.id===selId?' sel':'')+(l.locked?' locked':'');
     const preview = l.type==='text' ? (l.text.split('\n')[0].slice(0,12)||'(빈텍스트)') : l.name;
     div.innerHTML=`
       <div class="litem-icon">${l.type==='text'?'✍️':'🖌'}</div>
@@ -2954,6 +2956,7 @@ function startDrag(e) {
     const hitW = b ? b.hw/W2 : 0.28;
     const hitH = b ? b.hh/H2 : 0.28;
     if (Math.abs(fx-l.x) < Math.max(hitW, 0.05) && Math.abs(fy-l.y) < Math.max(hitH, 0.05)) {
+      if (l.locked) { showToast('🔒 잠금된 레이어예요'); return; }
       const changed = selId !== l.id;
       selId=l.id; drag=true; dsx=fx; dsy=fy; dlx=l.x; dly=l.y;
       if (changed) { refreshLayerList(); renderProps(); }
