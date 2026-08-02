@@ -2959,6 +2959,7 @@ function resetBgPos() {
 ════════════════════════════════════ */
 // 드래그 상태 변수
 let drag=false, pendingDrag=false, dsx,dsy,dlx,dly; // 레이어 드래그
+let _multiDragInit=null, _multiDragStartX=0, _multiDragStartY=0;
 let bgDrag=false, bdsx,bdsy,bdox,bdoy;     // 배경 드래그
 let handleDrag=false, handleDragStartSize=0, handleDragStartX=0, handleDragStartY=0, handleDragStartSX=100, handleDragStartSY=100; // 핸들 드래그
 let pinchStartDist=0, pinchStartSize=0, pinchTarget='layer'; // pinch zoom
@@ -3063,8 +3064,8 @@ function startDrag(e) {
         render(); refreshLayerList(); updateMultiToolbar();
         return;
       }
-      // 일반 클릭: 단일선택
-      selIds = [];
+      // 일반 클릭: 단일선택 (단, 이미 다중선택된 레이어면 유지)
+      if (!selIds.includes(l.id)) selIds = [];
       pendingDrag=true; drag=false;
       dsx=fx; dsy=fy; dlx=l.x; dly=l.y;
       render();
@@ -3085,7 +3086,18 @@ function moveDrag(e) {
   if (pendingDrag) {
     const [fx2,fy2]=getCanvasXY(e);
     const dist = Math.sqrt((fx2-dsx)**2 + (fy2-dsy)**2);
-    if (dist > 0.01) { drag=true; pendingDrag=false; }
+    if (dist > 0.01) {
+      drag=true; pendingDrag=false;
+      // 다중선택 초기위치 저장
+      if (selIds.length > 1) {
+        _multiDragStartX = fx2; _multiDragStartY = fy2;
+        _multiDragInit = {};
+        selIds.forEach(sid => {
+          const sl = layers.find(x=>x.id===sid);
+          if (sl) _multiDragInit[sid] = { x: sl.x, y: sl.y };
+        });
+      }
+    }
   }
   if (!drag && !bgDrag && !handleDrag) return;
   if (e.cancelable) e.preventDefault();
@@ -3120,11 +3132,13 @@ function moveDrag(e) {
       selIds.forEach(sid => {
         const sl = layers.find(x=>x.id===sid);
         if (sl && !sl.locked) {
-          sl.x = Math.max(0,Math.min(1, sl.x + dx));
-          sl.y = Math.max(0,Math.min(1, sl.y + dy));
+          const initPos = _multiDragInit && _multiDragInit[sid];
+          if (initPos) {
+            sl.x = Math.max(0,Math.min(1, initPos.x + (fx - _multiDragStartX)));
+            sl.y = Math.max(0,Math.min(1, initPos.y + (fy - _multiDragStartY)));
+          }
         }
       });
-      dsx=fx; dsy=fy;
     } else {
       l.x=Math.max(0,Math.min(1,dlx+dx));
       l.y=Math.max(0,Math.min(1,dly+dy));
@@ -3135,7 +3149,7 @@ function moveDrag(e) {
 function endDrag(){
   if (drag || bgDrag || handleDrag) saveHistory();
   if (drag) { refreshLayerList(); renderProps(); updateLayerToolbar(); }
-  drag=false; handleDrag=false; pendingDrag=false;
+  drag=false; handleDrag=false; pendingDrag=false; _multiDragInit=null;
   if (bgDrag) { bgDrag=false; mc.style.cursor='grab'; }
 }
 
