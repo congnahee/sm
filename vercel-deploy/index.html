@@ -3042,6 +3042,7 @@ function startDrag(e) {
     selId = null; selIds = []; hideLayerToolbar(); refreshLayerList(); renderProps();
     return;
   }
+  // 글자올리기/갤러리 탭에서는 배경 드래그 없음 → 빈 곳 클릭 = 선택해제만
 
   // Layer drag
   const W2 = mc.width, H2 = mc.height;
@@ -3121,22 +3122,13 @@ function moveDrag(e) {
 
     if (handleDrag) {
       const l = layers.find(x=>x.id===selId); if (!l) return;
-      const dx = fx - handleDragStartX;
-      const dy = fy - handleDragStartY;
-      const [dirX, dirY] = handleDragDir;
-      // 방향에 따른 부호: 오른쪽/아래로 드래그 → 커짐, 왼쪽/위로 → 작아짐
-      let delta = 0;
-      if (dirX !== 0 && dirY !== 0) {
-        // 모서리: 가로+세로 합산
-        delta = dx * dirX + dy * dirY;
-      } else if (dirX !== 0) {
-        // 좌우 핸들
-        delta = dx * dirX;
-      } else {
-        // 상하 핸들
-        delta = dy * dirY;
-      }
-      const newSize = Math.max(10, Math.round(handleDragStartSize + delta * mc.width * 2));
+      // 현재 마우스와 레이어 중심 사이 거리
+      const curDist = Math.sqrt((fx-l.x)**2 + (fy-l.y)**2);
+      // 드래그 시작 시 거리
+      const startDist = Math.sqrt((handleDragStartX-l.x)**2 + (handleDragStartY-l.y)**2);
+      if (startDist < 0.001) { render(); return; }
+      const ratio = curDist / startDist;
+      const newSize = Math.max(10, Math.round(handleDragStartSize * ratio));
       l.size = newSize;
       const ps = $('pe_size'); if (ps) { ps.value = newSize; $('pe_vsize').textContent = newSize; }
       render(); return;
@@ -3152,6 +3144,7 @@ function moveDrag(e) {
       render(); return;
     }
 
+    mc.style.cursor = 'grabbing';
     const l=layers.find(x=>x.id===selId); if(!l) return;
     const dx=fx-dsx, dy=fy-dsy;
     // 다중선택 이동
@@ -3179,6 +3172,7 @@ function endDrag(){
   if (handleDrag) { renderProps(); updateLayerToolbar(); }
   drag=false; handleDrag=false; pendingDrag=false; _multiDragInit=null;
   if (bgDrag) { bgDrag=false; mc.style.cursor='grab'; }
+  else { mc.style.cursor = bgMode==='move' && bgImg ? 'grab' : 'default'; }
 }
 
 
@@ -3563,7 +3557,9 @@ function updateMultiToolbar() {
 
 
 function updateCursorForLayer(e) {
-  if (!selId || drag || bgDrag || handleDrag) return;
+  if (drag) { mc.style.cursor='grabbing'; return; }
+  if (handleDrag) return;
+  if (!selId || bgDrag) return;
   const l = layers.find(x => x.id === selId);
   if (!l || !l.visible) return;
   const [fx, fy] = getCanvasXY(e);
