@@ -622,6 +622,8 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
   box-shadow:0 4px 16px rgba(0,0,0,.4);
   transform:translateX(-50%);
   pointer-events:all;
+  left:50% !important;
+  top:8px !important;
 }
 #layerToolbar.show{display:flex}
 .ltb-btn{
@@ -3080,6 +3082,12 @@ function startDrag(e) {
       return;
     }
   }
+    // 빈 곳 클릭 → 선택 해제
+    if (!bgImg) {
+      selId = null; selIds = [];
+      hideLayerToolbar();
+      refreshLayerList(); renderProps(); render();
+    }
   } catch(e) { console.error('startDrag err:', e.message, e.stack); }
 }
 function moveDrag(e) {
@@ -3149,6 +3157,7 @@ function moveDrag(e) {
 function endDrag(){
   if (drag || bgDrag || handleDrag) saveHistory();
   if (drag) { refreshLayerList(); renderProps(); updateLayerToolbar(); }
+  if (handleDrag) { renderProps(); updateLayerToolbar(); }
   drag=false; handleDrag=false; pendingDrag=false; _multiDragInit=null;
   if (bgDrag) { bgDrag=false; mc.style.cursor='grab'; }
 }
@@ -3165,15 +3174,14 @@ function updateLayerToolbar() {
   const l = layers.find(x => x.id === selId);
   if (!l) { tb.classList.remove('show'); return; }
 
-  // 캔버스 위 위치 계산
+  // 툴바 캔버스 상단 중앙 고정
   const rect = mc.getBoundingClientRect();
   const zoneRect = document.getElementById('canvasZone').getBoundingClientRect();
-  const cx = rect.left - zoneRect.left + l.x * rect.width;
-  const ty = rect.top  - zoneRect.top  + l.y * rect.height;
-  const topY = Math.max(ty - rect.height * (l.size||100)/2/mc.width - 44, 4);
+  const canvasTop = rect.top - zoneRect.top;
+  const canvasCx = rect.left - zoneRect.left + rect.width / 2;
 
-  tb.style.left = cx + 'px';
-  tb.style.top  = topY + 'px';
+  tb.style.left = canvasCx + 'px';
+  tb.style.top  = Math.max(canvasTop + 8, 8) + 'px';
 
   // 잠금 아이콘 업데이트
   const lockBtn = document.getElementById('ltbLockBtn');
