@@ -624,6 +624,30 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
 .ctx-sub:hover{background:rgba(196,151,58,.1)}
 .ctx-sub .ctx-icon{width:18px;text-align:center;font-size:14px;color:var(--ink2)}
 .ctx-sub-arrow{margin-left:auto;font-size:11px;color:var(--ink3)}
+
+/* ── 레이어 자르기 오버레이 ── */
+#lyrCropOverlay{position:absolute;inset:0;display:none;z-index:52;touch-action:none;pointer-events:none}
+#lyrCropOverlay.active{pointer-events:all}
+.lyrcrop-mask{position:absolute;background:rgba(0,0,0,.52);pointer-events:none}
+.lyrcrop-border-box{position:absolute;border:2.5px solid #4ECDC4;cursor:move;box-shadow:0 0 0 1px rgba(78,205,196,.3)}
+#lyrCropSzLbl{position:absolute;top:-26px;left:0;background:rgba(10,40,38,.9);color:#4ECDC4;font-size:.62rem;padding:2px 9px;border-radius:5px;pointer-events:none;white-space:nowrap;font-family:'Gowun Dodum',serif}
+.lyrcrop-handle{position:absolute;touch-action:none;z-index:57;pointer-events:all}
+.lyrcrop-handle.corner{width:16px;height:16px;background:#4ECDC4;border-radius:3px;box-shadow:0 2px 8px rgba(78,205,196,.6)}
+.lyrcrop-handle.edge-h{height:5px;background:#4ECDC4;border-radius:3px;width:34px}
+.lyrcrop-handle.edge-v{width:5px;background:#4ECDC4;border-radius:3px;height:34px}
+.lyrcrop-handle[data-d=nw]{top:-8px;left:-8px;cursor:nw-resize}
+.lyrcrop-handle[data-d=ne]{top:-8px;right:-8px;cursor:ne-resize}
+.lyrcrop-handle[data-d=sw]{bottom:-8px;left:-8px;cursor:sw-resize}
+.lyrcrop-handle[data-d=se]{bottom:-8px;right:-8px;cursor:se-resize}
+.lyrcrop-handle[data-d=n]{top:-2.5px;left:calc(50% - 17px);cursor:n-resize}
+.lyrcrop-handle[data-d=s]{bottom:-2.5px;left:calc(50% - 17px);cursor:s-resize}
+.lyrcrop-handle[data-d=w]{left:-2.5px;top:calc(50% - 17px);cursor:w-resize}
+.lyrcrop-handle[data-d=e]{right:-2.5px;top:calc(50% - 17px);cursor:e-resize}
+#lyrCropConfirmBar{display:none;position:absolute;bottom:0;left:0;right:0;height:50px;background:rgba(10,38,36,.96);z-index:62;align-items:center;justify-content:center;gap:10px;padding:0 14px}
+#lyrCropConfirmBar.show{display:flex}
+.lyrcrop-btn{padding:8px 22px;border-radius:9px;font-size:12px;font-weight:700;font-family:'Gowun Dodum',serif;cursor:pointer;border:none;transition:all .15s}
+.lyrcrop-btn-cancel{background:rgba(255,255,255,.12);color:rgba(255,255,255,.8)}
+.lyrcrop-btn-ok{background:linear-gradient(135deg,#4ECDC4,#2EAF9F);color:#fff}
 </style>
 </head>
 <body>
@@ -738,6 +762,29 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
     </div>
     <div class="canvas-shell" id="canvasShell">
       <canvas id="mainCanvas"></canvas>
+      <!-- ✂ LAYER CROP OVERLAY -->
+      <div id="lyrCropOverlay">
+        <div class="lyrcrop-mask" id="lyrCropM0"></div>
+        <div class="lyrcrop-mask" id="lyrCropM1"></div>
+        <div class="lyrcrop-mask" id="lyrCropM2"></div>
+        <div class="lyrcrop-mask" id="lyrCropM3"></div>
+        <div class="lyrcrop-border-box" id="lyrCropBox">
+          <div id="lyrCropSzLbl"></div>
+          <div class="lyrcrop-handle corner" data-d="nw"></div>
+          <div class="lyrcrop-handle corner" data-d="ne"></div>
+          <div class="lyrcrop-handle corner" data-d="sw"></div>
+          <div class="lyrcrop-handle corner" data-d="se"></div>
+          <div class="lyrcrop-handle edge-h" data-d="n"></div>
+          <div class="lyrcrop-handle edge-h" data-d="s"></div>
+          <div class="lyrcrop-handle edge-v" data-d="w"></div>
+          <div class="lyrcrop-handle edge-v" data-d="e"></div>
+        </div>
+      </div>
+      <div id="lyrCropConfirmBar">
+        <button class="lyrcrop-btn lyrcrop-btn-cancel" id="lyrCropCancelBtn">✕ 취소</button>
+        <button class="lyrcrop-btn lyrcrop-btn-ok" id="lyrCropOkBtn">✓ 레이어 자르기 적용</button>
+      </div>
+
       <div class="canvas-resize-handle tl" id="rh-tl"></div>
       <!-- 크롭 오버레이 -->
       <div id="cropOverlay" style="display:none;position:absolute;inset:0;z-index:30;">
@@ -3150,6 +3197,172 @@ document.addEventListener('keydown', e => {
   if ((e.ctrlKey||e.metaKey) && e.key === 'c') { e.preventDefault(); ctxCopy(); }
   if ((e.ctrlKey||e.metaKey) && e.key === 'l') { e.preventDefault(); ctxLock(); }
 });
+
+
+/* ════════════════════════════════════
+   ✂ LAYER CROP (레이어 이미지 자르기)
+════════════════════════════════════ */
+let lyrCropActive = false;
+let lyrCropRect = { x:0, y:0, w:0, h:0 };
+let _lyrCropDrag = null;
+let _lyrCropTargetId = null;
+
+function toggleLyrCrop() {
+  const l = layers.find(x=>x.id===selId);
+  if (!l || l.type !== 'calli') { showToast('이미지 레이어를 선택하세요'); return; }
+  lyrCropActive ? exitLyrCrop(false) : enterLyrCrop();
+}
+
+function enterLyrCrop() {
+  const l = layers.find(x=>x.id===selId);
+  if (!l) return;
+  lyrCropActive = true;
+  _lyrCropTargetId = l.id;
+  const W = mc.clientWidth, H = mc.clientHeight;
+  const cache = calliCache && calliCache[l.id];
+  let bx = W*0.1, by = H*0.1, bw = W*0.8, bh = H*0.8;
+  if (cache) {
+    const dW = l.size * (mc.clientWidth / mc.width);
+    const dH = dW * (cache.h / cache.w);
+    bx = Math.max(0, l.x * W - dW/2);
+    by = Math.max(0, l.y * H - dH/2);
+    bw = Math.min(W - bx, dW);
+    bh = Math.min(H - by, dH);
+  }
+  lyrCropRect = { x:bx, y:by, w:bw, h:bh };
+  const ov = document.getElementById('lyrCropOverlay');
+  ov.style.display = 'block';
+  ov.classList.add('active');
+  document.getElementById('lyrCropConfirmBar').classList.add('show');
+  hideLayerToolbar();
+  _updateLyrCropUI();
+  showToast('✂ 드래그로 자를 영역 선택');
+}
+
+function exitLyrCrop(apply) {
+  if (apply) _applyLyrCrop();
+  lyrCropActive = false;
+  _lyrCropDrag = null;
+  const ov = document.getElementById('lyrCropOverlay');
+  if (ov) { ov.style.display = 'none'; ov.classList.remove('active'); }
+  const bar = document.getElementById('lyrCropConfirmBar');
+  if (bar) bar.classList.remove('show');
+}
+
+function _applyLyrCrop() {
+  const l = layers.find(x=>x.id===_lyrCropTargetId);
+  if (!l || !l.srcImg) return;
+  const W = mc.clientWidth, H = mc.clientHeight;
+  const cx = Math.max(0, Math.round(lyrCropRect.x));
+  const cy = Math.max(0, Math.round(lyrCropRect.y));
+  const cw = Math.min(W-cx, Math.max(10, Math.round(lyrCropRect.w)));
+  const ch = Math.min(H-cy, Math.max(10, Math.round(lyrCropRect.h)));
+  const cache = calliCache && calliCache[l.id];
+  if (!cache) return;
+  const dW = l.size * (mc.clientWidth / mc.width);
+  const dH = dW * (cache.h / cache.w);
+  const layerLeft = l.x * W - dW/2;
+  const layerTop  = l.y * H - dH/2;
+  const scaleX = l.srcImg.width / dW;
+  const scaleY = l.srcImg.height / dH;
+  let sx = (cx - layerLeft) * scaleX;
+  let sy = (cy - layerTop)  * scaleY;
+  let sw = cw * scaleX;
+  let sh = ch * scaleY;
+  if (sx < 0) { sw += sx; sx = 0; }
+  if (sy < 0) { sh += sy; sy = 0; }
+  sw = Math.min(sw, l.srcImg.width - sx);
+  sh = Math.min(sh, l.srcImg.height - sy);
+  if (sw < 1 || sh < 1) { showToast('자르기 영역이 너무 작습니다'); return; }
+  const tmp = document.createElement('canvas');
+  tmp.width = Math.round(sw); tmp.height = Math.round(sh);
+  tmp.getContext('2d').drawImage(l.srcImg, Math.round(sx), Math.round(sy), Math.round(sw), Math.round(sh), 0, 0, tmp.width, tmp.height);
+  const dataUrl = tmp.toDataURL('image/png');
+  const newImg = new Image();
+  newImg.onload = () => {
+    saveHistory();
+    l.srcImg = newImg;
+    l.srcDataUrl = dataUrl;
+    if (calliCache) delete calliCache[l.id];
+    if (typeof processCalliLayer === 'function') processCalliLayer(l.id);
+    refreshLayerList(); renderProps(); render();
+    showToast('✂ 레이어 자르기 완료');
+  };
+  newImg.src = dataUrl;
+}
+
+function _updateLyrCropUI() {
+  const W = mc.clientWidth, H = mc.clientHeight;
+  let {x,y,w,h} = lyrCropRect;
+  x=Math.max(0,x); y=Math.max(0,y);
+  w=Math.min(W-x,Math.max(20,w)); h=Math.min(H-y,Math.max(20,h));
+  lyrCropRect={x,y,w,h};
+  const s=(id,css)=>{const el=document.getElementById(id);if(el)el.style.cssText=css;};
+  s('lyrCropM0',`position:absolute;background:rgba(0,0,0,.52);left:0;right:0;top:0;height:${y}px;pointer-events:none`);
+  s('lyrCropM1',`position:absolute;background:rgba(0,0,0,.52);left:0;right:0;top:${y+h}px;bottom:0;pointer-events:none`);
+  s('lyrCropM2',`position:absolute;background:rgba(0,0,0,.52);top:${y}px;height:${h}px;left:0;width:${x}px;pointer-events:none`);
+  s('lyrCropM3',`position:absolute;background:rgba(0,0,0,.52);top:${y}px;height:${h}px;left:${x+w}px;right:0;pointer-events:none`);
+  s('lyrCropBox',`position:absolute;left:${x}px;top:${y}px;width:${w}px;height:${h}px;border:2.5px solid #4ECDC4;cursor:move;box-shadow:0 0 0 1px rgba(78,205,196,.3)`);
+  const lbl=document.getElementById('lyrCropSzLbl');
+  if(lbl) lbl.textContent = Math.round(w)+' × '+Math.round(h)+' px';
+}
+
+(function _initLyrCropEvents() {
+  function setup() {
+    const box = document.getElementById('lyrCropBox');
+    if (!box) { setTimeout(setup, 300); return; }
+    document.querySelectorAll('.lyrcrop-handle').forEach(h => {
+      h.addEventListener('pointerdown', e => {
+        if (!lyrCropActive) return;
+        e.stopPropagation(); e.preventDefault();
+        const r=mc.getBoundingClientRect();
+        _lyrCropDrag={type:'handle',dir:h.dataset.d,sx:e.clientX-r.left,sy:e.clientY-r.top,...lyrCropRect};
+        try{h.setPointerCapture(e.pointerId);}catch(_){}
+      });
+      h.addEventListener('pointermove', e => {
+        if (!_lyrCropDrag||_lyrCropDrag.type!=='handle') return;
+        e.preventDefault();
+        const r=mc.getBoundingClientRect();
+        const px=e.clientX-r.left,py=e.clientY-r.top;
+        const W=mc.clientWidth,H=mc.clientHeight,MIN=20;
+        const{dir,sx,sy,x:ox,y:oy,w:ow,h:oh}=_lyrCropDrag;
+        const dx=px-sx,dy=py-sy;
+        let x=ox,y=oy,w=ow,h=oh;
+        if(dir.includes('e'))w=Math.min(W-x,Math.max(MIN,ow+dx));
+        if(dir.includes('s'))h=Math.min(H-y,Math.max(MIN,oh+dy));
+        if(dir.includes('w')){const nx=Math.max(0,Math.min(ox+ow-MIN,ox+dx));w=ox+ow-nx;x=nx;}
+        if(dir.includes('n')){const ny=Math.max(0,Math.min(oy+oh-MIN,oy+dy));h=oy+oh-ny;y=ny;}
+        lyrCropRect={x,y,w,h};_updateLyrCropUI();
+      });
+      h.addEventListener('pointerup',()=>{_lyrCropDrag=null;});
+    });
+    box.addEventListener('pointerdown', e => {
+      if(!lyrCropActive||e.target.classList.contains('lyrcrop-handle'))return;
+      e.stopPropagation();e.preventDefault();
+      const r=mc.getBoundingClientRect();
+      _lyrCropDrag={type:'move',sx:e.clientX-r.left,sy:e.clientY-r.top,ox:lyrCropRect.x,oy:lyrCropRect.y};
+      try{box.setPointerCapture(e.pointerId);}catch(_){}
+    });
+    box.addEventListener('pointermove', e => {
+      if(!_lyrCropDrag||_lyrCropDrag.type!=='move')return;
+      e.preventDefault();
+      const r=mc.getBoundingClientRect();
+      const W=mc.clientWidth,H=mc.clientHeight;
+      let nx=_lyrCropDrag.ox+(e.clientX-r.left)-_lyrCropDrag.sx;
+      let ny=_lyrCropDrag.oy+(e.clientY-r.top)-_lyrCropDrag.sy;
+      nx=Math.max(0,Math.min(W-lyrCropRect.w,nx));
+      ny=Math.max(0,Math.min(H-lyrCropRect.h,ny));
+      lyrCropRect.x=nx;lyrCropRect.y=ny;_updateLyrCropUI();
+    });
+    box.addEventListener('pointerup',()=>{_lyrCropDrag=null;});
+    const okBtn = document.getElementById('lyrCropOkBtn');
+    const cancelBtn = document.getElementById('lyrCropCancelBtn');
+    if(okBtn) okBtn.addEventListener('click',()=>exitLyrCrop(true));
+    if(cancelBtn) cancelBtn.addEventListener('click',()=>exitLyrCrop(false));
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup);
+  else setup();
+})();
 
 mc.addEventListener('mousedown',startDrag);
 mc.addEventListener('mousemove',moveDrag);
