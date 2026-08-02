@@ -580,6 +580,50 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
 .csz-btns{display:flex;gap:8px}
 .csz-btn-cancel{flex:1;padding:10px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);color:var(--ink2);font-size:13px;font-family:'Gowun Dodum',serif;cursor:pointer}
 .csz-btn-ok{flex:2;padding:10px;border:none;border-radius:10px;background:linear-gradient(135deg,#C4973A,#a07830);color:#1C0F06;font-size:13px;font-weight:700;font-family:'Gowun Dodum',serif;cursor:pointer}
+
+/* ── 레이어 플로팅 툴바 ── */
+#layerToolbar{
+  display:none;position:absolute;z-index:200;
+  background:rgba(28,15,6,.92);border-radius:10px;
+  padding:4px 6px;gap:2px;align-items:center;
+  box-shadow:0 4px 16px rgba(0,0,0,.4);
+  transform:translateX(-50%);
+  pointer-events:all;
+}
+#layerToolbar.show{display:flex}
+.ltb-btn{
+  width:32px;height:32px;border:none;background:transparent;
+  color:rgba(255,255,255,.85);font-size:15px;border-radius:7px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:background .12s;
+}
+.ltb-btn:hover{background:rgba(255,255,255,.15)}
+.ltb-sep{width:1px;height:20px;background:rgba(255,255,255,.15);margin:0 2px}
+
+/* ── 컨텍스트 메뉴 ── */
+#layerCtxMenu{
+  display:none;position:absolute;z-index:300;
+  background:var(--parchment);border-radius:12px;
+  box-shadow:0 8px 28px rgba(0,0,0,.25);
+  min-width:190px;padding:6px 0;
+  font-family:'Gowun Dodum',serif;
+}
+#layerCtxMenu.show{display:block}
+.ctx-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 16px;font-size:13px;color:var(--ink);
+  cursor:pointer;transition:background .1s;
+}
+.ctx-item:hover{background:rgba(196,151,58,.1)}
+.ctx-item .ctx-icon{width:18px;text-align:center;font-size:14px;color:var(--ink2)}
+.ctx-item .ctx-key{margin-left:auto;font-size:11px;color:var(--ink3)}
+.ctx-item.red{color:#E84855}
+.ctx-item.red .ctx-icon{color:#E84855}
+.ctx-sep{height:1px;background:var(--border);margin:4px 0}
+.ctx-sub{display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:13px;color:var(--ink);cursor:pointer;transition:background .1s;position:relative}
+.ctx-sub:hover{background:rgba(196,151,58,.1)}
+.ctx-sub .ctx-icon{width:18px;text-align:center;font-size:14px;color:var(--ink2)}
+.ctx-sub-arrow{margin-left:auto;font-size:11px;color:var(--ink3)}
 </style>
 </head>
 <body>
@@ -668,6 +712,29 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
 
   <!-- CANVAS ZONE -->
   <div class="canvas-zone" id="canvasZone">
+    <!-- ── 레이어 플로팅 툴바 ── -->
+    <div id="layerToolbar">
+      <button class="ltb-btn" onclick="ltbDelete()" title="삭제">🗑</button>
+      <button class="ltb-btn" onclick="ltbLock()" id="ltbLockBtn" title="잠금">🔓</button>
+      <div class="ltb-sep"></div>
+      <button class="ltb-btn" onclick="ltbMore(event)" title="더보기">···</button>
+    </div>
+    <!-- ── 컨텍스트 메뉴 ── -->
+    <div id="layerCtxMenu">
+      <div class="ctx-item" onclick="ctxCopy()"><span class="ctx-icon">⧉</span>복사<span class="ctx-key">Ctrl+C</span></div>
+      <div class="ctx-item" onclick="ctxDuplicate()"><span class="ctx-icon">⊕</span>복제<span class="ctx-key">Ctrl+D</span></div>
+      <div class="ctx-sep"></div>
+      <div class="ctx-sub" onclick="ctxOrderSub(event)"><span class="ctx-icon">≋</span>순서<span class="ctx-sub-arrow">›</span></div>
+      <div class="ctx-sub" onclick="ctxAlignSub(event)"><span class="ctx-icon">⊞</span>정렬<span class="ctx-sub-arrow">›</span></div>
+      <div class="ctx-sep"></div>
+      <div class="ctx-item" onclick="ctxLock()"><span class="ctx-icon">🔓</span><span id="ctxLockLabel">잠금</span><span class="ctx-key">Ctrl+L</span></div>
+      <div class="ctx-sep"></div>
+      <div class="ctx-item red" onclick="ctxDelete()"><span class="ctx-icon">🗑</span>삭제<span class="ctx-key">Delete</span></div>
+    </div>
+    <!-- ── 서브메뉴 ── -->
+    <div id="layerSubMenu" style="display:none;position:absolute;z-index:400;background:var(--parchment);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.2);min-width:140px;padding:6px 0;font-family:'Gowun Dodum',serif;">
+      <div id="subMenuItems"></div>
+    </div>
     <div class="canvas-shell" id="canvasShell">
       <canvas id="mainCanvas"></canvas>
       <div class="canvas-resize-handle tl" id="rh-tl"></div>
@@ -2826,6 +2893,7 @@ function startDrag(e) {
     bgDrag = true;
     bdsx=fx; bdsy=fy; bdox=bgOffX; bdoy=bgOffY;
     mc.style.cursor = 'grabbing';
+    selId = null; hideLayerToolbar(); refreshLayerList(); renderProps();
     return;
   }
 
@@ -2841,6 +2909,7 @@ function startDrag(e) {
       const changed = selId !== l.id;
       selId=l.id; drag=true; dsx=fx; dsy=fy; dlx=l.x; dly=l.y;
       if (changed) { refreshLayerList(); renderProps(); }
+      updateLayerToolbar();
       return;
     }
   }
@@ -2881,10 +2950,198 @@ function moveDrag(e) {
 }
 function endDrag(){
   if (drag || bgDrag || handleDrag) saveHistory();
-  if (drag) { refreshLayerList(); renderProps(); }
+  if (drag) { refreshLayerList(); renderProps(); updateLayerToolbar(); }
   drag=false; handleDrag=false;
   if (bgDrag) { bgDrag=false; mc.style.cursor='grab'; }
 }
+
+
+/* ════════════════════════════════════
+   레이어 플로팅 툴바 + 컨텍스트 메뉴
+════════════════════════════════════ */
+let _copiedLayer = null;
+
+function updateLayerToolbar() {
+  const tb = document.getElementById('layerToolbar');
+  if (!tb) return;
+  const l = layers.find(x => x.id === selId);
+  if (!l) { tb.classList.remove('show'); return; }
+
+  // 캔버스 위 위치 계산
+  const rect = mc.getBoundingClientRect();
+  const zoneRect = document.getElementById('canvasZone').getBoundingClientRect();
+  const cx = rect.left - zoneRect.left + l.x * rect.width;
+  const ty = rect.top  - zoneRect.top  + l.y * rect.height;
+  const topY = Math.max(ty - rect.height * (l.size||100)/2/mc.width - 44, 4);
+
+  tb.style.left = cx + 'px';
+  tb.style.top  = topY + 'px';
+
+  // 잠금 아이콘 업데이트
+  const lockBtn = document.getElementById('ltbLockBtn');
+  if (lockBtn) lockBtn.textContent = l.locked ? '🔒' : '🔓';
+
+  tb.classList.add('show');
+}
+
+function hideLayerToolbar() {
+  const tb = document.getElementById('layerToolbar');
+  if (tb) tb.classList.remove('show');
+  hideCtxMenu();
+}
+
+function hideCtxMenu() {
+  const m = document.getElementById('layerCtxMenu');
+  if (m) m.classList.remove('show');
+  const s = document.getElementById('layerSubMenu');
+  if (s) s.style.display = 'none';
+}
+
+function ltbDelete() {
+  if (!selId) return;
+  saveHistory();
+  layers = layers.filter(x => x.id !== selId);
+  selId = null;
+  hideLayerToolbar();
+  refreshLayerList(); renderProps(); render();
+  showToast('삭제됨');
+}
+
+function ltbLock() {
+  const l = layers.find(x => x.id === selId);
+  if (!l) return;
+  l.locked = !l.locked;
+  updateLayerToolbar();
+  showToast(l.locked ? '🔒 잠금' : '🔓 잠금 해제');
+}
+
+function ltbMore(e) {
+  e.stopPropagation();
+  const menu = document.getElementById('layerCtxMenu');
+  if (!menu) return;
+  const l = layers.find(x => x.id === selId);
+  if (l) {
+    const lbl = document.getElementById('ctxLockLabel');
+    if (lbl) lbl.textContent = l.locked ? '잠금 해제' : '잠금';
+    const lockIcon = menu.querySelector('.ctx-item:last-child .ctx-icon');
+  }
+  const tb = document.getElementById('layerToolbar');
+  const tbRect = tb.getBoundingClientRect();
+  const zoneRect = document.getElementById('canvasZone').getBoundingClientRect();
+  menu.style.left = (tbRect.right - zoneRect.left - menu.offsetWidth || 0) + 'px';
+  menu.style.top  = (tbRect.bottom - zoneRect.top + 4) + 'px';
+  menu.classList.toggle('show');
+}
+
+// 컨텍스트 메뉴 항목들
+function ctxCopy() {
+  const l = layers.find(x => x.id === selId);
+  if (!l) return;
+  _copiedLayer = JSON.parse(JSON.stringify(l));
+  hideCtxMenu();
+  showToast('복사됨');
+}
+
+function ctxDuplicate() {
+  if (!selId) return;
+  duplicateLayer(selId);
+  hideCtxMenu();
+}
+
+function ctxLock() {
+  ltbLock();
+  hideCtxMenu();
+}
+
+function ctxDelete() {
+  ltbDelete();
+  hideCtxMenu();
+}
+
+function ctxOrderSub(e) {
+  e.stopPropagation();
+  const items = [
+    { label: '맨 앞으로', fn: () => { moveLayerTo('front'); hideCtxMenu(); } },
+    { label: '앞으로',    fn: () => { moveLayerTo('up');    hideCtxMenu(); } },
+    { label: '뒤로',      fn: () => { moveLayerTo('down');  hideCtxMenu(); } },
+    { label: '맨 뒤로',  fn: () => { moveLayerTo('back');  hideCtxMenu(); } },
+  ];
+  showSubMenu(e.currentTarget, items);
+}
+
+function ctxAlignSub(e) {
+  e.stopPropagation();
+  const items = [
+    { label: '왼쪽 정렬',   fn: () => { alignLayer('left');   hideCtxMenu(); } },
+    { label: '가운데',       fn: () => { alignLayer('center'); hideCtxMenu(); } },
+    { label: '오른쪽 정렬', fn: () => { alignLayer('right');  hideCtxMenu(); } },
+    { label: '위',           fn: () => { alignLayer('top');    hideCtxMenu(); } },
+    { label: '세로 중앙',   fn: () => { alignLayer('middle'); hideCtxMenu(); } },
+    { label: '아래',         fn: () => { alignLayer('bottom'); hideCtxMenu(); } },
+  ];
+  showSubMenu(e.currentTarget, items);
+}
+
+function showSubMenu(anchor, items) {
+  const sub = document.getElementById('layerSubMenu');
+  const zone = document.getElementById('canvasZone');
+  const aRect = anchor.getBoundingClientRect();
+  const zRect = zone.getBoundingClientRect();
+  sub.style.left = (aRect.right - zRect.left + 4) + 'px';
+  sub.style.top  = (aRect.top  - zRect.top) + 'px';
+  const ul = document.getElementById('subMenuItems');
+  ul.innerHTML = '';
+  items.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'ctx-item';
+    div.textContent = item.label;
+    div.onclick = item.fn;
+    ul.appendChild(div);
+  });
+  sub.style.display = 'block';
+}
+
+function moveLayerTo(dir) {
+  const idx = layers.findIndex(x => x.id === selId);
+  if (idx < 0) return;
+  saveHistory();
+  if (dir === 'front') { const l = layers.splice(idx,1)[0]; layers.push(l); }
+  else if (dir === 'back') { const l = layers.splice(idx,1)[0]; layers.unshift(l); }
+  else if (dir === 'up' && idx < layers.length-1) { [layers[idx], layers[idx+1]] = [layers[idx+1], layers[idx]]; }
+  else if (dir === 'down' && idx > 0) { [layers[idx], layers[idx-1]] = [layers[idx-1], layers[idx]]; }
+  refreshLayerList(); render();
+}
+
+function alignLayer(pos) {
+  const l = layers.find(x => x.id === selId);
+  if (!l) return;
+  saveHistory();
+  if (pos==='left')   l.x = 0.05;
+  if (pos==='center') l.x = 0.5;
+  if (pos==='right')  l.x = 0.95;
+  if (pos==='top')    l.y = 0.05;
+  if (pos==='middle') l.y = 0.5;
+  if (pos==='bottom') l.y = 0.95;
+  render(); updateLayerToolbar();
+}
+
+// 클릭 시 메뉴 닫기
+document.addEventListener('click', e => {
+  const menu = document.getElementById('layerCtxMenu');
+  const sub  = document.getElementById('layerSubMenu');
+  const tb   = document.getElementById('layerToolbar');
+  if (menu && !menu.contains(e.target) && !tb?.contains(e.target)) hideCtxMenu();
+});
+
+// 키보드 단축키
+document.addEventListener('keydown', e => {
+  if (!selId) return;
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (e.key === 'Delete' || e.key === 'Backspace') { ltbDelete(); }
+  if ((e.ctrlKey||e.metaKey) && e.key === 'd') { e.preventDefault(); ctxDuplicate(); }
+  if ((e.ctrlKey||e.metaKey) && e.key === 'c') { e.preventDefault(); ctxCopy(); }
+  if ((e.ctrlKey||e.metaKey) && e.key === 'l') { e.preventDefault(); ctxLock(); }
+});
 
 mc.addEventListener('mousedown',startDrag);
 mc.addEventListener('mousemove',moveDrag);
