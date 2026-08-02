@@ -2205,7 +2205,7 @@ function render(targetCtx, TW, TH, transparent) {
   layers.forEach(l => {
     if (!l.visible) return;
     try {
-      if (l.type==='text') drawText(c,W,H,l);
+      if (l.type==='text'||l.type==='sticker') drawText(c,W,H,l);
       else drawCalli(c,W,H,l);
     } catch(e) { console.warn('레이어 렌더 에러:', e); }
   });
@@ -2235,7 +2235,7 @@ function drawSelectionHandles(c, W, H, l, mode='gold') {
 
   let hw, hh;
   try {
-    if (l.type === 'text') {
+    if (l.type === 'text' || l.type === 'sticker') {
       const fs = (l.size||40) * sc;
       c.font = `${l.weight||'700'} ${fs}px ${l.font||'sans-serif'}`;
       const lines = (l.text||'텍스트').split('\n');
@@ -2719,10 +2719,10 @@ function refreshLayerList() {
     div.className = 'litem'+(l.id===selId?' sel':selIds.includes(l.id)?' sel-multi':'')+(l.locked?' locked':'');
     const preview = l.type==='text' ? (l.text.split('\n')[0].slice(0,12)||'(빈텍스트)') : l.name;
     div.innerHTML=`
-      <div class="litem-icon">${l.type==='text'?'✍️':'🖌'}</div>
+      <div class="litem-icon">${l.type==='text'?'✍️':l.type==='sticker'?'⭐':'🖌'}</div>
       <div class="litem-info">
         <div class="litem-name">${preview}</div>
-        <div class="litem-sub">${l.type==='text'?'텍스트':'PNG 오버레이'} · 투명도 ${l.opacity}%</div>
+        <div class="litem-sub">${l.type==='text'?'텍스트':l.type==='sticker'?'스티커':'PNG 오버레이'} · 투명도 ${l.opacity}%</div>
       </div>
       <div class="litem-btns">
         <div class="lbtn" title="복제" onclick="event.stopPropagation();duplicateLayer(${l.id})" style="font-size:11px">⧉</div>
@@ -2753,7 +2753,7 @@ function renderProps() {
   if (!l) { hint.style.display='block'; return; }
   hint.style.display='none';
   try {
-    if (l.type==='text') buildTextProps(area,l);
+    if (l.type==='text'||l.type==='sticker') buildTextProps(area,l);
     else buildCalliProps(area,l);
   } catch(e) { console.warn('renderProps 에러:', e); }
 }
@@ -2809,9 +2809,9 @@ function buildTextProps(area, l) {
   $('pe_font').addEventListener('change', e=>{ saveHistory(); l.font=e.target.value; render(); });
   $('pe_size').addEventListener('input', e=>{ l.size=+e.target.value; $('pe_vsize').textContent=e.target.value; render(); });
   $('pe_size').addEventListener('change', ()=>saveHistory());
-  $('pe_rot').addEventListener('input', e=>{ l.rotate=+e.target.value; $('pe_vrot').textContent=e.target.value+'°'; render(); });
+  $('pe_rot').addEventListener('input', e=>{ drag=false;handleDrag=false;pendingDrag=false; l.rotate=+e.target.value; $('pe_vrot').textContent=e.target.value+'°'; render(); });
   $('pe_rot').addEventListener('change', ()=>saveHistory());
-  $('pe_op').addEventListener('input', e=>{ l.opacity=+e.target.value; $('pe_vop').textContent=e.target.value+'%'; refreshLayerList(); render(); });
+  $('pe_op').addEventListener('input', e=>{ drag=false;handleDrag=false;pendingDrag=false; l.opacity=+e.target.value; $('pe_vop').textContent=e.target.value+'%'; refreshLayerList(); render(); });
   $('pe_op').addEventListener('change', ()=>saveHistory());
   $('pe_shadow').addEventListener('change', e=>{ saveHistory(); l.shadow=e.target.checked; render(); });
 }
@@ -2854,15 +2854,15 @@ function buildCalliProps(area, l) {
     </div>`;
   area.appendChild(box);
 
-  $('pe_size').addEventListener('input', e=>{ l.size=+e.target.value; $('pe_vsize').textContent=e.target.value; render(); });
+  $('pe_size').addEventListener('input', e=>{ drag=false;handleDrag=false;pendingDrag=false; l.size=+e.target.value; $('pe_vsize').textContent=e.target.value; render(); });
   $('pe_size').addEventListener('change', ()=>saveHistory());
-  $('pe_scaleX').addEventListener('input', e=>{ l.scaleX=+e.target.value; $('pe_vscaleX').textContent=e.target.value+'%'; render(); });
+  $('pe_scaleX').addEventListener('input', e=>{ drag=false;handleDrag=false;pendingDrag=false; l.scaleX=+e.target.value; $('pe_vscaleX').textContent=e.target.value+'%'; render(); });
   $('pe_scaleX').addEventListener('change', ()=>saveHistory());
-  $('pe_scaleY').addEventListener('input', e=>{ l.scaleY=+e.target.value; $('pe_vscaleY').textContent=e.target.value+'%'; render(); });
+  $('pe_scaleY').addEventListener('input', e=>{ drag=false;handleDrag=false;pendingDrag=false; l.scaleY=+e.target.value; $('pe_vscaleY').textContent=e.target.value+'%'; render(); });
   $('pe_scaleY').addEventListener('change', ()=>saveHistory());
   $('pe_rot').addEventListener('input', e=>{ l.rotate=+e.target.value; $('pe_vrot').textContent=e.target.value+'°'; render(); });
   $('pe_rot').addEventListener('change', ()=>saveHistory());
-  $('pe_op').addEventListener('input', e=>{ l.opacity=+e.target.value; $('pe_vop').textContent=e.target.value+'%'; refreshLayerList(); render(); });
+  $('pe_op').addEventListener('input', e=>{ drag=false;handleDrag=false;pendingDrag=false; l.opacity=+e.target.value; $('pe_vop').textContent=e.target.value+'%'; refreshLayerList(); render(); });
   $('pe_op').addEventListener('change', ()=>saveHistory());
   $('pe_thr').addEventListener('input', e=>{ l.thresh=+e.target.value; $('pe_vthr').textContent=e.target.value; processCalliLayer(l.id); render(); });
   $('pe_thr').addEventListener('change', ()=>saveHistory());
@@ -2978,7 +2978,7 @@ function getLayerBounds(l, W, H) {
   const cx = l.x * W, cy = l.y * H;
   let hw, hh;
   try {
-    if (l.type === 'text') {
+    if (l.type === 'text' || l.type === 'sticker') {
       const fs = (l.size||40) * sc;
       mctx.font = `${l.weight||'700'} ${fs}px ${l.font||'sans-serif'}`;
       const lines = (l.text||'텍스트').split('\n');
@@ -3008,8 +3008,10 @@ function startDrag(e) {
       if (b) {
         const hs = 14 / (W / mc.width); // 히트 반경 (정규화)
         const corners = [
-          [-b.hw/W*1,-b.hh/H*1],[b.hw/W*1,-b.hh/H*1],
-          [b.hw/W*1,b.hh/H*1],[-b.hw/W*1,b.hh/H*1]
+          [-b.hw/W,-b.hh/H],[b.hw/W,-b.hh/H],
+          [b.hw/W,b.hh/H],[-b.hw/W,b.hh/H],
+          [0,-b.hh/H],[0,b.hh/H],
+          [-b.hw/W,0],[b.hw/W,0]
         ];
         for (const [chx,chy] of corners) {
           const hx = l.x + chx, hy = l.y + chy;
@@ -3542,8 +3544,41 @@ function updateMultiToolbar() {
   }
 }
 
+
+function updateCursorForLayer(e) {
+  if (!selId || drag || bgDrag || handleDrag) return;
+  const l = layers.find(x => x.id === selId);
+  if (!l || !l.visible) return;
+  const [fx, fy] = getCanvasXY(e);
+  const W = mc.width, H = mc.height;
+  const b = getLayerBounds(l, W, H);
+  if (!b) return;
+  const sc = W / mc.clientWidth;
+  const hs = 18 / mc.clientWidth; // 핸들 히트 영역 (normalized)
+
+  const cx = l.x, cy = l.y;
+  const hw = b.hw / W, hh = b.hh / H;
+
+  const dx = fx - cx, dy = fy - cy;
+  const nearL = Math.abs(dx + hw) < hs;
+  const nearR = Math.abs(dx - hw) < hs;
+  const nearT = Math.abs(dy + hh) < hs;
+  const nearB = Math.abs(dy - hh) < hs;
+  const inBox = Math.abs(dx) < hw + hs && Math.abs(dy) < hh + hs;
+
+  if (!inBox) { mc.style.cursor = 'default'; return; }
+
+  if (nearT && nearL)      mc.style.cursor = 'nw-resize';
+  else if (nearT && nearR) mc.style.cursor = 'ne-resize';
+  else if (nearB && nearL) mc.style.cursor = 'sw-resize';
+  else if (nearB && nearR) mc.style.cursor = 'se-resize';
+  else if (nearT || nearB) mc.style.cursor = 'ns-resize';
+  else if (nearL || nearR) mc.style.cursor = 'ew-resize';
+  else                     mc.style.cursor = 'move';
+}
+
 mc.addEventListener('mousedown',startDrag);
-mc.addEventListener('mousemove',moveDrag);
+mc.addEventListener('mousemove', e => { moveDrag(e); updateCursorForLayer(e); });
 document.addEventListener('mouseup',endDrag);
 mc.addEventListener('touchstart', e => {
   if (e.touches.length === 2) {
@@ -4979,7 +5014,7 @@ function closeStickerModal() {
 function addStickerLayer(emoji) {
   saveHistory();
   const id = ++idCtr;
-  layers.push({ id, type:'text', text:emoji, font:"'Noto Serif KR',serif", size:Math.round(mc.width*.15), color:'#000000', weight:'400', align:'center', x:.5, y:.5, rotate:0, opacity:100, shadow:false, visible:true });
+  layers.push({ id, type:'sticker', text:emoji, font:"'Noto Serif KR',serif", size:Math.round(mc.width*.15), color:'#000000', weight:'400', align:'center', x:.5, y:.5, rotate:0, opacity:100, shadow:false, visible:true });
   selId = id;
   refreshLayerList(); renderProps(); render();
   showToast(emoji + ' 스티커 추가됨');
