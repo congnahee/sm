@@ -2650,9 +2650,15 @@ function refreshLayerList() {
         <div class="lbtn" title="아래로" onclick="event.stopPropagation();moveLayer(${l.id},'down')">↓</div>
         <div class="lbtn del" title="삭제" onclick="event.stopPropagation();delLayer(${l.id})">✕</div>
       </div>`;
-    div.addEventListener('click', ()=>{ selId=l.id; refreshLayerList(); renderProps(); });
+    div.addEventListener('click', ()=>{ selId=l.id; refreshLayerList(); renderProps(); updateLayerToolbar(); });
+    div.dataset.layerId = l.id;
     list.appendChild(div);
   });
+  // 선택된 레이어로 스크롤
+  if (selId) {
+    const selEl = list.querySelector(`[data-layer-id="${selId}"]`);
+    if (selEl) selEl.scrollIntoView({ block:'nearest', behavior:'smooth' });
+  }
 }
 
 /* ════════════════════════════════════
@@ -2959,7 +2965,14 @@ function startDrag(e) {
       if (l.locked) { showToast('🔒 잠금된 레이어예요'); return; }
       const changed = selId !== l.id;
       selId=l.id; drag=true; dsx=fx; dsy=fy; dlx=l.x; dly=l.y;
-      if (changed) { refreshLayerList(); renderProps(); }
+      if (changed) {
+        // 글자올리기 탭으로 자동 전환
+        const layerTab = document.getElementById('ptab-layers');
+        if (layerTab && !layerTab.classList.contains('active')) {
+          switchTab('layers', layerTab);
+        }
+        refreshLayerList(); renderProps();
+      }
       updateLayerToolbar();
       return;
     }
