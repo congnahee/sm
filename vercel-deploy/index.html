@@ -723,6 +723,7 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
     <div id="layerCtxMenu">
       <div class="ctx-item" onclick="ctxCopy()"><span class="ctx-icon">⧉</span>복사<span class="ctx-key">Ctrl+C</span></div>
       <div class="ctx-item" onclick="ctxDuplicate()"><span class="ctx-icon">⊕</span>복제<span class="ctx-key">Ctrl+D</span></div>
+      <div class="ctx-item" onclick="ctxCrop()"><span class="ctx-icon">✂</span>이미지 자르기</div>
       <div class="ctx-sep"></div>
       <div class="ctx-sub" onclick="ctxOrderSub(event)"><span class="ctx-icon">≋</span>순서<span class="ctx-sub-arrow">›</span></div>
       <div class="ctx-sub" onclick="ctxAlignSub(event)"><span class="ctx-icon">⊞</span>정렬<span class="ctx-sub-arrow">›</span></div>
@@ -3046,6 +3047,13 @@ function ctxDuplicate() {
   if (!selId) return;
   duplicateLayer(selId);
   hideCtxMenu();
+}
+
+function ctxCrop() {
+  hideCtxMenu();
+  const l = layers.find(x => x.id === selId);
+  if (!l || l.type !== 'calli') { showToast('이미지 레이어를 선택하세요'); return; }
+  toggleLyrCrop();
 }
 
 function ctxLock() {
