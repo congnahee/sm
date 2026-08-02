@@ -1,4 +1,28 @@
 <!DOCTYPE html>
+<!--
+  ╔══════════════════════════════════════════════════════════════╗
+  ║                                                              ║
+  ║   콩심캘리 스튜디오 (Congsim Calli Studio)                   ║
+  ║                                                              ║
+  ║   Copyright © 2025 Congsim. All rights reserved.            ║
+  ║   이 소프트웨어의 모든 저작권은 콩심(Congsim)에 있습니다.    ║
+  ║                                                              ║
+  ║   이 소프트웨어의 소스코드, 디자인 및 콘텐츠 일체는          ║
+  ║   콩심의 독점적 자산입니다. 사전 서면 동의 없이              ║
+  ║   무단 복제, 배포, 수정을 엄격히 금지합니다.                 ║
+  ║   위반 시 저작권법에 의해 법적 조치를 받을 수 있습니다.      ║
+  ║                                                              ║
+  ║   All source code, design, and content of this software     ║
+  ║   are the exclusive property of Congsim.                    ║
+  ║   Unauthorized copying, reproduction, distribution,         ║
+  ║   or modification of this software, in whole or in part,    ║
+  ║   is strictly prohibited without prior written permission   ║
+  ║   from Congsim. Violations may result in legal action       ║
+  ║   under applicable copyright law.                           ║
+  ║                                                              ║
+  ╚══════════════════════════════════════════════════════════════╝
+-->
+
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
@@ -766,9 +790,9 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
 <circle r="11" fill="#FFB820"/>
 </g>
 </svg></div>
-    <div>
+    <div style="display:flex;align-items:baseline;gap:8px">
       <div class="logo-txt">콩심캘리</div>
-      <div class="logo-ver">Kongsim Calli Studio v1</div>
+      <div class="logo-ver" style="font-size:10px;color:rgba(255,255,255,.35);letter-spacing:.1em;margin-top:0">Congsim Calli Studio</div>
     </div>
   </div>
   <div class="hdr-right">
@@ -4962,6 +4986,44 @@ window.addEventListener('load', ()=>{
   mc.style.cursor='grab';
   try { buildGallery(); } catch(e) { console.warn('buildGallery:', e.message); }
 });
+</script>
+
+<script>
+// ── 소스 보호 ──
+(function(){
+  // 우클릭 막기
+  document.addEventListener('contextmenu', e => e.preventDefault());
+  // F12, Ctrl+U, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+S 막기
+  document.addEventListener('keydown', e => {
+    if (e.key === 'F12') { e.preventDefault(); return false; }
+    if (e.ctrlKey && e.key === 'u') { e.preventDefault(); return false; }
+    if (e.ctrlKey && e.key === 's') { e.preventDefault(); return false; }
+    if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i')) { e.preventDefault(); return false; }
+    if (e.ctrlKey && e.shiftKey && (e.key === 'J' || e.key === 'j')) { e.preventDefault(); return false; }
+    if (e.ctrlKey && e.shiftKey && (e.key === 'C' || e.key === 'c')) { e.preventDefault(); return false; }
+  });
+  // 개발자도구 감지 (창 크기 변화로 감지)
+  let devOpen = false;
+  const threshold = 160;
+  setInterval(() => {
+    const widthDiff = window.outerWidth - window.innerWidth;
+    const heightDiff = window.outerHeight - window.innerHeight;
+    if (widthDiff > threshold || heightDiff > threshold) {
+      if (!devOpen) {
+        devOpen = true;
+        document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#1C0F06;color:#C4973A;font-family:serif;font-size:20px;letter-spacing:.1em">🌼 콩심캘리</div>';
+      }
+    } else {
+      devOpen = false;
+    }
+  }, 1000);
+  // 텍스트 선택 막기 (캔버스 외부)
+  document.addEventListener('selectstart', e => {
+    if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+      e.preventDefault();
+    }
+  });
+})();
 </script>
 </body>
 </html>
