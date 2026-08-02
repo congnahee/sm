@@ -5114,43 +5114,7 @@ window.addEventListener('load', ()=>{
 });
 </script>
 
-<script>
-// ── 소스 보호 ──
-(function(){
-  // 우클릭 막기
-  document.addEventListener('contextmenu', e => e.preventDefault());
-  // F12, Ctrl+U, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+S 막기
-  document.addEventListener('keydown', e => {
-    if (e.key === 'F12') { e.preventDefault(); return false; }
-    if (e.ctrlKey && e.key === 'u') { e.preventDefault(); return false; }
-    if (e.ctrlKey && e.key === 's') { e.preventDefault(); return false; }
-    if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i')) { e.preventDefault(); return false; }
-    if (e.ctrlKey && e.shiftKey && (e.key === 'J' || e.key === 'j')) { e.preventDefault(); return false; }
-    if (e.ctrlKey && e.shiftKey && (e.key === 'C' || e.key === 'c')) { e.preventDefault(); return false; }
-  });
-  // 개발자도구 감지 (창 크기 변화로 감지)
-  let devOpen = false;
-  const threshold = 160;
-  setInterval(() => {
-    const widthDiff = window.outerWidth - window.innerWidth;
-    const heightDiff = window.outerHeight - window.innerHeight;
-    if (widthDiff > threshold || heightDiff > threshold) {
-      if (!devOpen) {
-        devOpen = true;
-        document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#1C0F06;color:#C4973A;font-family:serif;font-size:20px;letter-spacing:.1em">🌼 콩심캘리</div>';
-      }
-    } else {
-      devOpen = false;
-    }
-  }, 1000);
-  // 텍스트 선택 막기 (캔버스 외부)
-  document.addEventListener('selectstart', e => {
-    if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
-      e.preventDefault();
-    }
-  });
-})();
-</script>
+
 
 /* ════════════════════════════════════
    캔버스 패닝 (확대 시 빈 곳 드래그)
