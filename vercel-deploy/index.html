@@ -5116,6 +5116,8 @@ window.addEventListener('load', ()=>{
 
 
 
+
+<script>
 /* ════════════════════════════════════
    캔버스 패닝 (확대 시 빈 곳 드래그)
 ════════════════════════════════════ */
@@ -5130,66 +5132,44 @@ function _isPannable() {
   function setup() {
     const zone = document.getElementById('canvasZone');
     if (!zone) { setTimeout(setup, 300); return; }
-
     zone.addEventListener('mousedown', e => {
-      // 캔버스(mc) 위 클릭이 아닌 zone 빈 곳 클릭 시만 패닝
       if (e.target !== zone) return;
       if (!_isPannable()) return;
       _panActive = true;
-      _panStartX = e.clientX;
-      _panStartY = e.clientY;
-      _panScrollX = zone.scrollLeft;
-      _panScrollY = zone.scrollTop;
+      _panStartX = e.clientX; _panStartY = e.clientY;
+      _panScrollX = zone.scrollLeft; _panScrollY = zone.scrollTop;
       zone.style.cursor = 'grabbing';
       e.preventDefault();
     });
-
     document.addEventListener('mousemove', e => {
       if (!_panActive) return;
-      const zone = document.getElementById('canvasZone');
-      zone.scrollLeft = _panScrollX - (e.clientX - _panStartX);
-      zone.scrollTop  = _panScrollY - (e.clientY - _panStartY);
+      const z = document.getElementById('canvasZone');
+      z.scrollLeft = _panScrollX - (e.clientX - _panStartX);
+      z.scrollTop  = _panScrollY - (e.clientY - _panStartY);
     });
-
     document.addEventListener('mouseup', () => {
       if (!_panActive) return;
       _panActive = false;
-      const zone = document.getElementById('canvasZone');
-      zone.style.cursor = _isPannable() ? 'grab' : '';
+      const z = document.getElementById('canvasZone');
+      z.style.cursor = _isPannable() ? 'grab' : '';
     });
-
-    // 터치 패닝
     zone.addEventListener('touchstart', e => {
       if (e.target !== zone || e.touches.length !== 1) return;
       if (!_isPannable()) return;
       _panActive = true;
-      _panStartX = e.touches[0].clientX;
-      _panStartY = e.touches[0].clientY;
-      _panScrollX = zone.scrollLeft;
-      _panScrollY = zone.scrollTop;
+      _panStartX = e.touches[0].clientX; _panStartY = e.touches[0].clientY;
+      _panScrollX = zone.scrollLeft; _panScrollY = zone.scrollTop;
     }, { passive: true });
-
     zone.addEventListener('touchmove', e => {
       if (!_panActive || e.touches.length !== 1) return;
       zone.scrollLeft = _panScrollX - (e.touches[0].clientX - _panStartX);
       zone.scrollTop  = _panScrollY - (e.touches[0].clientY - _panStartY);
     }, { passive: true });
-
     zone.addEventListener('touchend', () => { _panActive = false; });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setup);
   else setup();
 })();
-
-// 줌 변경 시 패닝 커서 업데이트
-const _origZoomCanvas = zoomCanvas;
-zoomCanvas = function(dir) {
-  _origZoomCanvas(dir);
-  setTimeout(() => {
-    const zone = document.getElementById('canvasZone');
-    if (zone) zone.style.cursor = _isPannable() ? 'grab' : '';
-  }, 100);
-};
-
+</script>
 </body>
 </html>
