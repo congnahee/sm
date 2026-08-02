@@ -337,6 +337,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:17px;heigh
 }
 .litem.locked{opacity:.6}
 .litem.locked::after{content:'🔒';font-size:10px;margin-left:4px}
+.litem.sel-multi{border-color:#4ECDC4;background:rgba(78,205,196,.06)}
 .litem.sel{border-color:var(--gold);background:rgba(196,151,58,.06)}
 .litem:hover:not(.sel){border-color:var(--border2)}
 .litem-icon{font-size:18px;flex-shrink:0}
@@ -1378,6 +1379,7 @@ let DISP = 500;                     // display px (auto)
 let zoomScale = 1.0;                // user zoom multiplier
 
 let selId = null, idCtr = 0;
+let selIds = []; // 다중 선택
 let layers = [];        // [{id,type,…}]
 let calliCache = {};    // id→{offscreen,w,h}
 let saveW = 5000, saveH = 5000, saveFmt = 'png';
@@ -2207,9 +2209,17 @@ function render(targetCtx, TW, TH, transparent) {
   });
 
   // 선택된 레이어 핸들 그리기 (미리보기 캔버스에만)
-  if (!TW && selId) {
-    const l = layers.find(x=>x.id===selId);
-    if (l && l.visible) drawSelectionHandles(c, W, H, l);
+  if (!TW) {
+    // 다중선택 - 민트색 점선
+    if (selIds.length > 1) {
+      selIds.forEach(sid => {
+        const sl = layers.find(x=>x.id===sid);
+        if (sl && sl.visible) drawSelectionHandles(c, W, H, sl, sid === selId ? 'gold' : 'multi');
+      });
+    } else if (selId) {
+      const l = layers.find(x=>x.id===selId);
+      if (l && l.visible) drawSelectionHandles(c, W, H, l, 'gold');
+    }
   }
 
   // Empty hint
@@ -2217,7 +2227,7 @@ function render(targetCtx, TW, TH, transparent) {
   } catch(e) { console.warn('render 오류:', e.message); }
 }
 
-function drawSelectionHandles(c, W, H, l) {
+function drawSelectionHandles(c, W, H, l, mode='gold') {
   const sc = W / mc.width;
   const cx = l.x * W, cy = l.y * H;
 
@@ -2244,7 +2254,7 @@ function drawSelectionHandles(c, W, H, l) {
   c.rotate((l.rotate||0) * Math.PI/180);
 
   // 점선 테두리
-  c.strokeStyle = 'rgba(196,151,58,0.9)';
+  c.strokeStyle = mode === 'multi' ? 'rgba(78,205,196,0.8)' : 'rgba(196,151,58,0.9)';
   c.lineWidth = 1.5;
   c.setLineDash([5*sc, 3*sc]);
   c.strokeRect(-hw, -hh, hw*2, hh*2);
@@ -2704,7 +2714,7 @@ function refreshLayerList() {
   list.innerHTML='';
   [...layers].reverse().forEach(l => {
     const div = document.createElement('div');
-    div.className = 'litem'+(l.id===selId?' sel':'')+(l.locked?' locked':'');
+    div.className = 'litem'+(l.id===selId?' sel':selIds.includes(l.id)?' sel-multi':'')+(l.locked?' locked':'');
     const preview = l.type==='text' ? (l.text.split('\n')[0].slice(0,12)||'(빈텍스트)') : l.name;
     div.innerHTML=`
       <div class="litem-icon">${l.type==='text'?'✍️':'🖌'}</div>
@@ -3017,7 +3027,7 @@ function startDrag(e) {
     bgDrag = true;
     bdsx=fx; bdsy=fy; bdox=bgOffX; bdoy=bgOffY;
     mc.style.cursor = 'grabbing';
-    selId = null; hideLayerToolbar(); refreshLayerList(); renderProps();
+    selId = null; selIds = []; hideLayerToolbar(); refreshLayerList(); renderProps();
     return;
   }
 
@@ -3040,10 +3050,23 @@ function startDrag(e) {
         showToast('🔒 잠금된 레이어예요');
         return;
       }
-      // 선택은 즉시, 드래그는 움직임 감지 후
+      // Shift+클릭: 다중선택
+      if (e.shiftKey) {
+        if (selIds.includes(l.id)) {
+          selIds = selIds.filter(x => x !== l.id);
+          if (selId === l.id) selId = selIds[selIds.length-1] || null;
+        } else {
+          if (selId && !selIds.includes(selId)) selIds.push(selId);
+          selIds.push(l.id);
+          selId = l.id;
+        }
+        render(); refreshLayerList(); updateMultiToolbar();
+        return;
+      }
+      // 일반 클릭: 단일선택
+      selIds = [];
       pendingDrag=true; drag=false;
       dsx=fx; dsy=fy; dlx=l.x; dly=l.y;
-      // ✅ 선택 즉시 render → 선택 박스 바로 표시
       render();
       if (changed) {
         const layerTab = document.getElementById('ptab-layers');
@@ -3091,8 +3114,21 @@ function moveDrag(e) {
     }
 
     const l=layers.find(x=>x.id===selId); if(!l) return;
-    l.x=Math.max(0,Math.min(1,dlx+fx-dsx));
-    l.y=Math.max(0,Math.min(1,dly+fy-dsy));
+    const dx=fx-dsx, dy=fy-dsy;
+    // 다중선택 이동
+    if (selIds.length > 1) {
+      selIds.forEach(sid => {
+        const sl = layers.find(x=>x.id===sid);
+        if (sl && !sl.locked) {
+          sl.x = Math.max(0,Math.min(1, sl.x + dx));
+          sl.y = Math.max(0,Math.min(1, sl.y + dy));
+        }
+      });
+      dsx=fx; dsy=fy;
+    } else {
+      l.x=Math.max(0,Math.min(1,dlx+dx));
+      l.y=Math.max(0,Math.min(1,dly+dy));
+    }
     render();
   } catch(err) { console.warn('moveDrag err:', err); }
 }
@@ -3146,13 +3182,14 @@ function hideCtxMenu() {
 }
 
 function ltbDelete() {
-  if (!selId) return;
+  if (!selId && selIds.length === 0) return;
   saveHistory();
-  layers = layers.filter(x => x.id !== selId);
-  selId = null;
+  const toDelete = selIds.length > 1 ? selIds : [selId];
+  layers = layers.filter(x => !toDelete.includes(x.id));
+  selId = null; selIds = [];
   hideLayerToolbar();
   refreshLayerList(); renderProps(); render();
-  showToast('삭제됨');
+  showToast(toDelete.length > 1 ? toDelete.length + '개 삭제됨' : '삭제됨');
 }
 
 function ltbLock() {
@@ -3463,6 +3500,25 @@ function _updateLyrCropUI() {
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup);
   else setup();
 })();
+
+
+function updateMultiToolbar() {
+  if (selIds.length > 1) {
+    // 다중선택 툴바
+    const tb = document.getElementById('layerToolbar');
+    if (!tb) return;
+    const rect = mc.getBoundingClientRect();
+    const zoneRect = document.getElementById('canvasZone').getBoundingClientRect();
+    tb.style.left = (rect.width / 2) + 'px';
+    tb.style.top = '8px';
+    const lockBtn = document.getElementById('ltbLockBtn');
+    if (lockBtn) lockBtn.textContent = '🔓';
+    tb.classList.add('show');
+    showToast(selIds.length + '개 선택됨');
+  } else {
+    updateLayerToolbar();
+  }
+}
 
 mc.addEventListener('mousedown',startDrag);
 mc.addEventListener('mousemove',moveDrag);
