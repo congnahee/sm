@@ -972,7 +972,7 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
           <button class="cctrl-btn" onclick="resetAll()" title="초기화" style="width:38px;height:38px;font-size:16px;flex-shrink:0">↺</button>
         </div>
 
-        <div class="addrow" style="grid-template-columns:1fr 1fr 1fr 1fr">
+        <div class="addrow" style="grid-template-columns:repeat(4,1fr)">
           <div class="addbtn" onclick="addTextLayer()">
             <div class="addbtn-icon">✍️</div>
             <div class="addbtn-lbl">텍스트</div>
@@ -982,13 +982,14 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
             <div class="addbtn-lbl">캘리PNG</div>
             <input type="file" id="calliFileIn" accept="image/*,.png,.jpg,.jpeg,.webp" style="display:none" onchange="onCalliLoad(event)">
           </div>
+          <input type="file" id="imgFileIn" accept="image/*" style="display:none" onchange="onImgLoad(event)">
+          <div class="addbtn" onclick="$('imgFileIn').click()">
+            <div class="addbtn-icon">🖼</div>
+            <div class="addbtn-lbl">이미지</div>
+          </div>
           <div class="addbtn" onclick="openStickerModal()">
             <div class="addbtn-icon">⭐</div>
             <div class="addbtn-lbl">스티커</div>
-          </div>
-          <div class="addbtn" onclick="selId ? duplicateLayer(selId) : showToast('복제할 레이어를 먼저 선택하세요')">
-            <div class="addbtn-icon">📋</div>
-            <div class="addbtn-lbl">복제</div>
           </div>
         </div>
 
@@ -2616,9 +2617,32 @@ function onCalliLoad(e) {
         selId = id;
         processCalliLayer(id);
         refreshLayerList(); renderProps(); render();
-        hideLoad(); showToast('PNG 오버레이 추가됨 ✓');
+        hideLoad(); showToast('캘리 오버레이 추가됨 ✓');
         setTimeout(() => buildFilterThumbs('filterThumbGrid2'), 50);
       } catch(err) { hideLoad(); console.warn('onCalliLoad:', err.message); }
+    };
+    img.src = ev.target.result;
+  };
+  r.readAsDataURL(f);
+  e.target.value='';
+}
+
+function onImgLoad(e) {
+  const f = e.target.files[0]; if (!f) return;
+  showLoad('이미지 불러오는 중...');
+  const r = new FileReader();
+  r.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        saveHistory();
+        const id = ++idCtr;
+        layers.push({ id, type:'calli', name:f.name.replace(/\.[^.]+$/,''), srcImg:img, srcDataUrl:ev.target.result, size:Math.round(mc.width*.7), scaleX:100, scaleY:100, x:.5, y:.5, rotate:0, flipH:false, opacity:100, thresh:255, noBgRemove:true, visible:true, tintColor:null });
+        selId = id;
+        processCalliLayer(id);
+        refreshLayerList(); renderProps(); render();
+        hideLoad(); showToast('이미지 추가됨 ✓');
+      } catch(err) { hideLoad(); console.warn('onImgLoad:', err.message); }
     };
     img.src = ev.target.result;
   };
@@ -2645,7 +2669,6 @@ function processCalliLayer(id) {
     }
     oc.putImageData(id2,0,0);
   } catch(e) {
-    // CORS/보안 오류 시 원본 이미지 그대로 사용
     console.warn('processCalliLayer getImageData 오류 (CORS):', e.message);
   }
   calliCache[id] = { offscreen:off, w:img.width, h:img.height };
@@ -3650,6 +3673,11 @@ function switchTab(name, el) {
   if (name === 'bg') {
     bgMode = 'move';
     mc.style.cursor = bgImg ? 'grab' : 'default';
+    // 캔버스 리사이즈 핸들 표시
+    ['rh-tl','rh-tr','rh-bl','rh-br'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = '';
+    });
     // 배경탭 진입 시 갤러리 갱신 + 배경 있으면 오버레이 속성 표시
     setTimeout(() => {
       renderBgPhotoGallery();
@@ -3658,7 +3686,15 @@ function switchTab(name, el) {
     }, 0);
   } else {
     bgMode = 'layer';
-    mc.style.cursor = 'move';
+    mc.style.cursor = 'default';
+    // 배경 드래그 상태 초기화
+    bgDrag = false;
+    // 캔버스 리사이즈 핸들 숨기기
+    ['rh-tl','rh-tr','rh-bl','rh-br'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+    render();
   }
   // 단계 표시바 연동
   const stepMap = { 'bg':1, 'layers':2, 'gallery':3 };
