@@ -3006,7 +3006,9 @@ function startDrag(e) {
     if (l) {
       const b = getLayerBounds(l, W, H);
       if (b) {
-        const hs = 14 / (W / mc.width); // 히트 반경 (정규화)
+        // 히트 반경: 화면 픽셀 12px → 정규화 좌표로 변환
+        const hsX = 12 / mc.clientWidth;
+        const hsY = 12 / mc.clientHeight;
         const corners = [
           [-b.hw/W,-b.hh/H],[b.hw/W,-b.hh/H],
           [b.hw/W,b.hh/H],[-b.hw/W,b.hh/H],
@@ -3015,7 +3017,7 @@ function startDrag(e) {
         ];
         for (const [chx,chy] of corners) {
           const hx = l.x + chx, hy = l.y + chy;
-          if (Math.abs(fx - hx) < hs/W*3 && Math.abs(fy - hy) < hs/H*3) {
+          if (Math.abs(fx - hx) < hsX && Math.abs(fy - hy) < hsY) {
             handleDrag = true;
             handleDragStartX = fx; handleDragStartY = fy;
             handleDragStartSize = l.size;
@@ -3085,11 +3087,9 @@ function startDrag(e) {
     }
   }
     // 빈 곳 클릭 → 선택 해제
-    if (!bgImg) {
-      selId = null; selIds = [];
-      hideLayerToolbar();
-      refreshLayerList(); renderProps(); render();
-    }
+    selId = null; selIds = [];
+    hideLayerToolbar();
+    refreshLayerList(); renderProps(); render();
   } catch(e) { console.error('startDrag err:', e.message, e.stack); }
 }
 function moveDrag(e) {
