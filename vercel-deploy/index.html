@@ -2963,7 +2963,7 @@ function resetBgPos() {
 let drag=false, pendingDrag=false, dsx,dsy,dlx,dly; // 레이어 드래그
 let _multiDragInit=null, _multiDragStartX=0, _multiDragStartY=0;
 let bgDrag=false, bdsx,bdsy,bdox,bdoy;     // 배경 드래그
-let handleDrag=false, handleDragStartSize=0, handleDragStartX=0, handleDragStartY=0, handleDragStartSX=100, handleDragStartSY=100; // 핸들 드래그
+let handleDrag=false, handleDragStartSize=0, handleDragStartX=0, handleDragStartY=0, handleDragStartSX=100, handleDragStartSY=100, handleDragDir=[0,0]; // 핸들 드래그
 let pinchStartDist=0, pinchStartSize=0, pinchTarget='layer'; // pinch zoom
 
 function getCanvasXY(e) {
@@ -3006,9 +3006,11 @@ function startDrag(e) {
     if (l) {
       const b = getLayerBounds(l, W, H);
       if (b) {
-        // 히트 반경: 화면 픽셀 12px → 정규화 좌표로 변환
-        const hsX = 12 / mc.clientWidth;
-        const hsY = 12 / mc.clientHeight;
+        // 히트 반경: 화면 픽셀 12px, 단 레이어 크기의 25% 이하로 제한
+        const rawHsX = 12 / mc.clientWidth;
+        const rawHsY = 12 / mc.clientHeight;
+        const hsX = Math.min(rawHsX, b.hw/W * 0.25);
+        const hsY = Math.min(rawHsY, b.hh/H * 0.25);
         const corners = [
           [-b.hw/W,-b.hh/H],[b.hw/W,-b.hh/H],
           [b.hw/W,b.hh/H],[-b.hw/W,b.hh/H],
@@ -3023,6 +3025,9 @@ function startDrag(e) {
             handleDragStartSize = l.size;
             handleDragStartSX = l.scaleX || 100;
             handleDragStartSY = l.scaleY || 100;
+            // 핸들 방향 저장 (오른쪽/아래 = +1, 왼쪽/위 = -1, 중앙 = 0)
+            handleDragDir = [chx > 0.001 ? 1 : chx < -0.001 ? -1 : 0,
+                             chy > 0.001 ? 1 : chy < -0.001 ? -1 : 0];
             return;
           }
         }
@@ -3118,8 +3123,20 @@ function moveDrag(e) {
       const l = layers.find(x=>x.id===selId); if (!l) return;
       const dx = fx - handleDragStartX;
       const dy = fy - handleDragStartY;
-      const dist = Math.sqrt(dx*dx + dy*dy) * (dx+dy > 0 ? 1 : -1);
-      const newSize = Math.max(10, Math.round(handleDragStartSize + dist * mc.width * 1.5));
+      const [dirX, dirY] = handleDragDir;
+      // 방향에 따른 부호: 오른쪽/아래로 드래그 → 커짐, 왼쪽/위로 → 작아짐
+      let delta = 0;
+      if (dirX !== 0 && dirY !== 0) {
+        // 모서리: 가로+세로 합산
+        delta = dx * dirX + dy * dirY;
+      } else if (dirX !== 0) {
+        // 좌우 핸들
+        delta = dx * dirX;
+      } else {
+        // 상하 핸들
+        delta = dy * dirY;
+      }
+      const newSize = Math.max(10, Math.round(handleDragStartSize + delta * mc.width * 2));
       l.size = newSize;
       const ps = $('pe_size'); if (ps) { ps.value = newSize; $('pe_vsize').textContent = newSize; }
       render(); return;
