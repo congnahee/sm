@@ -336,6 +336,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:17px;heigh
   display:flex;align-items:center;gap:8px;
 }
 .litem.locked{opacity:.6}
+.litem.hidden-layer{opacity:.45}
 .litem.locked::after{content:'🔒';font-size:10px;margin-left:4px}
 .litem.sel-multi{border-color:#4ECDC4;background:rgba(78,205,196,.06)}
 .litem.sel{border-color:var(--gold);background:rgba(196,151,58,.06)}
@@ -2702,6 +2703,16 @@ function addTextLayer() {
 /* ════════════════════════════════════
    LAYER OPERATIONS
 ════════════════════════════════════ */
+
+function toggleLayerVisible(id) {
+  const l = layers.find(x=>x.id===id);
+  if (!l) return;
+  saveHistory();
+  l.visible = l.visible === false ? true : false;
+  refreshLayerList();
+  render();
+  showToast(l.visible === false ? '👁 레이어 숨김' : '👁 레이어 표시');
+}
 function duplicateLayer(id) {
   const l = layers.find(x => x.id === id);
   if (!l) return;
@@ -2749,15 +2760,16 @@ function refreshLayerList() {
   list.innerHTML='';
   [...layers].reverse().forEach(l => {
     const div = document.createElement('div');
-    div.className = 'litem'+(l.id===selId?' sel':selIds.includes(l.id)?' sel-multi':'')+(l.locked?' locked':'');
+    div.className = 'litem'+(l.id===selId?' sel':selIds.includes(l.id)?' sel-multi':'')+(l.locked?' locked':'')+(l.visible===false?' hidden-layer':'');
     const preview = l.type==='text' ? (l.text.split('\n')[0].slice(0,12)||'(빈텍스트)') : l.name;
     div.innerHTML=`
       <div class="litem-icon">${l.type==='text'?'✍️':l.type==='sticker'?'⭐':'🖌'}</div>
       <div class="litem-info">
         <div class="litem-name">${preview}</div>
-        <div class="litem-sub">${l.type==='text'?'텍스트':l.type==='sticker'?'스티커':'PNG 오버레이'} · 투명도 ${l.opacity}%</div>
+        <div class="litem-sub" style="opacity:${l.visible===false?'0.4':'1'}">${l.type==='text'?'텍스트':l.type==='sticker'?'스티커':'PNG 오버레이'} · 투명도 ${l.opacity}%${l.visible===false?' · 숨김':''}</div>
       </div>
       <div class="litem-btns">
+        <div class="lbtn" title="보이기/숨기기" onclick="event.stopPropagation();toggleLayerVisible(${l.id})" style="opacity:${l.visible===false?'0.35':'1'}">${l.visible===false?'🙈':'👁'}</div>
         <div class="lbtn" title="복제" onclick="event.stopPropagation();duplicateLayer(${l.id})" style="font-size:11px">⧉</div>
         <div class="lbtn" title="위로" onclick="event.stopPropagation();moveLayer(${l.id},'up')">↑</div>
         <div class="lbtn" title="아래로" onclick="event.stopPropagation();moveLayer(${l.id},'down')">↓</div>
@@ -3401,6 +3413,14 @@ document.addEventListener('keydown', e => {
   if ((e.ctrlKey||e.metaKey) && e.key === 'd') { e.preventDefault(); ctxDuplicate(); }
   if ((e.ctrlKey||e.metaKey) && e.key === 'c') { e.preventDefault(); ctxCopy(); }
   if ((e.ctrlKey||e.metaKey) && e.key === 'l') { e.preventDefault(); ctxLock(); }
+  if ((e.ctrlKey||e.metaKey) && e.key === 'a') {
+    e.preventDefault();
+    if (layers.length === 0) return;
+    selIds = layers.map(x=>x.id);
+    selId = selIds[selIds.length-1];
+    refreshLayerList(); render(); updateMultiToolbar();
+    showToast('전체 선택 (' + selIds.length + '개)');
+  }
 });
 
 
