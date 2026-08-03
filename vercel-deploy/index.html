@@ -3070,9 +3070,16 @@ function startDrag(e) {
             handleDragStartSize = l.size;
             handleDragStartSX = l.scaleX || 100;
             handleDragStartSY = l.scaleY || 100;
-            // 핸들 방향 저장 (오른쪽/아래 = +1, 왼쪽/위 = -1, 중앙 = 0)
             handleDragDir = [chx > 0.001 ? 1 : chx < -0.001 ? -1 : 0,
                              chy > 0.001 ? 1 : chy < -0.001 ? -1 : 0];
+            // 다중선택 초기 크기 저장
+            if (selIds.length > 1) {
+              _multiDragInit = {};
+              selIds.forEach(sid => {
+                const sl = layers.find(x=>x.id===sid);
+                if (sl) _multiDragInit[sid] = { size: sl.size, x: sl.x, y: sl.y };
+              });
+            }
             return;
           }
         }
@@ -3167,15 +3174,24 @@ function moveDrag(e) {
 
     if (handleDrag) {
       const l = layers.find(x=>x.id===selId); if (!l) return;
-      // 현재 마우스와 레이어 중심 사이 거리
       const curDist = Math.sqrt((fx-l.x)**2 + (fy-l.y)**2);
-      // 드래그 시작 시 거리
       const startDist = Math.sqrt((handleDragStartX-l.x)**2 + (handleDragStartY-l.y)**2);
       if (startDist < 0.001) { render(); return; }
       const ratio = curDist / startDist;
-      const newSize = Math.max(10, Math.round(handleDragStartSize * ratio));
-      l.size = newSize;
-      const ps = $('pe_size'); if (ps) { ps.value = newSize; $('pe_vsize').textContent = newSize; }
+      // 다중선택 - 모든 레이어에 같은 비율 적용
+      if (selIds.length > 1 && _multiDragInit) {
+        selIds.forEach(sid => {
+          const sl = layers.find(x=>x.id===sid);
+          const init = _multiDragInit[sid];
+          if (sl && init && !sl.locked) {
+            sl.size = Math.max(10, Math.round(init.size * ratio));
+          }
+        });
+      } else {
+        const newSize = Math.max(10, Math.round(handleDragStartSize * ratio));
+        l.size = newSize;
+        const ps = $('pe_size'); if (ps) { ps.value = newSize; $('pe_vsize').textContent = newSize; }
+      }
       render(); return;
     }
 
