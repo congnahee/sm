@@ -578,7 +578,7 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
 @media(max-width:680px){
   :root{--panel:100%}
   .app{flex-direction:column;height:100vh;overflow:hidden}
-  .canvas-zone{flex:none;height:55vh;overflow:hidden;padding:6px 8px 4px;gap:4px;justify-content:center}
+  .canvas-zone{flex:none;min-height:200px;max-height:60vh;overflow:hidden;padding:6px 8px 4px;gap:4px;justify-content:center;align-items:center}
   .canvas-shell{max-width:calc(100vw - 16px);overflow:hidden}
   .canvas-ctrl-bar{max-width:calc(100vw - 16px);padding:0 2px}
   .size-bar{gap:4px;max-width:calc(100vw - 16px);overflow-x:auto}
@@ -1707,16 +1707,26 @@ function initCanvas() {
   if (isMobile) {
     const zone = $('canvasZone');
     const availW = zone.clientWidth - 16;
-    const availH = zone.clientHeight - 44;
-    // 가로 기준으로 먼저 계산, 높이 초과하면 높이 기준으로 재계산
+    // 화면 높이에서 헤더/탭/사이즈바 등 UI 빼고 남은 공간 계산
+    const uiHeight = 200; // 헤더+탭+사이즈바+여백 대략적 높이
+    const maxAvailH = Math.min(window.innerHeight * 0.55, window.innerHeight - uiHeight);
+    // 가로 기준 계산
     dW = availW;
     dH = Math.round(dW * aspect);
-    if (dH > availH) {
-      dH = availH;
+    // 높이 초과 시 높이 기준으로 재계산
+    if (dH > maxAvailH) {
+      dH = Math.round(maxAvailH);
       dW = Math.round(dH / aspect);
+    }
+    // 가로 초과 시 다시 가로 기준
+    if (dW > availW) {
+      dW = availW;
+      dH = Math.round(dW * aspect);
     }
     dW = Math.max(80, dW);
     dH = Math.max(80, dH);
+    // canvas-zone 높이를 캔버스에 맞게 동적 조절
+    zone.style.height = (dH + 60) + 'px';
   } else {
     dW = Math.round(DISP);
     dH = Math.round(DISP * aspect);
