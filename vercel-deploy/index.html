@@ -3041,6 +3041,8 @@ function getLayerBounds(l, W, H) {
 }
 
 function startDrag(e) {
+  // 매 클릭마다 이전 상태 초기화
+  handleDrag = false; handleDragDir = [0,0]; pendingDrag = false;
   try {
   const [fx,fy] = getCanvasXY(e);
   const W = mc.width, H = mc.height;
@@ -3209,7 +3211,8 @@ function moveDrag(e) {
         applyResize(l, { size: handleDragStartSize, scaleX: handleDragStartSX, scaleY: handleDragStartSY });
         const ps = $('pe_size'); if (ps) { ps.value = l.size; $('pe_vsize').textContent = l.size; }
       }
-      render(); return;
+      render();
+      return; // handleDrag 처리 완료 - 이동으로 넘어가지 않음
     }
 
     if (bgDrag) {
@@ -3248,7 +3251,7 @@ function endDrag(){
   if (drag || bgDrag || handleDrag) saveHistory();
   if (drag) { refreshLayerList(); renderProps(); updateLayerToolbar(); }
   if (handleDrag) { renderProps(); updateLayerToolbar(); }
-  drag=false; handleDrag=false; pendingDrag=false; _multiDragInit=null;
+  drag=false; handleDrag=false; pendingDrag=false; _multiDragInit=null; handleDragDir=[0,0];
   if (bgDrag) { bgDrag=false; mc.style.cursor='grab'; }
   else { mc.style.cursor = bgMode==='move' && bgImg ? 'grab' : 'default'; }
 }
