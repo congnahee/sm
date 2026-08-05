@@ -1,11 +1,41 @@
 <!DOCTYPE html>
+<!--
+  ╔══════════════════════════════════════════════════════════════╗
+  ║                                                              ║
+  ║   콩심캘리 스튜디오 (Congsim Calli Studio)                   ║
+  ║                                                              ║
+  ║   Copyright © 2025 Congsim. All rights reserved.            ║
+  ║   이 소프트웨어의 모든 저작권은 콩심(Congsim)에 있습니다.    ║
+  ║                                                              ║
+  ║   이 소프트웨어의 소스코드, 디자인 및 콘텐츠 일체는          ║
+  ║   콩심의 독점적 자산입니다. 사전 서면 동의 없이              ║
+  ║   무단 복제, 배포, 수정을 엄격히 금지합니다.                 ║
+  ║   위반 시 저작권법에 의해 법적 조치를 받을 수 있습니다.      ║
+  ║                                                              ║
+  ║   All source code, design, and content of this software     ║
+  ║   are the exclusive property of Congsim.                    ║
+  ║   Unauthorized copying, reproduction, distribution,         ║
+  ║   or modification of this software, in whole or in part,    ║
+  ║   is strictly prohibited without prior written permission   ║
+  ║   from Congsim. Violations may result in legal action       ║
+  ║   under applicable copyright law.                           ║
+  ║                                                              ║
+  ╚══════════════════════════════════════════════════════════════╝
+-->
+
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
-<title>콩심캘리</title>
+
+  
+  
+  
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSg1MCw1MCkiPjxlbGxpcHNlIGN4PSIwIiBjeT0iLTI4IiByeD0iNyIgcnk9IjI0IiBmaWxsPSIjRjJFRkU5IiBzdHJva2U9IiMxYTFhMWEiIHN0cm9rZS13aWR0aD0iMS4zIiB0cmFuc2Zvcm09InJvdGF0ZSgwKSIvPjxlbGxpcHNlIGN4PSIwIiBjeT0iLTI3IiByeD0iNiIgcnk9IjIyIiBmaWxsPSIjRURFQUUzIiBzdHJva2U9IiMxYTFhMWEiIHN0cm9rZS13aWR0aD0iMS4zIiB0cmFuc2Zvcm09InJvdGF0ZSgyNikiLz48ZWxsaXBzZSBjeD0iMCIgY3k9Ii0yOSIgcng9IjcuNSIgcnk9IjI1IiBmaWxsPSIjRjJFRkU5IiBzdHJva2U9IiMxYTFhMWEiIHN0cm9rZS13aWR0aD0iMS4zIiB0cmFuc2Zvcm09InJvdGF0ZSg1MikiLz48ZWxsaXBzZSBjeD0iMCIgY3k9Ii0yNiIgcng9IjUuNSIgcnk9IjIxIiBmaWxsPSIjRUVFQmU0IiBzdHJva2U9IiMxYTFhMWEiIHN0cm9rZS13aWR0aD0iMS4zIiB0cmFuc2Zvcm09InJvdGF0ZSg3OCkiLz48ZWxsaXBzZSBjeD0iMCIgY3k9Ii0yOCIgcng9IjciIHJ5PSIyNCIgZmlsbD0iI0YxRUVFOCIgc3Ryb2tlPSIjMWExYTFhIiBzdHJva2Utd2lkdGg9IjEuMyIgdHJhbnNmb3JtPSJyb3RhdGUoMTA0KSIvPjxlbGxpcHNlIGN4PSIwIiBjeT0iLTI2IiByeD0iNiIgcnk9IjIxIiBmaWxsPSIjRURFQUUzIiBzdHJva2U9IiMxYTFhMWEiIHN0cm9rZS13aWR0aD0iMS4zIiB0cmFuc2Zvcm09InJvdGF0ZSgxMzApIi8+PGVsbGlwc2UgY3g9IjAiIGN5PSItMjkiIHJ4PSI3LjUiIHJ5PSIyNSIgZmlsbD0iI0YyRUZFOSIgc3Ryb2tlPSIjMWExYTFhIiBzdHJva2Utd2lkdGg9IjEuMyIgdHJhbnNmb3JtPSJyb3RhdGUoMTU2KSIvPjxlbGxpcHNlIGN4PSIwIiBjeT0iLTI3IiByeD0iNi41IiByeT0iMjMiIGZpbGw9IiNFRUVCZTQiIHN0cm9rZT0iIzFhMWExYSIgc3Ryb2tlLXdpZHRoPSIxLjMiIHRyYW5zZm9ybT0icm90YXRlKDE4MikiLz48ZWxsaXBzZSBjeD0iMCIgY3k9Ii0yOCIgcng9IjciIHJ5PSIyNCIgZmlsbD0iI0YwRURFNyIgc3Ryb2tlPSIjMWExYTFhIiBzdHJva2Utd2lkdGg9IjEuMyIgdHJhbnNmb3JtPSJyb3RhdGUoMjA4KSIvPjxlbGxpcHNlIGN4PSIwIiBjeT0iLTI2IiByeD0iNS41IiByeT0iMjEiIGZpbGw9IiNFQ0VBRTMiIHN0cm9rZT0iIzFhMWExYSIgc3Ryb2tlLXdpZHRoPSIxLjMiIHRyYW5zZm9ybT0icm90YXRlKDIzNCkiLz48ZWxsaXBzZSBjeD0iMCIgY3k9Ii0yOSIgcng9IjcuNSIgcnk9IjI0IiBmaWxsPSIjRjFFRUU4IiBzdHJva2U9IiMxYTFhMWEiIHN0cm9rZS13aWR0aD0iMS4zIiB0cmFuc2Zvcm09InJvdGF0ZSgyNjApIi8+PGVsbGlwc2UgY3g9IjAiIGN5PSItMjciIHJ4PSI2IiByeT0iMjIiIGZpbGw9IiNFRUVCZTQiIHN0cm9rZT0iIzFhMWExYSIgc3Ryb2tlLXdpZHRoPSIxLjMiIHRyYW5zZm9ybT0icm90YXRlKDI4NikiLz48ZWxsaXBzZSBjeD0iMCIgY3k9Ii0yOCIgcng9IjciIHJ5PSIyMyIgZmlsbD0iI0YwRURFOCIgc3Ryb2tlPSIjMWExYTFhIiBzdHJva2Utd2lkdGg9IjEuMyIgdHJhbnNmb3JtPSJyb3RhdGUoMzEyKSIvPjxlbGxpcHNlIGN4PSIwIiBjeT0iLTI2IiByeD0iNS41IiByeT0iMjEiIGZpbGw9IiNFREVBRTMiIHN0cm9rZT0iIzFhMWExYSIgc3Ryb2tlLXdpZHRoPSIxLjMiIHRyYW5zZm9ybT0icm90YXRlKDMzOCkiLz48Y2lyY2xlIHI9IjE0IiBmaWxsPSIjMWExYTFhIi8+PGNpcmNsZSByPSIxMSIgZmlsbD0iI0ZGQjgyMCIvPjwvZz48L3N2Zz4=">
+  <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSg1MCw1MCkiPjxlbGxpcHNlIGN4PSIwIiBjeT0iLTI4IiByeD0iNyIgcnk9IjI0IiBmaWxsPSIjRjJFRkU5IiBzdHJva2U9IiMxYTFhMWEiIHN0cm9rZS13aWR0aD0iMS4zIiB0cmFuc2Zvcm09InJvdGF0ZSgwKSIvPjxlbGxpcHNlIGN4PSIwIiBjeT0iLTI3IiByeD0iNiIgcnk9IjIyIiBmaWxsPSIjRURFQUUzIiBzdHJva2U9IiMxYTFhMWEiIHN0cm9rZS13aWR0aD0iMS4zIiB0cmFuc2Zvcm09InJvdGF0ZSgyNikiLz48ZWxsaXBzZSBjeD0iMCIgY3k9Ii0yOSIgcng9IjcuNSIgcnk9IjI1IiBmaWxsPSIjRjJFRkU5IiBzdHJva2U9IiMxYTFhMWEiIHN0cm9rZS13aWR0aD0iMS4zIiB0cmFuc2Zvcm09InJvdGF0ZSg1MikiLz48ZWxsaXBzZSBjeD0iMCIgY3k9Ii0yNiIgcng9IjUuNSIgcnk9IjIxIiBmaWxsPSIjRUVFQmU0IiBzdHJva2U9IiMxYTFhMWEiIHN0cm9rZS13aWR0aD0iMS4zIiB0cmFuc2Zvcm09InJvdGF0ZSg3OCkiLz48ZWxsaXBzZSBjeD0iMCIgY3k9Ii0yOCIgcng9IjciIHJ5PSIyNCIgZmlsbD0iI0YxRUVFOCIgc3Ryb2tlPSIjMWExYTFhIiBzdHJva2Utd2lkdGg9IjEuMyIgdHJhbnNmb3JtPSJyb3RhdGUoMTA0KSIvPjxlbGxpcHNlIGN4PSIwIiBjeT0iLTI2IiByeD0iNiIgcnk9IjIxIiBmaWxsPSIjRURFQUUzIiBzdHJva2U9IiMxYTFhMWEiIHN0cm9rZS13aWR0aD0iMS4zIiB0cmFuc2Zvcm09InJvdGF0ZSgxMzApIi8+PGVsbGlwc2UgY3g9IjAiIGN5PSItMjkiIHJ4PSI3LjUiIHJ5PSIyNSIgZmlsbD0iI0YyRUZFOSIgc3Ryb2tlPSIjMWExYTFhIiBzdHJva2Utd2lkdGg9IjEuMyIgdHJhbnNmb3JtPSJyb3RhdGUoMTU2KSIvPjxlbGxpcHNlIGN4PSIwIiBjeT0iLTI3IiByeD0iNi41IiByeT0iMjMiIGZpbGw9IiNFRUVCZTQiIHN0cm9rZT0iIzFhMWExYSIgc3Ryb2tlLXdpZHRoPSIxLjMiIHRyYW5zZm9ybT0icm90YXRlKDE4MikiLz48ZWxsaXBzZSBjeD0iMCIgY3k9Ii0yOCIgcng9IjciIHJ5PSIyNCIgZmlsbD0iI0YwRURFNyIgc3Ryb2tlPSIjMWExYTFhIiBzdHJva2Utd2lkdGg9IjEuMyIgdHJhbnNmb3JtPSJyb3RhdGUoMjA4KSIvPjxlbGxpcHNlIGN4PSIwIiBjeT0iLTI2IiByeD0iNS41IiByeT0iMjEiIGZpbGw9IiNFQ0VBRTMiIHN0cm9rZT0iIzFhMWExYSIgc3Ryb2tlLXdpZHRoPSIxLjMiIHRyYW5zZm9ybT0icm90YXRlKDIzNCkiLz48ZWxsaXBzZSBjeD0iMCIgY3k9Ii0yOSIgcng9IjcuNSIgcnk9IjI0IiBmaWxsPSIjRjFFRUU4IiBzdHJva2U9IiMxYTFhMWEiIHN0cm9rZS13aWR0aD0iMS4zIiB0cmFuc2Zvcm09InJvdGF0ZSgyNjApIi8+PGVsbGlwc2UgY3g9IjAiIGN5PSItMjciIHJ4PSI2IiByeT0iMjIiIGZpbGw9IiNFRUVCZTQiIHN0cm9rZT0iIzFhMWExYSIgc3Ryb2tlLXdpZHRoPSIxLjMiIHRyYW5zZm9ybT0icm90YXRlKDI4NikiLz48ZWxsaXBzZSBjeD0iMCIgY3k9Ii0yOCIgcng9IjciIHJ5PSIyMyIgZmlsbD0iI0YwRURFOCIgc3Ryb2tlPSIjMWExYTFhIiBzdHJva2Utd2lkdGg9IjEuMyIgdHJhbnNmb3JtPSJyb3RhdGUoMzEyKSIvPjxlbGxpcHNlIGN4PSIwIiBjeT0iLTI2IiByeD0iNS41IiByeT0iMjEiIGZpbGw9IiNFREVBRTMiIHN0cm9rZT0iIzFhMWExYSIgc3Ryb2tlLXdpZHRoPSIxLjMiIHRyYW5zZm9ybT0icm90YXRlKDMzOCkiLz48Y2lyY2xlIHI9IjE0IiBmaWxsPSIjMWExYTFhIi8+PGNpcmNsZSByPSIxMSIgZmlsbD0iI0ZGQjgyMCIvPjwvZz48L3N2Zz4=">
+  <title>콩심캘리</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600;700;900&family=Gowun+Dodum&family=Nanum+Myeongjo:wght@400;700;800&family=Nanum+Pen+Script&family=Nanum+Brush+Script&family=Single+Day&family=Gaegu:wght@300;400;700&family=Yeon+Sung&family=Black+Han+Sans&family=Do+Hyeon&family=Jua&family=Gugi&family=Hi+Melody&family=Cute+Font&family=East+Sea+Dokdo&display=swap" rel="stylesheet">
 <style>
 /* ────────────────────────────────────────
@@ -38,10 +68,10 @@ header{
 }
 .logo{display:flex;align-items:center;gap:9px}
 .logo-bean{
-  width:28px;height:28px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;
-  background:linear-gradient(135deg,var(--gold2),var(--gold));
-  display:flex;align-items:center;justify-content:center;font-size:13px;
-  box-shadow:0 2px 8px rgba(0,0,0,.3);flex-shrink:0;
+  width:32px;height:32px;
+  background:none;
+  display:flex;align-items:center;justify-content:center;font-size:32px;
+  flex-shrink:0;
 }
 .logo-txt{font-family:'Noto Serif KR',serif;font-size:17px;font-weight:700;color:var(--gold2);letter-spacing:.04em}
 .logo-ver{font-size:9px;color:rgba(255,255,255,.3);letter-spacing:.14em;margin-top:1px}
@@ -305,6 +335,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:17px;heigh
   padding:9px 11px;cursor:pointer;transition:all .15s;
   display:flex;align-items:center;gap:8px;
 }
+.litem.locked{opacity:.6}
+.litem.hidden-layer{opacity:.45}
+.litem.locked::after{content:'🔒';font-size:10px;margin-left:4px}
+.litem.sel-multi{border-color:#4ECDC4;background:rgba(78,205,196,.06)}
 .litem.sel{border-color:var(--gold);background:rgba(196,151,58,.06)}
 .litem:hover:not(.sel){border-color:var(--border2)}
 .litem-icon{font-size:18px;flex-shrink:0}
@@ -545,7 +579,7 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
 @media(max-width:680px){
   :root{--panel:100%}
   .app{flex-direction:column;height:100vh;overflow:hidden}
-  .canvas-zone{flex:none;height:55vh;overflow:hidden;padding:6px 8px 4px;gap:4px;justify-content:center}
+  .canvas-zone{flex:none;min-height:200px;max-height:60vh;overflow:hidden;padding:6px 8px 4px;gap:4px;justify-content:center;align-items:center}
   .canvas-shell{max-width:calc(100vw - 16px);overflow:hidden}
   .canvas-ctrl-bar{max-width:calc(100vw - 16px);padding:0 2px}
   .size-bar{gap:4px;max-width:calc(100vw - 16px);overflow-x:auto}
@@ -589,6 +623,8 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
   box-shadow:0 4px 16px rgba(0,0,0,.4);
   transform:translateX(-50%);
   pointer-events:all;
+  left:50% !important;
+  top:8px !important;
 }
 #layerToolbar.show{display:flex}
 .ltb-btn{
@@ -661,7 +697,26 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
   font-family:'Gowun Dodum',serif;
 ">
   <div style="text-align:center;padding:0 30px;max-width:340px;width:100%">
-    <div style="font-size:42px;margin-bottom:8px">🫘</div>
+    <div style="font-size:42px;margin-bottom:8px;line-height:1"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="1em" height="1em" style="vertical-align:middle;display:inline-block">
+<g transform="translate(50,50)">
+<ellipse cx="0" cy="-28" rx="7" ry="24" fill="#F2EFE9" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(0)"/>
+<ellipse cx="0" cy="-27" rx="6" ry="22" fill="#EDEAE3" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(26)"/>
+<ellipse cx="0" cy="-29" rx="7.5" ry="25" fill="#F2EFE9" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(52)"/>
+<ellipse cx="0" cy="-26" rx="5.5" ry="21" fill="#EEEBe4" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(78)"/>
+<ellipse cx="0" cy="-28" rx="7" ry="24" fill="#F1EEE8" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(104)"/>
+<ellipse cx="0" cy="-26" rx="6" ry="21" fill="#EDEAE3" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(130)"/>
+<ellipse cx="0" cy="-29" rx="7.5" ry="25" fill="#F2EFE9" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(156)"/>
+<ellipse cx="0" cy="-27" rx="6.5" ry="23" fill="#EEEBe4" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(182)"/>
+<ellipse cx="0" cy="-28" rx="7" ry="24" fill="#F0EDE7" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(208)"/>
+<ellipse cx="0" cy="-26" rx="5.5" ry="21" fill="#ECEAE3" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(234)"/>
+<ellipse cx="0" cy="-29" rx="7.5" ry="24" fill="#F1EEE8" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(260)"/>
+<ellipse cx="0" cy="-27" rx="6" ry="22" fill="#EEEBe4" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(286)"/>
+<ellipse cx="0" cy="-28" rx="7" ry="23" fill="#F0EDE8" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(312)"/>
+<ellipse cx="0" cy="-26" rx="5.5" ry="21" fill="#EDEAE3" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(338)"/>
+<circle r="14" fill="#1a1a1a"/>
+<circle r="11" fill="#FFB820"/>
+</g>
+</svg></div>
     <div style="font-size:22px;font-weight:700;color:#C4973A;letter-spacing:.08em;margin-bottom:4px">콩심캘리</div>
     <div style="font-size:12px;color:rgba(196,151,58,.6);letter-spacing:.06em;margin-bottom:36px">STUDIO</div>
     <div style="position:relative;margin-bottom:14px">
@@ -719,10 +774,29 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
 <!-- ══ HEADER ══ -->
 <header>
   <div class="logo">
-    <div class="logo-bean">🫘</div>
-    <div>
+    <div class="logo-bean" style="font-size:inherit;line-height:1"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="1em" height="1em" style="vertical-align:middle;display:inline-block">
+<g transform="translate(50,50)">
+<ellipse cx="0" cy="-28" rx="7" ry="24" fill="#F2EFE9" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(0)"/>
+<ellipse cx="0" cy="-27" rx="6" ry="22" fill="#EDEAE3" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(26)"/>
+<ellipse cx="0" cy="-29" rx="7.5" ry="25" fill="#F2EFE9" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(52)"/>
+<ellipse cx="0" cy="-26" rx="5.5" ry="21" fill="#EEEBe4" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(78)"/>
+<ellipse cx="0" cy="-28" rx="7" ry="24" fill="#F1EEE8" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(104)"/>
+<ellipse cx="0" cy="-26" rx="6" ry="21" fill="#EDEAE3" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(130)"/>
+<ellipse cx="0" cy="-29" rx="7.5" ry="25" fill="#F2EFE9" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(156)"/>
+<ellipse cx="0" cy="-27" rx="6.5" ry="23" fill="#EEEBe4" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(182)"/>
+<ellipse cx="0" cy="-28" rx="7" ry="24" fill="#F0EDE7" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(208)"/>
+<ellipse cx="0" cy="-26" rx="5.5" ry="21" fill="#ECEAE3" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(234)"/>
+<ellipse cx="0" cy="-29" rx="7.5" ry="24" fill="#F1EEE8" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(260)"/>
+<ellipse cx="0" cy="-27" rx="6" ry="22" fill="#EEEBe4" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(286)"/>
+<ellipse cx="0" cy="-28" rx="7" ry="23" fill="#F0EDE8" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(312)"/>
+<ellipse cx="0" cy="-26" rx="5.5" ry="21" fill="#EDEAE3" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(338)"/>
+<circle r="14" fill="#1a1a1a"/>
+<circle r="11" fill="#FFB820"/>
+</g>
+</svg></div>
+    <div style="display:flex;align-items:baseline;gap:8px">
       <div class="logo-txt">콩심캘리</div>
-      <div class="logo-ver">Kongsim Calli Studio v1</div>
+      <div class="logo-ver" style="font-size:10px;color:rgba(255,255,255,.35);letter-spacing:.1em;margin-top:0">Congsim Calli Studio</div>
     </div>
   </div>
   <div class="hdr-right">
@@ -899,7 +973,7 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
           <button class="cctrl-btn" onclick="resetAll()" title="초기화" style="width:38px;height:38px;font-size:16px;flex-shrink:0">↺</button>
         </div>
 
-        <div class="addrow" style="grid-template-columns:1fr 1fr 1fr 1fr">
+        <div class="addrow" style="grid-template-columns:repeat(4,1fr)">
           <div class="addbtn" onclick="addTextLayer()">
             <div class="addbtn-icon">✍️</div>
             <div class="addbtn-lbl">텍스트</div>
@@ -909,13 +983,14 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
             <div class="addbtn-lbl">캘리PNG</div>
             <input type="file" id="calliFileIn" accept="image/*,.png,.jpg,.jpeg,.webp" style="display:none" onchange="onCalliLoad(event)">
           </div>
+          <input type="file" id="imgFileIn" accept="image/*" style="display:none" onchange="onImgLoad(event)">
+          <div class="addbtn" onclick="$('imgFileIn').click()">
+            <div class="addbtn-icon">🖼</div>
+            <div class="addbtn-lbl">이미지</div>
+          </div>
           <div class="addbtn" onclick="openStickerModal()">
             <div class="addbtn-icon">⭐</div>
             <div class="addbtn-lbl">스티커</div>
-          </div>
-          <div class="addbtn" onclick="selId ? duplicateLayer(selId) : showToast('복제할 레이어를 먼저 선택하세요')">
-            <div class="addbtn-icon">📋</div>
-            <div class="addbtn-lbl">복제</div>
           </div>
         </div>
 
@@ -1308,6 +1383,7 @@ let DISP = 500;                     // display px (auto)
 let zoomScale = 1.0;                // user zoom multiplier
 
 let selId = null, idCtr = 0;
+let selIds = []; // 다중 선택
 let layers = [];        // [{id,type,…}]
 let calliCache = {};    // id→{offscreen,w,h}
 let saveW = 5000, saveH = 5000, saveFmt = 'png';
@@ -1632,16 +1708,26 @@ function initCanvas() {
   if (isMobile) {
     const zone = $('canvasZone');
     const availW = zone.clientWidth - 16;
-    const availH = zone.clientHeight - 44;
-    // 가로 기준으로 먼저 계산, 높이 초과하면 높이 기준으로 재계산
+    // 화면 높이에서 헤더/탭/사이즈바 등 UI 빼고 남은 공간 계산
+    const uiHeight = 200; // 헤더+탭+사이즈바+여백 대략적 높이
+    const maxAvailH = Math.min(window.innerHeight * 0.55, window.innerHeight - uiHeight);
+    // 가로 기준 계산
     dW = availW;
     dH = Math.round(dW * aspect);
-    if (dH > availH) {
-      dH = availH;
+    // 높이 초과 시 높이 기준으로 재계산
+    if (dH > maxAvailH) {
+      dH = Math.round(maxAvailH);
       dW = Math.round(dH / aspect);
+    }
+    // 가로 초과 시 다시 가로 기준
+    if (dW > availW) {
+      dW = availW;
+      dH = Math.round(dW * aspect);
     }
     dW = Math.max(80, dW);
     dH = Math.max(80, dH);
+    // canvas-zone 높이를 캔버스에 맞게 동적 조절
+    zone.style.height = (dH + 60) + 'px';
   } else {
     dW = Math.round(DISP);
     dH = Math.round(DISP * aspect);
@@ -2131,15 +2217,23 @@ function render(targetCtx, TW, TH, transparent) {
   layers.forEach(l => {
     if (!l.visible) return;
     try {
-      if (l.type==='text') drawText(c,W,H,l);
+      if (l.type==='text'||l.type==='sticker') drawText(c,W,H,l);
       else drawCalli(c,W,H,l);
     } catch(e) { console.warn('레이어 렌더 에러:', e); }
   });
 
   // 선택된 레이어 핸들 그리기 (미리보기 캔버스에만)
-  if (!TW && selId) {
-    const l = layers.find(x=>x.id===selId);
-    if (l && l.visible) drawSelectionHandles(c, W, H, l);
+  if (!TW) {
+    // 다중선택 - 민트색 점선
+    if (selIds.length > 1) {
+      selIds.forEach(sid => {
+        const sl = layers.find(x=>x.id===sid);
+        if (sl && sl.visible) drawSelectionHandles(c, W, H, sl, sid === selId ? 'gold' : 'multi');
+      });
+    } else if (selId) {
+      const l = layers.find(x=>x.id===selId);
+      if (l && l.visible) drawSelectionHandles(c, W, H, l, 'gold');
+    }
   }
 
   // Empty hint
@@ -2147,13 +2241,13 @@ function render(targetCtx, TW, TH, transparent) {
   } catch(e) { console.warn('render 오류:', e.message); }
 }
 
-function drawSelectionHandles(c, W, H, l) {
+function drawSelectionHandles(c, W, H, l, mode='gold') {
   const sc = W / mc.width;
   const cx = l.x * W, cy = l.y * H;
 
   let hw, hh;
   try {
-    if (l.type === 'text') {
+    if (l.type === 'text' || l.type === 'sticker') {
       const fs = (l.size||40) * sc;
       c.font = `${l.weight||'700'} ${fs}px ${l.font||'sans-serif'}`;
       const lines = (l.text||'텍스트').split('\n');
@@ -2174,7 +2268,7 @@ function drawSelectionHandles(c, W, H, l) {
   c.rotate((l.rotate||0) * Math.PI/180);
 
   // 점선 테두리
-  c.strokeStyle = 'rgba(196,151,58,0.9)';
+  c.strokeStyle = mode === 'multi' ? 'rgba(78,205,196,0.8)' : 'rgba(196,151,58,0.9)';
   c.lineWidth = 1.5;
   c.setLineDash([5*sc, 3*sc]);
   c.strokeRect(-hw, -hh, hw*2, hh*2);
@@ -2534,9 +2628,32 @@ function onCalliLoad(e) {
         selId = id;
         processCalliLayer(id);
         refreshLayerList(); renderProps(); render();
-        hideLoad(); showToast('PNG 오버레이 추가됨 ✓');
+        hideLoad(); showToast('캘리 오버레이 추가됨 ✓');
         setTimeout(() => buildFilterThumbs('filterThumbGrid2'), 50);
       } catch(err) { hideLoad(); console.warn('onCalliLoad:', err.message); }
+    };
+    img.src = ev.target.result;
+  };
+  r.readAsDataURL(f);
+  e.target.value='';
+}
+
+function onImgLoad(e) {
+  const f = e.target.files[0]; if (!f) return;
+  showLoad('이미지 불러오는 중...');
+  const r = new FileReader();
+  r.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        saveHistory();
+        const id = ++idCtr;
+        layers.push({ id, type:'calli', name:f.name.replace(/\.[^.]+$/,''), srcImg:img, srcDataUrl:ev.target.result, size:Math.round(mc.width*.7), scaleX:100, scaleY:100, x:.5, y:.5, rotate:0, flipH:false, opacity:100, thresh:255, noBgRemove:true, visible:true, tintColor:null });
+        selId = id;
+        processCalliLayer(id);
+        refreshLayerList(); renderProps(); render();
+        hideLoad(); showToast('이미지 추가됨 ✓');
+      } catch(err) { hideLoad(); console.warn('onImgLoad:', err.message); }
     };
     img.src = ev.target.result;
   };
@@ -2563,7 +2680,6 @@ function processCalliLayer(id) {
     }
     oc.putImageData(id2,0,0);
   } catch(e) {
-    // CORS/보안 오류 시 원본 이미지 그대로 사용
     console.warn('processCalliLayer getImageData 오류 (CORS):', e.message);
   }
   calliCache[id] = { offscreen:off, w:img.width, h:img.height };
@@ -2587,6 +2703,16 @@ function addTextLayer() {
 /* ════════════════════════════════════
    LAYER OPERATIONS
 ════════════════════════════════════ */
+
+function toggleLayerVisible(id) {
+  const l = layers.find(x=>x.id===id);
+  if (!l) return;
+  saveHistory();
+  l.visible = l.visible === false ? true : false;
+  refreshLayerList();
+  render();
+  showToast(l.visible === false ? '👁 레이어 숨김' : '👁 레이어 표시');
+}
 function duplicateLayer(id) {
   const l = layers.find(x => x.id === id);
   if (!l) return;
@@ -2634,23 +2760,30 @@ function refreshLayerList() {
   list.innerHTML='';
   [...layers].reverse().forEach(l => {
     const div = document.createElement('div');
-    div.className = 'litem'+(l.id===selId?' sel':'');
+    div.className = 'litem'+(l.id===selId?' sel':selIds.includes(l.id)?' sel-multi':'')+(l.locked?' locked':'')+(l.visible===false?' hidden-layer':'');
     const preview = l.type==='text' ? (l.text.split('\n')[0].slice(0,12)||'(빈텍스트)') : l.name;
     div.innerHTML=`
-      <div class="litem-icon">${l.type==='text'?'✍️':'🖌'}</div>
+      <div class="litem-icon">${l.type==='text'?'✍️':l.type==='sticker'?'⭐':'🖌'}</div>
       <div class="litem-info">
         <div class="litem-name">${preview}</div>
-        <div class="litem-sub">${l.type==='text'?'텍스트':'PNG 오버레이'} · 투명도 ${l.opacity}%</div>
+        <div class="litem-sub" style="opacity:${l.visible===false?'0.4':'1'}">${l.type==='text'?'텍스트':l.type==='sticker'?'스티커':'PNG 오버레이'} · 투명도 ${l.opacity}%${l.visible===false?' · 숨김':''}</div>
       </div>
       <div class="litem-btns">
+        <div class="lbtn" title="보이기/숨기기" onclick="event.stopPropagation();toggleLayerVisible(${l.id})" style="opacity:${l.visible===false?'0.35':'1'}">${l.visible===false?'🙈':'👁'}</div>
         <div class="lbtn" title="복제" onclick="event.stopPropagation();duplicateLayer(${l.id})" style="font-size:11px">⧉</div>
         <div class="lbtn" title="위로" onclick="event.stopPropagation();moveLayer(${l.id},'up')">↑</div>
         <div class="lbtn" title="아래로" onclick="event.stopPropagation();moveLayer(${l.id},'down')">↓</div>
         <div class="lbtn del" title="삭제" onclick="event.stopPropagation();delLayer(${l.id})">✕</div>
       </div>`;
-    div.addEventListener('click', ()=>{ selId=l.id; refreshLayerList(); renderProps(); });
+    div.addEventListener('click', ()=>{ selId=l.id; refreshLayerList(); renderProps(); updateLayerToolbar(); });
+    div.dataset.layerId = l.id;
     list.appendChild(div);
   });
+  // 선택된 레이어로 스크롤
+  if (selId) {
+    const selEl = list.querySelector(`[data-layer-id="${selId}"]`);
+    if (selEl) selEl.scrollIntoView({ block:'nearest', behavior:'smooth' });
+  }
 }
 
 /* ════════════════════════════════════
@@ -2665,7 +2798,7 @@ function renderProps() {
   if (!l) { hint.style.display='block'; return; }
   hint.style.display='none';
   try {
-    if (l.type==='text') buildTextProps(area,l);
+    if (l.type==='text'||l.type==='sticker') buildTextProps(area,l);
     else buildCalliProps(area,l);
   } catch(e) { console.warn('renderProps 에러:', e); }
 }
@@ -2721,9 +2854,9 @@ function buildTextProps(area, l) {
   $('pe_font').addEventListener('change', e=>{ saveHistory(); l.font=e.target.value; render(); });
   $('pe_size').addEventListener('input', e=>{ l.size=+e.target.value; $('pe_vsize').textContent=e.target.value; render(); });
   $('pe_size').addEventListener('change', ()=>saveHistory());
-  $('pe_rot').addEventListener('input', e=>{ l.rotate=+e.target.value; $('pe_vrot').textContent=e.target.value+'°'; render(); });
+  $('pe_rot').addEventListener('input', e=>{ drag=false;handleDrag=false;pendingDrag=false; l.rotate=+e.target.value; $('pe_vrot').textContent=e.target.value+'°'; render(); });
   $('pe_rot').addEventListener('change', ()=>saveHistory());
-  $('pe_op').addEventListener('input', e=>{ l.opacity=+e.target.value; $('pe_vop').textContent=e.target.value+'%'; refreshLayerList(); render(); });
+  $('pe_op').addEventListener('input', e=>{ drag=false;handleDrag=false;pendingDrag=false; l.opacity=+e.target.value; $('pe_vop').textContent=e.target.value+'%'; refreshLayerList(); render(); });
   $('pe_op').addEventListener('change', ()=>saveHistory());
   $('pe_shadow').addEventListener('change', e=>{ saveHistory(); l.shadow=e.target.checked; render(); });
 }
@@ -2766,15 +2899,15 @@ function buildCalliProps(area, l) {
     </div>`;
   area.appendChild(box);
 
-  $('pe_size').addEventListener('input', e=>{ l.size=+e.target.value; $('pe_vsize').textContent=e.target.value; render(); });
+  $('pe_size').addEventListener('input', e=>{ drag=false;handleDrag=false;pendingDrag=false; l.size=+e.target.value; $('pe_vsize').textContent=e.target.value; render(); });
   $('pe_size').addEventListener('change', ()=>saveHistory());
-  $('pe_scaleX').addEventListener('input', e=>{ l.scaleX=+e.target.value; $('pe_vscaleX').textContent=e.target.value+'%'; render(); });
+  $('pe_scaleX').addEventListener('input', e=>{ drag=false;handleDrag=false;pendingDrag=false; l.scaleX=+e.target.value; $('pe_vscaleX').textContent=e.target.value+'%'; render(); });
   $('pe_scaleX').addEventListener('change', ()=>saveHistory());
-  $('pe_scaleY').addEventListener('input', e=>{ l.scaleY=+e.target.value; $('pe_vscaleY').textContent=e.target.value+'%'; render(); });
+  $('pe_scaleY').addEventListener('input', e=>{ drag=false;handleDrag=false;pendingDrag=false; l.scaleY=+e.target.value; $('pe_vscaleY').textContent=e.target.value+'%'; render(); });
   $('pe_scaleY').addEventListener('change', ()=>saveHistory());
   $('pe_rot').addEventListener('input', e=>{ l.rotate=+e.target.value; $('pe_vrot').textContent=e.target.value+'°'; render(); });
   $('pe_rot').addEventListener('change', ()=>saveHistory());
-  $('pe_op').addEventListener('input', e=>{ l.opacity=+e.target.value; $('pe_vop').textContent=e.target.value+'%'; refreshLayerList(); render(); });
+  $('pe_op').addEventListener('input', e=>{ drag=false;handleDrag=false;pendingDrag=false; l.opacity=+e.target.value; $('pe_vop').textContent=e.target.value+'%'; refreshLayerList(); render(); });
   $('pe_op').addEventListener('change', ()=>saveHistory());
   $('pe_thr').addEventListener('input', e=>{ l.thresh=+e.target.value; $('pe_vthr').textContent=e.target.value; processCalliLayer(l.id); render(); });
   $('pe_thr').addEventListener('change', ()=>saveHistory());
@@ -2872,9 +3005,10 @@ function resetBgPos() {
    DRAG LAYERS ON CANVAS
 ════════════════════════════════════ */
 // 드래그 상태 변수
-let drag=false, dsx,dsy,dlx,dly;           // 레이어 드래그
+let drag=false, pendingDrag=false, dsx,dsy,dlx,dly; // 레이어 드래그
+let _multiDragInit=null, _multiDragStartX=0, _multiDragStartY=0;
 let bgDrag=false, bdsx,bdsy,bdox,bdoy;     // 배경 드래그
-let handleDrag=false, handleDragStartSize=0, handleDragStartX=0, handleDragStartY=0, handleDragStartSX=100, handleDragStartSY=100; // 핸들 드래그
+let handleDrag=false, handleDragStartSize=0, handleDragStartX=0, handleDragStartY=0, handleDragStartSX=100, handleDragStartSY=100, handleDragDir=[0,0]; // 핸들 드래그
 let pinchStartDist=0, pinchStartSize=0, pinchTarget='layer'; // pinch zoom
 
 function getCanvasXY(e) {
@@ -2889,7 +3023,7 @@ function getLayerBounds(l, W, H) {
   const cx = l.x * W, cy = l.y * H;
   let hw, hh;
   try {
-    if (l.type === 'text') {
+    if (l.type === 'text' || l.type === 'sticker') {
       const fs = (l.size||40) * sc;
       mctx.font = `${l.weight||'700'} ${fs}px ${l.font||'sans-serif'}`;
       const lines = (l.text||'텍스트').split('\n');
@@ -2907,6 +3041,8 @@ function getLayerBounds(l, W, H) {
 }
 
 function startDrag(e) {
+  // 매 클릭마다 이전 상태 초기화
+  handleDrag = false; handleDragDir = [0,0]; pendingDrag = false;
   try {
   const [fx,fy] = getCanvasXY(e);
   const W = mc.width, H = mc.height;
@@ -2917,19 +3053,36 @@ function startDrag(e) {
     if (l) {
       const b = getLayerBounds(l, W, H);
       if (b) {
-        const hs = 14 / (W / mc.width); // 히트 반경 (정규화)
+        // 히트 반경: 화면 픽셀 12px, 단 레이어 크기의 25% 이하로 제한
+        const rawHsX = 12 / mc.clientWidth;
+        const rawHsY = 12 / mc.clientHeight;
+        const hsX = Math.min(rawHsX, b.hw/W * 0.25);
+        const hsY = Math.min(rawHsY, b.hh/H * 0.25);
         const corners = [
-          [-b.hw/W*1,-b.hh/H*1],[b.hw/W*1,-b.hh/H*1],
-          [b.hw/W*1,b.hh/H*1],[-b.hw/W*1,b.hh/H*1]
+          [-b.hw/W,-b.hh/H],[b.hw/W,-b.hh/H],
+          [b.hw/W,b.hh/H],[-b.hw/W,b.hh/H],
+          [0,-b.hh/H],[0,b.hh/H],
+          [-b.hw/W,0],[b.hw/W,0]
         ];
         for (const [chx,chy] of corners) {
           const hx = l.x + chx, hy = l.y + chy;
-          if (Math.abs(fx - hx) < hs/W*3 && Math.abs(fy - hy) < hs/H*3) {
+          if (Math.abs(fx - hx) < hsX && Math.abs(fy - hy) < hsY) {
             handleDrag = true;
             handleDragStartX = fx; handleDragStartY = fy;
             handleDragStartSize = l.size;
             handleDragStartSX = l.scaleX || 100;
             handleDragStartSY = l.scaleY || 100;
+            handleDragDir = [chx > 0.001 ? 1 : chx < -0.001 ? -1 : 0,
+                             chy > 0.001 ? 1 : chy < -0.001 ? -1 : 0];
+            // 다중선택 초기 크기 저장
+            if (selIds.length > 1) {
+              _multiDragInit = {};
+              selIds.forEach(sid => {
+                const sl = layers.find(x=>x.id===sid);
+                if (sl) _multiDragInit[sid] = { size: sl.size, x: sl.x, y: sl.y };
+              });
+            }
+            pendingDrag = false; drag = false; // 핸들 드래그 시 이동 막기
             return;
           }
         }
@@ -2941,9 +3094,10 @@ function startDrag(e) {
     bgDrag = true;
     bdsx=fx; bdsy=fy; bdox=bgOffX; bdoy=bgOffY;
     mc.style.cursor = 'grabbing';
-    selId = null; hideLayerToolbar(); refreshLayerList(); renderProps();
+    selId = null; selIds = []; hideLayerToolbar(); refreshLayerList(); renderProps();
     return;
   }
+  // 글자올리기/갤러리 탭에서는 배경 드래그 없음 → 빈 곳 클릭 = 선택해제만
 
   // Layer drag
   const W2 = mc.width, H2 = mc.height;
@@ -2955,15 +3109,71 @@ function startDrag(e) {
     const hitH = b ? b.hh/H2 : 0.28;
     if (Math.abs(fx-l.x) < Math.max(hitW, 0.05) && Math.abs(fy-l.y) < Math.max(hitH, 0.05)) {
       const changed = selId !== l.id;
-      selId=l.id; drag=true; dsx=fx; dsy=fy; dlx=l.x; dly=l.y;
-      if (changed) { refreshLayerList(); renderProps(); }
+      selId=l.id;
+      if (l.locked) {
+        // 잠긴 레이어: 선택은 허용, 드래그만 막음
+        render();
+        if (changed) { refreshLayerList(); renderProps(); }
+        updateLayerToolbar();
+        showToast('🔒 잠금된 레이어예요');
+        return;
+      }
+      // Shift+클릭: 다중선택
+      if (e.shiftKey) {
+        if (selIds.includes(l.id)) {
+          selIds = selIds.filter(x => x !== l.id);
+          if (selId === l.id) selId = selIds[selIds.length-1] || null;
+        } else {
+          if (selId && !selIds.includes(selId)) selIds.push(selId);
+          selIds.push(l.id);
+          selId = l.id;
+        }
+        render(); refreshLayerList(); updateMultiToolbar();
+        return;
+      }
+      // 일반 클릭: 단일선택 (단, 이미 다중선택된 레이어면 유지)
+      if (!selIds.includes(l.id)) selIds = [];
+      pendingDrag=true; drag=false;
+      dsx=fx; dsy=fy; dlx=l.x; dly=l.y;
+      render();
+      if (changed) {
+        const layerTab = document.getElementById('ptab-layers');
+        if (layerTab && !layerTab.classList.contains('active')) {
+          switchTab('layers', layerTab);
+        }
+        refreshLayerList(); renderProps();
+      }
       updateLayerToolbar();
       return;
     }
   }
+    // 빈 곳 클릭 → 선택 해제
+    selId = null; selIds = [];
+    hideLayerToolbar();
+    refreshLayerList(); renderProps(); render();
   } catch(e) { console.error('startDrag err:', e.message, e.stack); }
 }
 function moveDrag(e) {
+  if (handleDrag) {
+    // 핸들 드래그 중이면 pendingDrag/drag 무시
+    pendingDrag = false; drag = false;
+  }
+  if (pendingDrag) {
+    const [fx2,fy2]=getCanvasXY(e);
+    const dist = Math.sqrt((fx2-dsx)**2 + (fy2-dsy)**2);
+    if (dist > 0.01) {
+      drag=true; pendingDrag=false;
+      // 다중선택 초기위치 저장
+      if (selIds.length > 1) {
+        _multiDragStartX = fx2; _multiDragStartY = fy2;
+        _multiDragInit = {};
+        selIds.forEach(sid => {
+          const sl = layers.find(x=>x.id===sid);
+          if (sl) _multiDragInit[sid] = { x: sl.x, y: sl.y };
+        });
+      }
+    }
+  }
   if (!drag && !bgDrag && !handleDrag) return;
   if (e.cancelable) e.preventDefault();
   try {
@@ -2971,13 +3181,43 @@ function moveDrag(e) {
 
     if (handleDrag) {
       const l = layers.find(x=>x.id===selId); if (!l) return;
+      const [dirX, dirY] = handleDragDir;
       const dx = fx - handleDragStartX;
       const dy = fy - handleDragStartY;
-      const dist = Math.sqrt(dx*dx + dy*dy) * (dx+dy > 0 ? 1 : -1);
-      const newSize = Math.max(10, Math.round(handleDragStartSize + dist * mc.width * 1.5));
-      l.size = newSize;
-      const ps = $('pe_size'); if (ps) { ps.value = newSize; $('pe_vsize').textContent = newSize; }
-      render(); return;
+
+      // 방향별 독립 조절
+      const applyResize = (sl, init) => {
+        if (!sl || !init || sl.locked) return;
+        if (dirX !== 0 && dirY !== 0) {
+          // 모서리: 전체 크기 비율로 조절
+          const curDist = Math.sqrt((fx-sl.x)**2 + (fy-sl.y)**2);
+          const startDist = Math.sqrt((handleDragStartX-sl.x)**2 + (handleDragStartY-sl.y)**2);
+          if (startDist < 0.001) return;
+          sl.size = Math.max(10, Math.round((init.size || handleDragStartSize) * (curDist/startDist)));
+        } else if (dirX === 0 && dirY !== 0) {
+          // 상하 핸들: 세로 비율(scaleY)만 조절
+          const delta = dy * dirY * 200;
+          sl.scaleY = Math.max(10, Math.min(300, (init.scaleY || 100) + delta));
+          const ps = $('pe_scaleY'); if (ps) { ps.value = Math.round(sl.scaleY); $('pe_vscaleY').textContent = Math.round(sl.scaleY)+'%'; }
+        } else if (dirX !== 0 && dirY === 0) {
+          // 좌우 핸들: 가로 비율(scaleX)만 조절
+          const delta = dx * dirX * 200;
+          sl.scaleX = Math.max(10, Math.min(300, (init.scaleX || 100) + delta));
+          const ps = $('pe_scaleX'); if (ps) { ps.value = Math.round(sl.scaleX); $('pe_vscaleX').textContent = Math.round(sl.scaleX)+'%'; }
+        }
+      };
+
+      if (selIds.length > 1 && _multiDragInit) {
+        selIds.forEach(sid => {
+          const sl = layers.find(x=>x.id===sid);
+          applyResize(sl, _multiDragInit[sid]);
+        });
+      } else {
+        applyResize(l, { size: handleDragStartSize, scaleX: handleDragStartSX, scaleY: handleDragStartSY });
+        const ps = $('pe_size'); if (ps) { ps.value = l.size; $('pe_vsize').textContent = l.size; }
+      }
+      render();
+      return; // handleDrag 처리 완료 - 이동으로 넘어가지 않음
     }
 
     if (bgDrag) {
@@ -2990,17 +3230,35 @@ function moveDrag(e) {
       render(); return;
     }
 
+    mc.style.cursor = 'grabbing';
     const l=layers.find(x=>x.id===selId); if(!l) return;
-    l.x=Math.max(0,Math.min(1,dlx+fx-dsx));
-    l.y=Math.max(0,Math.min(1,dly+fy-dsy));
+    const dx=fx-dsx, dy=fy-dsy;
+    // 다중선택 이동
+    if (selIds.length > 1) {
+      selIds.forEach(sid => {
+        const sl = layers.find(x=>x.id===sid);
+        if (sl && !sl.locked) {
+          const initPos = _multiDragInit && _multiDragInit[sid];
+          if (initPos) {
+            sl.x = Math.max(0,Math.min(1, initPos.x + (fx - _multiDragStartX)));
+            sl.y = Math.max(0,Math.min(1, initPos.y + (fy - _multiDragStartY)));
+          }
+        }
+      });
+    } else {
+      l.x=Math.max(0,Math.min(1,dlx+dx));
+      l.y=Math.max(0,Math.min(1,dly+dy));
+    }
     render();
   } catch(err) { console.warn('moveDrag err:', err); }
 }
 function endDrag(){
   if (drag || bgDrag || handleDrag) saveHistory();
   if (drag) { refreshLayerList(); renderProps(); updateLayerToolbar(); }
-  drag=false; handleDrag=false;
+  if (handleDrag) { renderProps(); updateLayerToolbar(); }
+  drag=false; handleDrag=false; pendingDrag=false; _multiDragInit=null; handleDragDir=[0,0];
   if (bgDrag) { bgDrag=false; mc.style.cursor='grab'; }
+  else { mc.style.cursor = bgMode==='move' && bgImg ? 'grab' : 'default'; }
 }
 
 
@@ -3015,15 +3273,14 @@ function updateLayerToolbar() {
   const l = layers.find(x => x.id === selId);
   if (!l) { tb.classList.remove('show'); return; }
 
-  // 캔버스 위 위치 계산
+  // 툴바 캔버스 상단 중앙 고정
   const rect = mc.getBoundingClientRect();
   const zoneRect = document.getElementById('canvasZone').getBoundingClientRect();
-  const cx = rect.left - zoneRect.left + l.x * rect.width;
-  const ty = rect.top  - zoneRect.top  + l.y * rect.height;
-  const topY = Math.max(ty - rect.height * (l.size||100)/2/mc.width - 44, 4);
+  const canvasTop = rect.top - zoneRect.top;
+  const canvasCx = rect.left - zoneRect.left + rect.width / 2;
 
-  tb.style.left = cx + 'px';
-  tb.style.top  = topY + 'px';
+  tb.style.left = canvasCx + 'px';
+  tb.style.top  = Math.max(canvasTop + 8, 8) + 'px';
 
   // 잠금 아이콘 업데이트
   const lockBtn = document.getElementById('ltbLockBtn');
@@ -3046,13 +3303,14 @@ function hideCtxMenu() {
 }
 
 function ltbDelete() {
-  if (!selId) return;
+  if (!selId && selIds.length === 0) return;
   saveHistory();
-  layers = layers.filter(x => x.id !== selId);
-  selId = null;
+  const toDelete = selIds.length > 1 ? selIds : [selId];
+  layers = layers.filter(x => !toDelete.includes(x.id));
+  selId = null; selIds = [];
   hideLayerToolbar();
   refreshLayerList(); renderProps(); render();
-  showToast('삭제됨');
+  showToast(toDelete.length > 1 ? toDelete.length + '개 삭제됨' : '삭제됨');
 }
 
 function ltbLock() {
@@ -3196,6 +3454,14 @@ document.addEventListener('keydown', e => {
   if ((e.ctrlKey||e.metaKey) && e.key === 'd') { e.preventDefault(); ctxDuplicate(); }
   if ((e.ctrlKey||e.metaKey) && e.key === 'c') { e.preventDefault(); ctxCopy(); }
   if ((e.ctrlKey||e.metaKey) && e.key === 'l') { e.preventDefault(); ctxLock(); }
+  if ((e.ctrlKey||e.metaKey) && e.key === 'a') {
+    e.preventDefault();
+    if (layers.length === 0) return;
+    selIds = layers.map(x=>x.id);
+    selId = selIds[selIds.length-1];
+    refreshLayerList(); render(); updateMultiToolbar();
+    showToast('전체 선택 (' + selIds.length + '개)');
+  }
 });
 
 
@@ -3364,8 +3630,62 @@ function _updateLyrCropUI() {
   else setup();
 })();
 
+
+function updateMultiToolbar() {
+  if (selIds.length > 1) {
+    // 다중선택 툴바
+    const tb = document.getElementById('layerToolbar');
+    if (!tb) return;
+    const rect = mc.getBoundingClientRect();
+    const zoneRect = document.getElementById('canvasZone').getBoundingClientRect();
+    tb.style.left = (rect.width / 2) + 'px';
+    tb.style.top = '8px';
+    const lockBtn = document.getElementById('ltbLockBtn');
+    if (lockBtn) lockBtn.textContent = '🔓';
+    tb.classList.add('show');
+    showToast(selIds.length + '개 선택됨');
+  } else {
+    updateLayerToolbar();
+  }
+}
+
+
+function updateCursorForLayer(e) {
+  if (drag) { mc.style.cursor='grabbing'; return; }
+  if (handleDrag) return;
+  if (!selId || bgDrag) return;
+  const l = layers.find(x => x.id === selId);
+  if (!l || !l.visible) return;
+  const [fx, fy] = getCanvasXY(e);
+  const W = mc.width, H = mc.height;
+  const b = getLayerBounds(l, W, H);
+  if (!b) return;
+  const sc = W / mc.clientWidth;
+  const hs = 18 / mc.clientWidth; // 핸들 히트 영역 (normalized)
+
+  const cx = l.x, cy = l.y;
+  const hw = b.hw / W, hh = b.hh / H;
+
+  const dx = fx - cx, dy = fy - cy;
+  const nearL = Math.abs(dx + hw) < hs;
+  const nearR = Math.abs(dx - hw) < hs;
+  const nearT = Math.abs(dy + hh) < hs;
+  const nearB = Math.abs(dy - hh) < hs;
+  const inBox = Math.abs(dx) < hw + hs && Math.abs(dy) < hh + hs;
+
+  if (!inBox) { mc.style.cursor = 'default'; return; }
+
+  if (nearT && nearL)      mc.style.cursor = 'nw-resize';
+  else if (nearT && nearR) mc.style.cursor = 'ne-resize';
+  else if (nearB && nearL) mc.style.cursor = 'sw-resize';
+  else if (nearB && nearR) mc.style.cursor = 'se-resize';
+  else if (nearT || nearB) mc.style.cursor = 'ns-resize';
+  else if (nearL || nearR) mc.style.cursor = 'ew-resize';
+  else                     mc.style.cursor = 'move';
+}
+
 mc.addEventListener('mousedown',startDrag);
-mc.addEventListener('mousemove',moveDrag);
+mc.addEventListener('mousemove', e => { moveDrag(e); updateCursorForLayer(e); });
 document.addEventListener('mouseup',endDrag);
 mc.addEventListener('touchstart', e => {
   if (e.touches.length === 2) {
@@ -3424,6 +3744,11 @@ function switchTab(name, el) {
   if (name === 'bg') {
     bgMode = 'move';
     mc.style.cursor = bgImg ? 'grab' : 'default';
+    // 캔버스 리사이즈 핸들 표시
+    ['rh-tl','rh-tr','rh-bl','rh-br'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = '';
+    });
     // 배경탭 진입 시 갤러리 갱신 + 배경 있으면 오버레이 속성 표시
     setTimeout(() => {
       renderBgPhotoGallery();
@@ -3432,7 +3757,15 @@ function switchTab(name, el) {
     }, 0);
   } else {
     bgMode = 'layer';
-    mc.style.cursor = 'move';
+    mc.style.cursor = 'default';
+    // 배경 드래그 상태 초기화
+    bgDrag = false;
+    // 캔버스 리사이즈 핸들 숨기기
+    ['rh-tl','rh-tr','rh-bl','rh-br'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+    render();
   }
   // 단계 표시바 연동
   const stepMap = { 'bg':1, 'layers':2, 'gallery':3 };
@@ -4801,7 +5134,7 @@ function closeStickerModal() {
 function addStickerLayer(emoji) {
   saveHistory();
   const id = ++idCtr;
-  layers.push({ id, type:'text', text:emoji, font:"'Noto Serif KR',serif", size:Math.round(mc.width*.15), color:'#000000', weight:'400', align:'center', x:.5, y:.5, rotate:0, opacity:100, shadow:false, visible:true });
+  layers.push({ id, type:'sticker', text:emoji, font:"'Noto Serif KR',serif", size:Math.round(mc.width*.15), color:'#000000', weight:'400', align:'center', x:.5, y:.5, rotate:0, opacity:100, shadow:false, visible:true });
   selId = id;
   refreshLayerList(); renderProps(); render();
   showToast(emoji + ' 스티커 추가됨');
@@ -4887,5 +5220,9 @@ window.addEventListener('load', ()=>{
   try { buildGallery(); } catch(e) { console.warn('buildGallery:', e.message); }
 });
 </script>
-</body>
+
+
+
+
+<script></body>
 </html>
