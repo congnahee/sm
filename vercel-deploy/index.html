@@ -3176,42 +3176,53 @@ function moveDrag(e) {
     if (handleDrag) {
       const l = layers.find(x=>x.id===selId); if (!l) return;
       const [dirX, dirY] = handleDragDir;
+      // 이전 프레임과의 delta (상대적 변화량)
       const dx = fx - handleDragStartX;
       const dy = fy - handleDragStartY;
 
-      // 방향별 독립 조절
-      const applyResize = (sl, init) => {
-        if (!sl || !init || sl.locked) return;
-        if (dirX !== 0 && dirY !== 0) {
-          // 모서리: 전체 크기 비율로 조절
-          const curDist = Math.sqrt((fx-sl.x)**2 + (fy-sl.y)**2);
-          const startDist = Math.sqrt((handleDragStartX-sl.x)**2 + (handleDragStartY-sl.y)**2);
-          if (startDist < 0.001) return;
-          sl.size = Math.max(10, Math.round((init.size || handleDragStartSize) * (curDist/startDist)));
-        } else if (dirX === 0 && dirY !== 0) {
-          // 상하 핸들: 세로 비율(scaleY)만 조절
-          const delta = dy * dirY * 200;
-          sl.scaleY = Math.max(10, Math.min(300, (init.scaleY || 100) + delta));
-          const ps = $('pe_scaleY'); if (ps) { ps.value = Math.round(sl.scaleY); $('pe_vscaleY').textContent = Math.round(sl.scaleY)+'%'; }
-        } else if (dirX !== 0 && dirY === 0) {
-          // 좌우 핸들: 가로 비율(scaleX)만 조절
-          const delta = dx * dirX * 200;
-          sl.scaleX = Math.max(10, Math.min(300, (init.scaleX || 100) + delta));
-          const ps = $('pe_scaleX'); if (ps) { ps.value = Math.round(sl.scaleX); $('pe_vscaleX').textContent = Math.round(sl.scaleX)+'%'; }
+      if (dirX !== 0 && dirY !== 0) {
+        // 모서리: 전체 크기 비율 조절 (절대 거리 기준)
+        const curDist = Math.sqrt((fx-l.x)**2 + (fy-l.y)**2);
+        const startDist = Math.sqrt((handleDragStartX-l.x)**2 + (handleDragStartY-l.y)**2);
+        if (startDist > 0.001) {
+          const ratio = curDist / startDist;
+          if (selIds.length > 1 && _multiDragInit) {
+            selIds.forEach(sid => {
+              const sl = layers.find(x=>x.id===sid);
+              const init = _multiDragInit[sid];
+              if (sl && init && !sl.locked) sl.size = Math.max(10, Math.round(init.size * ratio));
+            });
+          } else {
+            l.size = Math.max(10, Math.round(handleDragStartSize * ratio));
+            const ps = $('pe_size'); if (ps) { ps.value = l.size; $('pe_vsize').textContent = l.size; }
+          }
         }
-      };
-
-      if (selIds.length > 1 && _multiDragInit) {
-        selIds.forEach(sid => {
+      } else if (dirX === 0 && dirY !== 0) {
+        // 상하 핸들: scaleY 조절 (매 프레임 상대 delta)
+        const delta = dy * dirY * 150;
+        const targets = (selIds.length > 1 && _multiDragInit) ? selIds : [l.id];
+        targets.forEach(sid => {
           const sl = layers.find(x=>x.id===sid);
-          applyResize(sl, _multiDragInit[sid]);
+          if (!sl || sl.locked) return;
+          const initSY = (_multiDragInit && _multiDragInit[sid]) ? (_multiDragInit[sid].scaleY||100) : handleDragStartSY;
+          sl.scaleY = Math.max(10, Math.min(300, initSY + delta));
         });
-      } else {
-        applyResize(l, { size: handleDragStartSize, scaleX: handleDragStartSX, scaleY: handleDragStartSY });
-        const ps = $('pe_size'); if (ps) { ps.value = l.size; $('pe_vsize').textContent = l.size; }
+        const ps = $('pe_scaleY'); if (ps) { ps.value = Math.round(l.scaleY); $('pe_vscaleY').textContent = Math.round(l.scaleY)+'%'; }
+      } else if (dirX !== 0 && dirY === 0) {
+        // 좌우 핸들: scaleX 조절 (매 프레임 상대 delta)
+        const delta = dx * dirX * 150;
+        const targets = (selIds.length > 1 && _multiDragInit) ? selIds : [l.id];
+        targets.forEach(sid => {
+          const sl = layers.find(x=>x.id===sid);
+          if (!sl || sl.locked) return;
+          const initSX = (_multiDragInit && _multiDragInit[sid]) ? (_multiDragInit[sid].scaleX||100) : handleDragStartSX;
+          sl.scaleX = Math.max(10, Math.min(300, initSX + delta));
+        });
+        const ps = $('pe_scaleX'); if (ps) { ps.value = Math.round(l.scaleX); $('pe_vscaleX').textContent = Math.round(l.scaleX)+'%'; }
       }
+
       render();
-      return; // handleDrag 처리 완료 - 이동으로 넘어가지 않음
+      return;
     }
 
     if (bgDrag) {
