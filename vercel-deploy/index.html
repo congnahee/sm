@@ -3053,11 +3053,9 @@ function startDrag(e) {
     if (l) {
       const b = getLayerBounds(l, W, H);
       if (b) {
-        // 히트 반경: 화면 픽셀 12px, 단 레이어 크기의 25% 이하로 제한
-        const rawHsX = 12 / mc.clientWidth;
-        const rawHsY = 12 / mc.clientHeight;
-        const hsX = Math.min(rawHsX, b.hw/W * 0.25);
-        const hsY = Math.min(rawHsY, b.hh/H * 0.25);
+        // 히트 반경: 화면 픽셀 20px
+        const hsX = 20 / mc.clientWidth;
+        const hsY = 20 / mc.clientHeight;
         const corners = [
           [-b.hw/W,-b.hh/H],[b.hw/W,-b.hh/H],
           [b.hw/W,b.hh/H],[-b.hw/W,b.hh/H],
@@ -3082,6 +3080,7 @@ function startDrag(e) {
                 if (sl) _multiDragInit[sid] = { size: sl.size, x: sl.x, y: sl.y };
               });
             }
+            pendingDrag = false; drag = false; // 핸들 드래그 시 이동 막기
             return;
           }
         }
@@ -3153,7 +3152,7 @@ function startDrag(e) {
   } catch(e) { console.error('startDrag err:', e.message, e.stack); }
 }
 function moveDrag(e) {
-  if (pendingDrag) {
+  if (pendingDrag && !handleDrag) {
     const [fx2,fy2]=getCanvasXY(e);
     const dist = Math.sqrt((fx2-dsx)**2 + (fy2-dsy)**2);
     if (dist > 0.01) {
