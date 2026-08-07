@@ -602,9 +602,12 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
 #customSizeModal.show{display:flex}
 #customSizeBox{background:var(--parchment);border-radius:16px;padding:24px 20px;width:320px;max-width:93vw;font-family:'Gowun Dodum',serif;box-shadow:0 8px 32px rgba(0,0,0,.3)}
 #customSizeBox h3{margin:0 0 14px;font-size:15px;color:var(--ink);letter-spacing:.04em;text-align:center}
-.csz-unit-row{display:flex;gap:6px;margin-bottom:14px;justify-content:center}
+.csz-unit-row{display:flex;gap:6px;margin-bottom:10px;justify-content:center}
 .csz-unit-btn{padding:5px 14px;border-radius:7px;border:1.5px solid var(--border);font-size:12px;cursor:pointer;color:var(--ink2);background:var(--bg);font-family:'Gowun Dodum',serif;transition:all .12s}
 .csz-unit-btn.active{border-color:var(--gold);color:var(--gold);background:rgba(196,151,58,.08);font-weight:700}
+.csz-dpi-row{display:flex;gap:5px;margin-bottom:12px;justify-content:center;flex-wrap:wrap}
+.csz-dpi-btn{padding:4px 10px;border-radius:7px;border:1.5px solid var(--border);font-size:11px;cursor:pointer;color:var(--ink2);background:var(--bg);font-family:'Gowun Dodum',serif;transition:all .12s}
+.csz-dpi-btn.active{border-color:#7B9E87;color:#7B9E87;background:rgba(123,158,135,.08);font-weight:700}
 .csz-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
 .csz-row label{font-size:12px;color:var(--ink2);width:32px;flex-shrink:0}
 .csz-row input{flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:'Gowun Dodum',serif;background:var(--bg);color:var(--ink);outline:none;text-align:center}
@@ -921,6 +924,14 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
           <div class="csz-unit-btn active" onclick="setCszUnit('px')">px</div>
           <div class="csz-unit-btn" onclick="setCszUnit('cm')">cm</div>
           <div class="csz-unit-btn" onclick="setCszUnit('mm')">mm</div>
+        </div>
+        <!-- DPI 선택 -->
+        <div class="csz-dpi-row" id="cszDpiRow">
+          <div class="csz-dpi-btn" onclick="setCszDpi(72)">72</div>
+          <div class="csz-dpi-btn" onclick="setCszDpi(96)">96</div>
+          <div class="csz-dpi-btn" onclick="setCszDpi(150)">150</div>
+          <div class="csz-dpi-btn active" onclick="setCszDpi(300)">300</div>
+          <div class="csz-dpi-btn" onclick="setCszDpi(600)">600 DPI</div>
         </div>
 
         <!-- 가로/세로 입력 -->
@@ -1788,8 +1799,9 @@ function setSize(el) {
 let _cszRatio = 1;
 let _cszUnit = 'px';   // 'px' | 'cm' | 'mm'
 let _cszDir  = 'portrait'; // 'portrait' | 'landscape'
-const PX_PER_CM = 96 / 2.54;   // 37.795
-const PX_PER_MM = 96 / 25.4;   // 3.7795
+let _cszDpi = 300;
+let PX_PER_CM = _cszDpi / 2.54;
+let PX_PER_MM = _cszDpi / 25.4;
 
 function _toPx(val) {
   if (_cszUnit === 'cm') return Math.round(val * PX_PER_CM);
@@ -1805,16 +1817,34 @@ function _cszStep() {
   return _cszUnit === 'px' ? 1 : _cszUnit === 'mm' ? 0.1 : 0.01;
 }
 
+function setCszDpi(dpi) {
+  // 현재 px값 먼저 저장
+  const wPx = _toPx(+$('cszW').value);
+  const hPx = _toPx(+$('cszH').value);
+  _cszDpi = dpi;
+  PX_PER_CM = dpi / 2.54;
+  PX_PER_MM = dpi / 25.4;
+  // DPI 버튼 active
+  document.querySelectorAll('.csz-dpi-btn').forEach(b => {
+    b.classList.toggle('active', parseInt(b.textContent) === dpi);
+  });
+  // 값 재변환
+  $('cszW').value = _fromPx(wPx);
+  $('cszH').value = _fromPx(hPx);
+}
+
 function setCszUnit(unit) {
+  if (_cszUnit === unit) return;
+  const wPx = _toPx(+$('cszW').value);
+  const hPx = _toPx(+$('cszH').value);
   _cszUnit = unit;
-  // 버튼 active
   document.querySelectorAll('.csz-unit-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.csz-unit-btn').forEach(b => { if(b.textContent===unit) b.classList.add('active'); });
-  // 단위 레이블 업데이트
   document.querySelectorAll('.csz-unit-lbl').forEach(l => l.textContent = unit);
   const lbl = $('cszUnitLbl'); if(lbl) lbl.textContent = unit;
-  // 값 변환
-  const wPx = _toPxFromInput('w'), hPx = _toPxFromInput('h');
+  // DPI 행: cm/mm일 때만 표시
+  const dpiRow = $('cszDpiRow');
+  if (dpiRow) dpiRow.style.display = unit === 'px' ? 'none' : 'flex';
   $('cszW').value = _fromPx(wPx);
   $('cszH').value = _fromPx(hPx);
   $('cszW').step = _cszStep();
@@ -1846,6 +1876,10 @@ function openCustomSize() {
   document.querySelectorAll('.csz-unit-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.csz-unit-btn').forEach(b => { if(b.textContent==='px') b.classList.add('active'); });
   document.querySelectorAll('.csz-unit-lbl').forEach(l => l.textContent = 'px');
+  // DPI 버튼 초기화
+  document.querySelectorAll('.csz-dpi-btn').forEach(b => {
+    b.classList.toggle('active', parseInt(b.textContent) === _cszDpi);
+  });
   $('cszW').step = 1; $('cszH').step = 1;
   $('cszW').value = outputW;
   $('cszH').value = outputH;
@@ -1854,6 +1888,9 @@ function openCustomSize() {
   $('cszDirP').classList.toggle('active', _cszDir==='portrait');
   $('cszDirL').classList.toggle('active', _cszDir==='landscape');
   modal.classList.add('show');
+  // px 기본 → DPI 행 숨김
+  const dpiRow = $('cszDpiRow');
+  if (dpiRow) dpiRow.style.display = 'none';
   setTimeout(() => $('cszW').focus(), 100);
 }
 
