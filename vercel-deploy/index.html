@@ -600,15 +600,23 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
 /* ── 직접 입력 사이즈 모달 ── */
 #customSizeModal{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.55);align-items:center;justify-content:center}
 #customSizeModal.show{display:flex}
-#customSizeBox{background:var(--parchment);border-radius:16px;padding:24px 20px;width:280px;max-width:90vw;font-family:'Gowun Dodum',serif;box-shadow:0 8px 32px rgba(0,0,0,.3)}
-#customSizeBox h3{margin:0 0 16px;font-size:15px;color:var(--ink);letter-spacing:.04em;text-align:center}
-.csz-row{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+#customSizeBox{background:var(--parchment);border-radius:16px;padding:24px 20px;width:320px;max-width:93vw;font-family:'Gowun Dodum',serif;box-shadow:0 8px 32px rgba(0,0,0,.3)}
+#customSizeBox h3{margin:0 0 14px;font-size:15px;color:var(--ink);letter-spacing:.04em;text-align:center}
+.csz-unit-row{display:flex;gap:6px;margin-bottom:14px;justify-content:center}
+.csz-unit-btn{padding:5px 14px;border-radius:7px;border:1.5px solid var(--border);font-size:12px;cursor:pointer;color:var(--ink2);background:var(--bg);font-family:'Gowun Dodum',serif;transition:all .12s}
+.csz-unit-btn.active{border-color:var(--gold);color:var(--gold);background:rgba(196,151,58,.08);font-weight:700}
+.csz-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
 .csz-row label{font-size:12px;color:var(--ink2);width:32px;flex-shrink:0}
 .csz-row input{flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:'Gowun Dodum',serif;background:var(--bg);color:var(--ink);outline:none;text-align:center}
 .csz-row input:focus{border-color:var(--gold)}
-.csz-lock{display:flex;align-items:center;gap:6px;margin-bottom:16px;cursor:pointer;font-size:12px;color:var(--ink2)}
+.csz-unit-lbl{font-size:12px;color:var(--ink3);width:28px;flex-shrink:0}
+.csz-dir-row{display:flex;gap:6px;margin-bottom:12px;align-items:center}
+.csz-dir-lbl{font-size:12px;color:var(--ink2);width:32px;flex-shrink:0}
+.csz-dir-btn{display:flex;align-items:center;gap:4px;padding:5px 10px;border-radius:7px;border:1.5px solid var(--border);font-size:12px;cursor:pointer;color:var(--ink2);background:var(--bg);font-family:'Gowun Dodum',serif;transition:all .12s}
+.csz-dir-btn.active{border-color:var(--gold);color:var(--gold);background:rgba(196,151,58,.08)}
+.csz-lock{display:flex;align-items:center;gap:6px;margin-bottom:12px;cursor:pointer;font-size:12px;color:var(--ink2)}
 .csz-lock input{width:14px;height:14px;cursor:pointer;accent-color:var(--gold)}
-.csz-presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.csz-presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
 .csz-preset{padding:4px 10px;border-radius:6px;border:1.5px solid var(--border);font-size:11px;cursor:pointer;color:var(--ink2);background:var(--bg);font-family:'Gowun Dodum',serif;transition:all .12s}
 .csz-preset:hover{border-color:var(--gold);color:var(--gold)}
 .csz-btns{display:flex;gap:8px}
@@ -907,19 +915,39 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
     <div id="customSizeModal" onclick="if(event.target===this)closeCustomSize()">
       <div id="customSizeBox">
         <h3>✏ 사이즈 직접 입력</h3>
+
+        <!-- 단위 선택 -->
+        <div class="csz-unit-row">
+          <div class="csz-unit-btn active" onclick="setCszUnit('px')">px</div>
+          <div class="csz-unit-btn" onclick="setCszUnit('cm')">cm</div>
+          <div class="csz-unit-btn" onclick="setCszUnit('mm')">mm</div>
+        </div>
+
+        <!-- 가로/세로 입력 -->
         <div class="csz-row">
           <label>가로</label>
-          <input type="number" id="cszW" min="100" max="10000" placeholder="px" oninput="onCszInput('w')">
-          <span style="font-size:12px;color:var(--ink3)">px</span>
+          <input type="number" id="cszW" min="1" max="10000" placeholder="" oninput="onCszInput('w')">
+          <span class="csz-unit-lbl" id="cszUnitLbl">px</span>
         </div>
         <div class="csz-row">
           <label>세로</label>
-          <input type="number" id="cszH" min="100" max="10000" placeholder="px" oninput="onCszInput('h')">
-          <span style="font-size:12px;color:var(--ink3)">px</span>
+          <input type="number" id="cszH" min="1" max="10000" placeholder="" oninput="onCszInput('h')">
+          <span class="csz-unit-lbl">px</span>
         </div>
+
+        <!-- 방향 -->
+        <div class="csz-dir-row">
+          <span class="csz-dir-lbl">방향</span>
+          <div class="csz-dir-btn active" id="cszDirP" onclick="setCszDir('portrait')">□ 세로</div>
+          <div class="csz-dir-btn" id="cszDirL" onclick="setCszDir('landscape')">▭ 가로</div>
+        </div>
+
+        <!-- 비율 고정 -->
         <label class="csz-lock">
-          <input type="checkbox" id="cszLock" checked> 비율 고정
+          <input type="checkbox" id="cszLock"> 비율 고정
         </label>
+
+        <!-- 프리셋 -->
         <div class="csz-presets">
           <div class="csz-preset" onclick="cszPreset(5000,5000)">1:1</div>
           <div class="csz-preset" onclick="cszPreset(1080,1920)">9:16</div>
@@ -928,6 +956,7 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
           <div class="csz-preset" onclick="cszPreset(1200,630)">SNS</div>
           <div class="csz-preset" onclick="cszPreset(2480,3508)">A4</div>
         </div>
+
         <div class="csz-btns">
           <button class="csz-btn-cancel" onclick="closeCustomSize()">취소</button>
           <button class="csz-btn-ok" onclick="applyCustomSize()">적용</button>
@@ -1757,13 +1786,73 @@ function setSize(el) {
    ✏ 직접 입력 사이즈
 ════════════════════════════════════ */
 let _cszRatio = 1;
+let _cszUnit = 'px';   // 'px' | 'cm' | 'mm'
+let _cszDir  = 'portrait'; // 'portrait' | 'landscape'
+const PX_PER_CM = 96 / 2.54;   // 37.795
+const PX_PER_MM = 96 / 25.4;   // 3.7795
+
+function _toPx(val) {
+  if (_cszUnit === 'cm') return Math.round(val * PX_PER_CM);
+  if (_cszUnit === 'mm') return Math.round(val * PX_PER_MM);
+  return Math.round(val);
+}
+function _fromPx(px) {
+  if (_cszUnit === 'cm') return Math.round(px / PX_PER_CM * 100) / 100;
+  if (_cszUnit === 'mm') return Math.round(px / PX_PER_MM * 10) / 10;
+  return Math.round(px);
+}
+function _cszStep() {
+  return _cszUnit === 'px' ? 1 : _cszUnit === 'mm' ? 0.1 : 0.01;
+}
+
+function setCszUnit(unit) {
+  _cszUnit = unit;
+  // 버튼 active
+  document.querySelectorAll('.csz-unit-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.csz-unit-btn').forEach(b => { if(b.textContent===unit) b.classList.add('active'); });
+  // 단위 레이블 업데이트
+  document.querySelectorAll('.csz-unit-lbl').forEach(l => l.textContent = unit);
+  const lbl = $('cszUnitLbl'); if(lbl) lbl.textContent = unit;
+  // 값 변환
+  const wPx = _toPxFromInput('w'), hPx = _toPxFromInput('h');
+  $('cszW').value = _fromPx(wPx);
+  $('cszH').value = _fromPx(hPx);
+  $('cszW').step = _cszStep();
+  $('cszH').step = _cszStep();
+}
+
+function _toPxFromInput(which) {
+  const v = which==='w' ? +$('cszW').value : +$('cszH').value;
+  return _toPx(v);
+}
+
+function setCszDir(dir) {
+  _cszDir = dir;
+  $('cszDirP').classList.toggle('active', dir==='portrait');
+  $('cszDirL').classList.toggle('active', dir==='landscape');
+  // 가로/세로 방향에 맞게 swap
+  const w = +$('cszW').value, h = +$('cszH').value;
+  if (dir==='portrait'  && w > h) { $('cszW').value=h; $('cszH').value=w; }
+  if (dir==='landscape' && h > w) { $('cszW').value=h; $('cszH').value=w; }
+  _cszRatio = +$('cszW').value / (+$('cszH').value || 1);
+}
 
 function openCustomSize() {
   const modal = $('customSizeModal');
   if (!modal) return;
+  _cszUnit = 'px';
+  _cszDir = outputH >= outputW ? 'portrait' : 'landscape';
+  // 단위 버튼 초기화
+  document.querySelectorAll('.csz-unit-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.csz-unit-btn').forEach(b => { if(b.textContent==='px') b.classList.add('active'); });
+  document.querySelectorAll('.csz-unit-lbl').forEach(l => l.textContent = 'px');
+  $('cszW').step = 1; $('cszH').step = 1;
   $('cszW').value = outputW;
   $('cszH').value = outputH;
   _cszRatio = outputW / outputH;
+  // 방향 버튼
+  $('cszDirP').classList.toggle('active', _cszDir==='portrait');
+  $('cszDirL').classList.toggle('active', _cszDir==='landscape');
   modal.classList.add('show');
   setTimeout(() => $('cszW').focus(), 100);
 }
@@ -1775,35 +1864,41 @@ function closeCustomSize() {
 
 function onCszInput(changed) {
   if (!$('cszLock').checked) return;
-  const w = +$('cszW').value;
-  const h = +$('cszH').value;
+  const w = +$('cszW').value, h = +$('cszH').value;
   if (changed === 'w' && w > 0) {
-    $('cszH').value = Math.round(w / _cszRatio);
+    $('cszH').value = _cszUnit==='px' ? Math.round(w / _cszRatio) : Math.round(w / _cszRatio * 100)/100;
   } else if (changed === 'h' && h > 0) {
-    $('cszW').value = Math.round(h * _cszRatio);
+    $('cszW').value = _cszUnit==='px' ? Math.round(h * _cszRatio) : Math.round(h * _cszRatio * 100)/100;
   }
 }
 
 function cszPreset(w, h) {
-  $('cszW').value = w;
-  $('cszH').value = h;
-  _cszRatio = w / h;
+  // 프리셋은 항상 px 기준
+  _cszUnit = 'px';
+  document.querySelectorAll('.csz-unit-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.csz-unit-btn').forEach(b => { if(b.textContent==='px') b.classList.add('active'); });
+  document.querySelectorAll('.csz-unit-lbl').forEach(l => l.textContent = 'px');
+  $('cszW').step = 1; $('cszH').step = 1;
+  // 방향에 맞게
+  const fw = (_cszDir==='landscape' && h>w) ? h : w;
+  const fh = (_cszDir==='landscape' && h>w) ? w : h;
+  $('cszW').value = fw;
+  $('cszH').value = fh;
+  _cszRatio = fw / fh;
 }
 
 function applyCustomSize() {
-  const w = Math.max(100, Math.min(10000, +$('cszW').value || outputW));
-  const h = Math.max(100, Math.min(10000, +$('cszH').value || outputH));
+  const w = Math.max(100, Math.min(10000, _toPxFromInput('w') || outputW));
+  const h = Math.max(100, Math.min(10000, _toPxFromInput('h') || outputH));
   saveHistory();
   outputW = w; outputH = h; saveW = w; saveH = h;
   document.querySelectorAll('.size-chip').forEach(c => c.classList.remove('active'));
-  // 현재 사이즈와 일치하는 칩 활성화
   document.querySelectorAll('.size-chip[data-w]').forEach(c => {
     if (+c.dataset.w === w && +c.dataset.h === h) c.classList.add('active');
   });
   const lbl = $('sizeLabel');
   if (lbl) lbl.textContent = `${w.toLocaleString()} × ${h.toLocaleString()} px`;
-  initCanvas();
-  render();
+  initCanvas(); render();
   closeCustomSize();
   showToast(`✏ ${w.toLocaleString()} × ${h.toLocaleString()} px`);
 }
