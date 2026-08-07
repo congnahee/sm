@@ -3064,18 +3064,23 @@ function startDrag(e) {
   try {
     const [fx, fy] = getCanvasXY(e);
     const W = mc.width, H = mc.height;
+    // hitTest용 display 좌표계 (fx,fy와 같은 기준)
+    const dW = mc.clientWidth, dH = mc.clientHeight;
 
     // ① 핸들 감지 (선택된 레이어 모서리/중앙)
     if (selId) {
       const l = layers.find(x => x.id === selId);
       if (l) {
-        const b = getLayerBounds(l, W, H);
+        const b = getLayerBounds(l, dW, dH);
         if (b) {
-          // 핸들 hitTest: 캔버스 좌표계(0~1 정규화)
-          // b.hw/hh는 display픽셀 → /clientWidth,H로 정규화
-          const nhw = b.hw / mc.clientWidth;
-          const nhh = b.hh / mc.clientHeight;
-          const hs = 18 / mc.clientWidth; // 히트 반경 18px
+          // 핸들 hitTest: 정규화 좌표계 (0~1)
+          // b.hw/hh는 mc.width/height 기준 논리픽셀
+          // fx,fy도 mc.width 기준 정규화 (getCanvasXY = clientX/clientWidth ≈ 논리X/mc.width)
+          // sc = mc.clientWidth/mc.width 이므로: b.hw(논리px) / mc.width = 정규화
+          // b.hw는 이제 dW(display픽셀) 기준 → /dW로 정규화
+          const nhw = b.hw / dW;
+          const nhh = b.hh / dH;
+          const hs = 22 / dW; // 히트 반경 22 display픽셀
           const corners = [
             [-nhw,-nhh],[nhw,-nhh],[nhw,nhh],[-nhw,nhh],
             [0,-nhh],[0,nhh],[-nhw,0],[nhw,0]
@@ -3125,9 +3130,9 @@ function startDrag(e) {
     for (let i = layers.length - 1; i >= 0; i--) {
       const l = layers[i];
       if (!l.visible) continue;
-      const b = getLayerBounds(l, W, H);
-      const hitW = b ? b.hw/W : 0.28;
-      const hitH = b ? b.hh/H : 0.28;
+      const b = getLayerBounds(l, dW, dH);
+      const hitW = b ? b.hw/dW : 0.28;
+      const hitH = b ? b.hh/dH : 0.28;
       if (Math.abs(fx - l.x) < Math.max(hitW, 0.05) && Math.abs(fy - l.y) < Math.max(hitH, 0.05)) {
         const changed = selId !== l.id;
         selId = l.id;
