@@ -1,0 +1,243 @@
+/* ═══════════════════════════════════════════════════
+   콩심캘리 스튜디오 — layers.js
+   레이어 시스템 (캘리/텍스트/스티커/조작/속성편집)
+═══════════════════════════════════════════════════ */
+/* ════════════════════════════════════
+   CALLI LAYER
+════════════════════════════════════ */
+function onCalliLoad(e) {
+  const f = e.target.files[0]; if (!f) return;
+  showLoad('배경 제거 처리 중...');
+  const r = new FileReader();
+  r.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        saveHistory(); // 레이어 추가 전 상태 저장
+        const id = ++idCtr;
+        layers.push({ id, type:'calli', name:f.name.replace(/\.[^.]+$/,''), srcImg:img, srcDataUrl:ev.target.result, size:Math.round(mc.width*.7), scaleX:100, scaleY:100, x:.5, y:.5, rotate:0, flipH:false, opacity:100, thresh:200, visible:true, tintColor:null });
+        selId = id;
+        processCalliLayer(id);
+        refreshLayerList(); renderProps(); render();
+        hideLoad(); showToast('캘리 오버레이 추가됨 ✓');
+        setTimeout(() => buildFilterThumbs('filterThumbGrid2'), 50);
+      } catch(err) { hideLoad(); console.warn('onCalliLoad:', err.message); }
+    };
+    img.src = ev.target.result;
+  };
+  r.readAsDataURL(f);
+  e.target.value='';
+}
+
+function onImgLoad(e) {
+  const f = e.target.files[0]; if (!f) return;
+  showLoad('이미지 불러오는 중...');
+  const r = new FileReader();
+  r.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        saveHistory();
+        const id = ++idCtr;
+        layers.push({ id, type:'calli', name:f.name.replace(/\.[^.]+$/,''), srcImg:img, srcDataUrl:ev.target.result, size:Math.round(mc.width*.7), scaleX:100, scaleY:100, x:.5, y:.5, rotate:0, flipH:false, opacity:100, thresh:255, noBgRemove:true, visible:true, tintColor:null });
+        selId = id;
+        processCalliLayer(id);
+        refreshLayerList(); renderProps(); render();
+        hideLoad(); showToast('이미지 추가됨 ✓');
+      } catch(err) { hideLoad(); console.warn('onImgLoad:', err.message); }
+    };
+    img.src = ev.target.result;
+  };
+  r.readAsDataURL(f);
+  e.target.value='';
+}
+
+function processCalliLayer(id) {
+  const l = layers.find(x=>x.id===id); if (!l||!l.srcImg) return;
+  const img = l.srcImg, thresh = l.thresh;
+  const off = document.createElement('canvas');
+  off.width=img.width; off.height=img.height;
+  const oc = off.getContext('2d', {willReadFrequently: true});
+  oc.drawImage(img,0,0);
+  try {
+    const id2 = oc.getImageData(0,0,img.width,img.height);
+    const d = id2.data;
+    for (let i=0;i<d.length;i+=4) {
+      const lum = .299*d[i] + .587*d[i+1] + .114*d[i+2];
+      if (lum > thresh) {
+        const soft = 45;
+        d[i+3] = Math.round(Math.max(0,1-(lum-(thresh-soft))/soft)*255);
+      }
+    }
+    oc.putImageData(id2,0,0);
+  } catch(e) {
+    console.warn('processCalliLayer getImageData 오류 (CORS):', e.message);
+  }
+  calliCache[id] = { offscreen:off, w:img.width, h:img.height };
+}
+
+/* ════════════════════════════════════
+   TEXT LAYER
+════════════════════════════════════ */
+function addTextLayer() {
+  try {
+    saveHistory();
+    const id = ++idCtr;
+    layers.push({ id, type:'text', text:'', font:FONTS[0].v, size:Math.round(mc.width*.09), color:'#1C0F06', weight:'700', align:'center', x:.5, y:.5, rotate:0, opacity:100, shadow:false, visible:true });
+    selId = id;
+    refreshLayerList(); renderProps(); render();
+    showToast('텍스트 레이어 추가됨');
+    setTimeout(() => { try { const t = document.getElementById('pe_txt'); if(t){ t.focus(); t.select(); } } catch(e){} }, 80);
+  } catch(e) { showToast('오류: ' + e.message); console.error('addTextLayer:', e); }
+}
+
+/* ════════════════════════════════════
+   LAYER OPERATIONS
+════════════════════════════════════ */
+
+function toggleLayerVisible(id) {
+  const l = layers.find(x=>x.id===id);
+  if (!l) return;
+  saveHistory();
+  l.visible = l.visible === false ? true : false;
+  refreshLayerList();
+  render();
+  showToast(l.visible === false ? '👁 레이어 숨김' : '👁 레이어 표시');
+}
+function duplicateLayer(id) {
+  const l = layers.find(x => x.id === id);
+  if (!l) return;
+  const srcImgRef = l.srcImg; // JSON 복사 전에 미리 빼두기
+  const copy = JSON.parse(JSON.stringify(l));
+  copy.id = ++idCtr;
+  copy.x = Math.min(0.9, l.x + 0.03);
+  copy.y = Math.min(0.9, l.y + 0.03);
+  if (srcImgRef) copy.srcImg = srcImgRef; // 원본 Image 객체 참조 복원
+  const idx = layers.findIndex(x => x.id === id);
+  layers.splice(idx + 1, 0, copy);
+  selId = copy.id;
+  if (copy.type === 'calli' && copy.srcImg) processCalliLayer(copy.id); // calliCache 등록
+  saveHistory();
+  refreshLayerList();
+  renderProps();
+  render();
+  showToast('레이어 복제됨 ✓');
+}
+
+function delLayer(id) {
+  saveHistory();
+  layers = layers.filter(l=>l.id!==id);
+  delete calliCache[id];
+  if (selId===id) { selId=null; renderProps(); }
+  refreshLayerList(); render(); showToast('레이어 삭제됨');
+}
+
+function moveLayer(id, dir) {
+  const i = layers.findIndex(l=>l.id===id);
+  if (dir==='up' && i<layers.length-1) { saveHistory(); [layers[i],layers[i+1]]=[layers[i+1],layers[i]]; }
+  else if (dir==='down' && i>0) { saveHistory(); [layers[i],layers[i-1]]=[layers[i-1],layers[i]]; }
+  refreshLayerList(); render();
+}
+
+/* ════════════════════════════════════
+   LAYER LIST UI
+════════════════════════════════════ */
+function refreshLayerList() {
+  const list = $('layerList');
+  if (!layers.length) {
+    list.innerHTML='<div style="text-align:center;padding:18px 0;color:var(--muted);font-size:12px;line-height:1.7">레이어가 없어요<br><small>위 버튼으로 추가하세요</small></div>';
+    return;
+  }
+  list.innerHTML='';
+  [...layers].reverse().forEach(l => {
+    const div = document.createElement('div');
+    div.className = 'litem'+(l.id===selId?' sel':selIds.includes(l.id)?' sel-multi':'')+(l.locked?' locked':'')+(l.visible===false?' hidden-layer':'');
+    const preview = l.type==='text' ? (l.text.split('\n')[0].slice(0,12)||'(빈텍스트)') : l.name;
+    div.innerHTML=`
+      <div class="litem-icon">${l.type==='text'?'✍️':l.type==='sticker'?'⭐':'🖌'}</div>
+      <div class="litem-info">
+        <div class="litem-name">${preview}</div>
+        <div class="litem-sub" style="opacity:${l.visible===false?'0.4':'1'}">${l.type==='text'?'텍스트':l.type==='sticker'?'스티커':'PNG 오버레이'} · 투명도 ${l.opacity}%${l.visible===false?' · 숨김':''}</div>
+      </div>
+      <div class="litem-btns">
+        <div class="lbtn" title="보이기/숨기기" onclick="event.stopPropagation();toggleLayerVisible(${l.id})" style="opacity:${l.visible===false?'0.35':'1'}">${l.visible===false?'🙈':'👁'}</div>
+        <div class="lbtn" title="복제" onclick="event.stopPropagation();duplicateLayer(${l.id})" style="font-size:11px">⧉</div>
+        <div class="lbtn" title="위로" onclick="event.stopPropagation();moveLayer(${l.id},'up')">↑</div>
+        <div class="lbtn" title="아래로" onclick="event.stopPropagation();moveLayer(${l.id},'down')">↓</div>
+        <div class="lbtn del" title="삭제" onclick="event.stopPropagation();delLayer(${l.id})">✕</div>
+      </div>`;
+    div.addEventListener('click', ()=>{ selId=l.id; refreshLayerList(); renderProps(); updateLayerToolbar(); });
+    div.dataset.layerId = l.id;
+    list.appendChild(div);
+  });
+  // 선택된 레이어로 스크롤
+  if (selId) {
+    const selEl = list.querySelector(`[data-layer-id="${selId}"]`);
+    if (selEl) selEl.scrollIntoView({ block:'nearest', behavior:'smooth' });
+  }
+}
+
+/* ════════════════════════════════════
+   PROPERTY EDITOR
+════════════════════════════════════ */
+function renderProps() {
+  const area = $('propArea');
+  const hint = $('noPropHint');
+  const old = area.querySelector('.propbox');
+  if (old) old.remove();
+  const l = layers.find(x=>x.id===selId);
+  if (!l) { hint.style.display='block'; return; }
+  hint.style.display='none';
+  try {
+    if (l.type==='text'||l.type==='sticker') buildTextProps(area,l);
+    else buildCalliProps(area,l);
+  } catch(e) { console.warn('renderProps 에러:', e); }
+}
+
+function buildTextProps(area, l) {
+  const box = document.createElement('div');
+  box.className='propbox';
+  box.innerHTML=`
+    <div class="prop-title"><div class="prop-dot"></div>텍스트 속성</div>
+    <textarea class="tinput" id="pe_txt" rows="3" placeholder="여기에 글자를 입력하세요">${l.text}</textarea>
+
+    <div class="slabel" style="font-size:9px;margin-bottom:5px">폰트</div>
+    <select class="fselect" id="pe_font">
+      ${FONTS.map(f=>`<option value="${f.v}" ${l.font===f.v?'selected':''}>${f.l}</option>`).join('')}
+    </select>
+
+    <div class="slabel" style="font-size:9px;margin-bottom:5px">굵기</div>
+    <div class="btnrow" id="pe_wrow">
+      ${['300','400','700','900'].map(w=>`<div class="togbtn ${l.weight===w?'active':''}" onclick="setLP('weight','${w}',this,'pe_wrow')">${{300:'가늘',400:'보통',700:'굵게',900:'진하게'}[w]}</div>`).join('')}
+    </div>
+
+    <div class="slabel" style="font-size:9px;margin-bottom:5px">정렬</div>
+    <div class="btnrow" id="pe_arow">
+      ${['left','center','right'].map(a=>{
+        const icons={
+          left:'<svg width="15" height="13" viewBox="0 0 15 13" fill="currentColor"><rect x="0" y="0" width="15" height="2" rx="1"/><rect x="0" y="4" width="10" height="2" rx="1"/><rect x="0" y="8" width="15" height="2" rx="1"/><rect x="0" y="11.5" width="8" height="2" rx="1"/></svg>',
+          center:'<svg width="15" height="13" viewBox="0 0 15 13" fill="currentColor"><rect x="0" y="0" width="15" height="2" rx="1"/><rect x="2.5" y="4" width="10" height="2" rx="1"/><rect x="0" y="8" width="15" height="2" rx="1"/><rect x="3.5" y="11.5" width="8" height="2" rx="1"/></svg>',
+          right:'<svg width="15" height="13" viewBox="0 0 15 13" fill="currentColor"><rect x="0" y="0" width="15" height="2" rx="1"/><rect x="5" y="4" width="10" height="2" rx="1"/><rect x="0" y="8" width="15" height="2" rx="1"/><rect x="7" y="11.5" width="8" height="2" rx="1"/></svg>'
+        };
+        return `<div class="togbtn ${l.align===a?'active':''}" style="padding:6px 10px" onclick="setLP('align','${a}',this,'pe_arow')" title="${{left:'왼쪽',center:'가운데',right:'오른쪽'}[a]}">${icons[a]}</div>`;
+      }).join('')}
+    </div>
+
+    <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">글씨 크기</span><span class="ctrl-v" id="pe_vsize">${l.size}</span></div><input type="range" id="pe_size" min="8" max="400" value="${l.size}"></div>
+    <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">회전</span><span class="ctrl-v" id="pe_vrot">${l.rotate}°</span></div><input type="range" id="pe_rot" min="-180" max="180" value="${l.rotate}"></div>
+    <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">투명도</span><span class="ctrl-v" id="pe_vop">${l.opacity}%</span></div><input type="range" id="pe_op" min="10" max="100" value="${l.opacity}"></div>
+
+    <div class="slabel" style="font-size:9px;margin-bottom:5px">글씨 색상</div>
+    <div class="cswrow" id="pe_cols">
+      ${PALETTE.map(c=>`<div class="csw ${l.color===c?'active':''}" style="background:${c};${c==='#FFFFFF'?'border:2px solid var(--border2);':''}" onclick="setTextColor('${c}',this)"></div>`).join('')}
+      <input type="color" id="pe_cpick" value="${l.color.length===7?l.color:'#000000'}" oninput="setTextColorFree(this.value)">
+    </div>
+
+    <div style="margin-top:9px;display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:var(--ink3)">
+      <input type="checkbox" id="pe_shadow" ${l.shadow?'checked':''} style="width:14px;height:14px;accent-color:var(--gold);cursor:pointer">
+      <label for="pe_shadow" style="cursor:pointer">그림자 효과</label>
+    </div>`;
+  area.appendChild(box);
+
+  $('pe_txt').addEventListener('input', e=>{ l.text=e.target.value; refreshLayerList(); render(); });
+  $('pe_txt').addEventListener('change', ()=>saveHistory()
