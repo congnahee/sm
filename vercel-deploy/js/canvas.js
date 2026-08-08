@@ -344,4 +344,205 @@ window.addEventListener('resize', initCanvas);
 
   function getRelXY(e) {
     const box = $('cropBox');
-    const sh
+    const shell = $('canvasShell');
+    const r = shell.getBoundingClientRect();
+    const src = (e.touches && e.touches.length > 0) ? e.touches[0] :
+                (e.changedTouches && e.changedTouches.length > 0) ? e.changedTouches[0] : e;
+    return [(src.clientX - r.left) / r.width, (src.clientY - r.top) / r.height];
+  }
+
+  function updateCropUI() {
+    const overlay = $('cropOverlay'); if (!overlay) return;
+    const W = 100, H = 100; // percent
+    const x = cx * 100, y = cy * 100, w = cw * 100, h = ch * 100;
+    $('cropBox').style.cssText = `position:absolute;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,0.3);cursor:move;box-sizing:border-box;left:${x}%;top:${y}%;width:${w}%;height:${h}%`;
+    $('cropDark-top').style.height    = y + '%';
+    $('cropDark-bottom').style.height = (100 - y - h) + '%';
+    $('cropDark-left').style.cssText  = `position:absolute;background:rgba(0,0,0,0.55);top:${y}%;height:${h}%;left:0;width:${x}%`;
+    $('cropDark-right').style.cssText = `position:absolute;background:rgba(0,0,0,0.55);top:${y}%;height:${h}%;right:0;width:${100-x-w}%`;
+  }
+
+  window.enterCropMode = function() {
+    if (cropActive) return;
+    cropActive = true;
+    cx = 0.05; cy = 0.05; cw = 0.9; ch = 0.9;
+    const overlay = $('cropOverlay');
+    overlay.style.display = 'block';
+    // 리사이즈 핸들 숨기기
+    ['rh-tl','rh-tr','rh-bl','rh-br'].forEach(id => { const el=$(id); if(el) el.style.display='none'; });
+    updateCropUI();
+    showToast('드래그로 자를 영역을 선택하세요');
+  };
+
+  window.cancelCrop = function() {
+    cropActive = false;
+    $('cropOverlay').style.display = 'none';
+    ['rh-tl','rh-tr','rh-bl','rh-br'].forEach(id => { const el=$(id); if(el) el.style.display=''; });
+  };
+
+  window.applyCrop = function() {
+    if (!cropActive) return;
+    saveHistory();
+    // 크롭 영역 → 새 outputW/H
+    const newW = Math.max(100, Math.round(outputW * cw));
+    const newH = Math.max(100, Math.round(outputH * ch));
+    const offX = cx; const offY = cy;
+
+    // bgOffX/Y 조정 (크롭된 만큼 배경 오프셋 이동)
+    bgOffX = bgOffX - offX + (1 - cw) / 2;
+    bgOffY = bgOffY - offY + (1 - ch) / 2;
+
+    // 레이어 위치 조정
+    layers.forEach(l => {
+      l.x = (l.x - offX) / cw;
+      l.y = (l.y - offY) / ch;
+    });
+
+    outputW = newW; outputH = newH; saveW = newW; saveH = newH;
+    document.querySelectorAll('.size-chip').forEach(c => c.classList.remove('active'));
+    initCanvas();
+    const lbl = $('sizeLabel');
+    if (lbl) lbl.textContent = `${newW.toLocaleString()} × ${newH.toLocaleString()} px`;
+
+    cancelCrop();
+    render();
+    showToast(`✂ 자르기 완료 — ${newW}×${newH}px`);
+  };
+
+  // 이벤트
+  function onCropDown(e) {
+    if (!cropActive) return;
+    const dir = e.target.dataset && e.target.dataset.dir;
+    const [fx, fy] = getRelXY(e);
+    dragStartX = fx; dragStartY = fy;
+    dragStartCx = cx; dragStartCy = cy; dragStartCw = cw; dragStartCh = ch;
+    if (dir) { dragType = dir; e.stopPropagation(); }
+    else if (e.target.id === 'cropBox' || e.target.closest('#cropBox')) { dragType = 'move'; e.stopPropagation(); }
+    else { dragType = null; }
+  }
+
+  function onCropMove(e) {
+    if (!cropActive || !dragType) return;
+    e.preventDefault(); e.stopPropagation();
+    const [fx, fy] = getRelXY(e);
+    const dx = fx - dragStartX, dy = fy - dragStartY;
+    const MIN = 0.05;
+    let nx = dragStartCx, ny = dragStartCy, nw = dragStartCw, nh = dragStartCh;
+
+    if (dragType === 'move') {
+      nx = Math.max(0, Math.min(1 - nw, dragStartCx + dx));
+      ny = Math.max(0, Math.min(1 - nh, dragStartCy + dy));
+    } else {
+      if (dragType.includes('l')) { nx = dragStartCx + dx; nw = dragStartCw - dx; }
+      if (dragType.includes('r')) { nw = dragStartCw + dx; }
+      if (dragType.includes('t')) { ny = dragStartCy + dy; nh = dragStartCh - dy; }
+      if (dragType.includes('b')) { nh = dragStartCh + dy; }
+      if (dragType === 'tc' || dragType === 'bc') { nx = dragStartCx; nw = dragStartCw; }
+      if (dragType === 'ml' || dragType === 'mr') { ny = dragStartCy; nh = dragStartCh; }
+      // 최소 크기 제한
+      if (nw < MIN) { if (dragType.includes('l')) nx = dragStartCx + dragStartCw - MIN; nw = MIN; }
+      if (nh < MIN) { if (dragType.includes('t')) ny = dragStartCy + dragStartCh - MIN; nh = MIN; }
+      // 경계 클램프
+      nx = Math.max(0, nx); ny = Math.max(0, ny);
+      if (nx + nw > 1) { if (dragType.includes('l')) nx = 1 - nw; else nw = 1 - nx; }
+      if (ny + nh > 1) { if (dragType.includes('t')) ny = 1 - nh; else nh = 1 - ny; }
+    }
+    cx = nx; cy = ny; cw = nw; ch = nh;
+    updateCropUI();
+  }
+
+  function onCropUp() { dragType = null; }
+
+  window.addEventListener('load', () => {
+    const overlay = $('cropOverlay');
+    if (!overlay) return;
+    overlay.addEventListener('mousedown',  onCropDown);
+    overlay.addEventListener('touchstart', onCropDown, {passive:false});
+    window.addEventListener('mousemove',  onCropMove);
+    window.addEventListener('touchmove',  onCropMove, {passive:false});
+    window.addEventListener('mouseup',    onCropUp);
+    window.addEventListener('touchend',   onCropUp);
+  });
+})();
+
+/* ════════════════════════════════════
+   CANVAS RESIZE HANDLES
+════════════════════════════════════ */
+(function() {
+  let resizing = false;
+  let resizeCorner = '';
+  let startX = 0, startY = 0;
+  let startW = 0, startH = 0;
+  let startRatio = 1;
+  const MIN_SIZE = 200;
+  const MAX_SIZE = 8000;
+
+  function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+  function onResizeStart(e, corner) {
+    e.preventDefault();
+    e.stopPropagation();
+    resizing = true;
+    resizeCorner = corner;
+    const src = e.touches ? e.touches[0] : e;
+    startX = src.clientX;
+    startY = src.clientY;
+    startW = outputW;
+    startH = outputH;
+    startRatio = outputH / outputW;
+  }
+
+  function onResizeMove(e) {
+    if (!resizing) return;
+    e.preventDefault();
+    const src = e.touches ? e.touches[0] : e;
+    const dx = src.clientX - startX;
+    const dy = src.clientY - startY;
+
+    // 화면상의 캔버스 크기 → 실제 px 비율 계산
+    const dispScale = mc.clientWidth / startW;
+
+    let newW = startW, newH = startH;
+    if (resizeCorner === 'br') {
+      newW = clamp(Math.round(startW + dx / dispScale), MIN_SIZE, MAX_SIZE);
+      newH = clamp(Math.round(startH + dy / dispScale), MIN_SIZE, MAX_SIZE);
+    } else if (resizeCorner === 'bl') {
+      newW = clamp(Math.round(startW - dx / dispScale), MIN_SIZE, MAX_SIZE);
+      newH = clamp(Math.round(startH + dy / dispScale), MIN_SIZE, MAX_SIZE);
+    } else if (resizeCorner === 'tr') {
+      newW = clamp(Math.round(startW + dx / dispScale), MIN_SIZE, MAX_SIZE);
+      newH = clamp(Math.round(startH - dy / dispScale), MIN_SIZE, MAX_SIZE);
+    } else if (resizeCorner === 'tl') {
+      newW = clamp(Math.round(startW - dx / dispScale), MIN_SIZE, MAX_SIZE);
+      newH = clamp(Math.round(startH - dy / dispScale), MIN_SIZE, MAX_SIZE);
+    }
+
+    outputW = newW; outputH = newH;
+    saveW = newW; saveH = newH;
+    initCanvas();
+    const lbl = $('sizeLabel');
+    if (lbl) lbl.textContent = `${newW.toLocaleString()} × ${newH.toLocaleString()} px`;
+    // 사이즈칩 active 해제
+    document.querySelectorAll('.size-chip').forEach(c => c.classList.remove('active'));
+  }
+
+  function onResizeEnd() {
+    if (!resizing) return;
+    resizing = false;
+    saveHistory();
+    showToast(`캔버스 ${outputW}×${outputH}px`);
+  }
+
+  window.addEventListener('load', () => {
+    ['tl','tr','bl','br'].forEach(corner => {
+      const el = $('rh-' + corner);
+      if (!el) return;
+      el.addEventListener('mousedown',  e => onResizeStart(e, corner));
+      el.addEventListener('touchstart', e => onResizeStart(e, corner), {passive:false});
+    });
+    window.addEventListener('mousemove',  onResizeMove);
+    window.addEventListener('touchmove',  onResizeMove, {passive:false});
+    window.addEventListener('mouseup',    onResizeEnd);
+    window.addEventListener('touchend',   onResizeEnd);
+  });
+})();

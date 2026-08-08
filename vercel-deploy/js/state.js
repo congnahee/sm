@@ -282,4 +282,17 @@ const FONTS = [
   {l:'Hi Melody',        v:"'Hi Melody',cursive",         cat:'손글씨', sample:'사랑스러운 글씨'},
   {l:'East Sea Dokdo',   v:"'East Sea Dokdo',cursive",    cat:'손글씨', sample:'자유로운 필체'},
   {l:'Cute Font',        v:"'Cute Font',cursive",         cat:'귀여운', sample:'귀여운 느낌'},
-  {l:'Gaegu',            v:"'Gaegu',cursive",             cat:'손글씨', sample:'일�
+  {l:'Gaegu',            v:"'Gaegu',cursive",             cat:'손글씨', sample:'일상의 기록'},
+  {l:'Single Day',       v:"'Single Day',cursive",        cat:'손글씨', sample:'하루하루'},
+  {l:'Yeon Sung',        v:"'Yeon Sung',cursive",         cat:'연성체', sample:'연필로 쓴 글'},
+  // 고딕/디스플레이
+  {l:'Black Han Sans',   v:"'Black Han Sans',sans-serif", cat:'고딕', sample:'강렬한 임팩트'},
+  {l:'Do Hyeon',         v:"'Do Hyeon',sans-serif",       cat:'고딕', sample:'깔끔한 디자인'},
+  {l:'Jua',              v:"'Jua',sans-serif",            cat:'고딕', sample:'친근한 느낌'},
+  {l:'Gugi',             v:"'Gugi',cursive",              cat:'디스플레이', sample:'개성 있는 글씨'},
+  {l:'Gowun Dodum',      v:"'Gowun Dodum',serif",         cat:'둥근', sample:'부드러운 감성'},
+];
+const PALETTE = ['#1C0F06','#FFFFFF','#C4973A','#E8C47A','#7A5535','#B84B3C','#2d5a27','#1a3a5c','#6b2d6b','#888','#FF6B6B','#4ECDC4'];
+
+const $ = id => document.getElementById(id);
+const mc = $('mainCanvas'), mctx = mc.getContext('2d', {willReadFrequently: true});
