@@ -252,6 +252,30 @@ function buildTextProps(area, l) {
   $('pe_shadow').addEventListener('change', e=>{ saveHistory(); l.shadow=e.target.checked; render(); });
 }
 
+
+/* 레이어 원본 대표색 추출 */
+function getLayerOrigColor(l) {
+  if (!l.srcImg) return 'linear-gradient(135deg,#000 50%,#fff 50%)';
+  try {
+    const tmp = document.createElement('canvas');
+    tmp.width = 16; tmp.height = 16;
+    const ctx = tmp.getContext('2d', {willReadFrequently: true});
+    ctx.drawImage(l.srcImg, 0, 0, 16, 16);
+    const data = ctx.getImageData(0, 0, 16, 16).data;
+    let r=0, g=0, b=0, cnt=0;
+    for (let i=0; i<data.length; i+=4) {
+      if (data[i+3] > 128) { // 불투명 픽셀만
+        r+=data[i]; g+=data[i+1]; b+=data[i+2]; cnt++;
+      }
+    }
+    if (cnt === 0) return 'linear-gradient(135deg,#000 50%,#fff 50%)';
+    r=Math.round(r/cnt); g=Math.round(g/cnt); b=Math.round(b/cnt);
+    return `rgb(${r},${g},${b})`;
+  } catch(e) {
+    return 'linear-gradient(135deg,#000 50%,#fff 50%)';
+  }
+}
+
 function buildCalliProps(area, l) {
   const tintPresets = ['null','#000000','#FFFFFF','#C4973A','#E84855','#3A86FF','#06D6A0','#FF6B35','#9B5DE5','#F72585'];
   const box = document.createElement('div');
@@ -272,7 +296,7 @@ function buildCalliProps(area, l) {
 
     <div class="ctrl-row" style="margin-top:10px;margin-bottom:6px"><span class="ctrl-n" style="font-size:12px;font-weight:700">🎨 캘리 컬러 변경</span></div>
     <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px" id="pe_tintRow">
-      <div class="csw${!l.tintColor?' active':''}" data-tint="null" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#000 50%,#fff 50%);border:2px solid var(--border);cursor:pointer;position:relative;overflow:hidden" title="원본"></div>
+      <div class="csw${!l.tintColor?' active':''}" data-tint="null" style="width:28px;height:28px;border-radius:50%;background:${getLayerOrigColor(l)};border:2px solid ${!l.tintColor?'var(--gold)':'var(--border)'};cursor:pointer;position:relative;overflow:hidden;box-shadow:${!l.tintColor?'0 0 0 2px var(--gold)':'none'}" title="원본 색상"></div>
       ${tintPresets.slice(1).map(c=>`<div class="csw${l.tintColor===c?' active':''}" data-tint="${c}" style="width:28px;height:28px;border-radius:50%;background:${c};border:2px solid var(--border);cursor:pointer"></div>`).join('')}
       <input type="color" id="pe_tintPicker" value="${l.tintColor||'#000000'}" style="width:28px;height:28px;border-radius:50%;border:2px solid var(--border);cursor:pointer;padding:1px;background:var(--parchment)" title="직접 선택">
     </div>
