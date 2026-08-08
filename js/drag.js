@@ -99,8 +99,8 @@ function startDrag(e) {
       }
     }
 
-    // ② 배경 드래그
-    if (bgMode === 'move' && bgImg) {
+    // ② 배경 드래그 (Shift 누르면 박스선택 우선)
+    if (bgMode === 'move' && bgImg && !e.shiftKey) {
       bgDrag = true;
       bdsx = fx; bdsy = fy; bdox = bgOffX; bdoy = bgOffY;
       mc.style.cursor = 'grabbing';
@@ -152,11 +152,80 @@ function startDrag(e) {
       }
     }
 
-    // ④ 빈 곳 클릭 → 선택 해제
-    selId = null; selIds = [];
-    hideLayerToolbar();
-    refreshLayerList(); renderProps(); render();
+    // ④ 빈 곳 클릭 → 박스 선택 시작
+    boxSel = true;
+    boxStartX = fx; boxStartY = fy;
+    boxCurX = fx; boxCurY = fy;
+    boxAdditive = e.shiftKey;
+    boxPrevIds = e.shiftKey ? selIds.slice() : [];
+    if (!e.shiftKey) {
+      selId = null; selIds = [];
+      hideLayerToolbar();
+      refreshLayerList(); renderProps(); render();
+    }
   } catch(err) { console.error('startDrag err:', err); }
+}
+
+/* ═══ 드래그 박스 선택 ═══ */
+let boxSel = false, boxStartX = 0, boxStartY = 0, boxCurX = 0, boxCurY = 0;
+let boxAdditive = false, boxPrevIds = [];
+
+function _boxRect() {
+  return {
+    x1: Math.min(boxStartX, boxCurX), y1: Math.min(boxStartY, boxCurY),
+    x2: Math.max(boxStartX, boxCurX), y2: Math.max(boxStartY, boxCurY)
+  };
+}
+
+function drawSelectBox() {
+  if (!boxSel) return;
+  const r = _boxRect();
+  const W = mc.width, H = mc.height;
+  const x = r.x1*W, y = r.y1*H, w = (r.x2-r.x1)*W, h = (r.y2-r.y1)*H;
+  if (w < 2 && h < 2) return;
+  mctx.save();
+  mctx.fillStyle = 'rgba(78,205,196,0.13)';
+  mctx.fillRect(x, y, w, h);
+  mctx.strokeStyle = 'rgba(78,205,196,0.95)';
+  mctx.lineWidth = Math.max(1.5, W/500);
+  mctx.setLineDash([6*(W/500), 4*(W/500)]);
+  mctx.strokeRect(x, y, w, h);
+  mctx.restore();
+}
+
+function applyBoxSelection() {
+  const r = _boxRect();
+  const dW = mc.clientWidth || mc.width, dH = mc.clientHeight || mc.height;
+  // 너무 작은 드래그는 단순 클릭으로 간주
+  if (Math.abs(r.x2-r.x1) < 0.015 && Math.abs(r.y2-r.y1) < 0.015) return false;
+  const hits = [];
+  layers.forEach(l => {
+    if (!l.visible || l.locked) return;
+    let hw = 0.06, hh = 0.06;
+    try {
+      const b = getLayerBounds(l, dW, dH);
+      if (b) { hw = b.hw/dW; hh = b.hh/dH; }
+    } catch(e) {}
+    // 레이어 박스와 선택박스가 겹치면 선택
+    const lx1 = l.x-hw, lx2 = l.x+hw, ly1 = l.y-hh, ly2 = l.y+hh;
+    if (lx2 >= r.x1 && lx1 <= r.x2 && ly2 >= r.y1 && ly1 <= r.y2) hits.push(l.id);
+  });
+  let result = hits;
+  if (boxAdditive) {
+    result = boxPrevIds.slice();
+    hits.forEach(id => { if (!result.includes(id)) result.push(id); });
+  }
+  if (result.length === 0) {
+    selId = null; selIds = [];
+    hideLayerToolbar(); refreshLayerList(); renderProps(); render();
+    return true;
+  }
+  selIds = result.length > 1 ? result : [];
+  selId = result[result.length-1];
+  refreshLayerList(); renderProps(); render();
+  if (selIds.length > 1) updateMultiToolbar(); else updateLayerToolbar();
+  if (result.length > 1) showToast(result.length + '개 선택됨');
+  return true;
 }
 
 function moveDrag(e) {
@@ -175,6 +244,15 @@ function moveDrag(e) {
         });
       }
     }
+  }
+
+  // ── 박스 선택 중 ──
+  if (boxSel) {
+    if (e.cancelable) e.preventDefault();
+    const [bx, by] = getCanvasXY(e);
+    boxCurX = bx; boxCurY = by;
+    render(); drawSelectBox();
+    return;
   }
 
   if (!drag && !bgDrag && !handleDrag) return;
@@ -258,6 +336,12 @@ function moveDrag(e) {
 }
 
 function endDrag() {
+  if (boxSel) {
+    boxSel = false;
+    if (!applyBoxSelection()) { render(); }
+    boxAdditive = false; boxPrevIds = [];
+    return;
+  }
   if (drag || bgDrag || handleDrag) saveHistory();
   if (drag) { refreshLayerList(); renderProps(); updateLayerToolbar(); }
   if (handleDrag) { renderProps(); updateLayerToolbar(); }
@@ -452,22 +536,118 @@ document.addEventListener('click', e => {
   if (menu && !menu.contains(e.target) && !tb?.contains(e.target)) hideCtxMenu();
 });
 
-// 키보드 단축키
+// ═══ 키보드 단축키 (확장판) ═══
+let _clipLayers = [];   // 복사/잘라내기 보관함
+let _pasteCount = 0;    // 붙여넣기 오프셋 카운터
+
+function _selectedLayers() {
+  if (selIds.length > 1) return selIds.map(id => layers.find(x=>x.id===id)).filter(Boolean);
+  const l = layers.find(x=>x.id===selId);
+  return l ? [l] : [];
+}
+
+function selectAllLayers() {
+  if (layers.length === 0) { showToast('레이어가 없어요'); return; }
+  selIds = layers.map(x=>x.id);
+  selId = selIds[selIds.length-1];
+  refreshLayerList(); render(); updateMultiToolbar();
+  showToast('전체 선택 (' + selIds.length + '개)');
+}
+
+function copySelected(silent) {
+  const sel = _selectedLayers();
+  if (!sel.length) return false;
+  _clipLayers = sel.map(l => { const c = JSON.parse(JSON.stringify(l)); delete c.srcImg; return c; });
+  _copiedLayer = _clipLayers[0];
+  _pasteCount = 0;
+  if (!silent) showToast(sel.length > 1 ? sel.length + '개 복사됨' : '복사됨');
+  return true;
+}
+
+function cutSelected() {
+  if (!copySelected(true)) return;
+  const n = _clipLayers.length;
+  saveHistory();
+  const ids = _selectedLayers().map(l=>l.id);
+  layers = layers.filter(x => !ids.includes(x.id));
+  selId = null; selIds = [];
+  hideLayerToolbar(); refreshLayerList(); renderProps(); render();
+  showToast(n > 1 ? n + '개 잘라내기' : '잘라내기 ✂');
+}
+
+function pasteClipboard() {
+  if (!_clipLayers.length) { showToast('복사한 레이어가 없어요'); return; }
+  saveHistory();
+  _pasteCount++;
+  const off = 0.03 * _pasteCount;
+  const newIds = [];
+  _clipLayers.forEach(src => {
+    const c = JSON.parse(JSON.stringify(src));
+    c.id = ++idCtr;
+    c.x = Math.max(0, Math.min(1, (c.x||0.5) + off));
+    c.y = Math.max(0, Math.min(1, (c.y||0.5) + off));
+    c.locked = false;
+    layers.push(c);
+    newIds.push(c.id);
+    if (c.type === 'calli' && c.srcDataUrl) {
+      const img = new Image();
+      img.onload = () => { c.srcImg = img; try { processCalliLayer(c.id); } catch(e){} render(); };
+      img.src = c.srcDataUrl;
+    }
+  });
+  selIds = newIds.length > 1 ? newIds : [];
+  selId = newIds[newIds.length-1];
+  refreshLayerList(); renderProps(); render();
+  if (selIds.length > 1) updateMultiToolbar(); else updateLayerToolbar();
+  showToast(newIds.length > 1 ? newIds.length + '개 붙여넣기' : '붙여넣기 ✓');
+}
+
+// 방향키 미세 이동
+let _nudgeTimer = null;
+function nudgeSelected(dx, dy) {
+  const sel = _selectedLayers().filter(l => !l.locked);
+  if (!sel.length) return;
+  sel.forEach(l => {
+    l.x = Math.max(0, Math.min(1, l.x + dx));
+    l.y = Math.max(0, Math.min(1, l.y + dy));
+  });
+  render();
+  clearTimeout(_nudgeTimer);
+  _nudgeTimer = setTimeout(() => { saveHistory(); renderProps(); }, 400);
+}
+
 document.addEventListener('keydown', e => {
-  if (!selId) return;
-  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-  if (e.key === 'Delete' || e.key === 'Backspace') { ltbDelete(); }
-  if ((e.ctrlKey||e.metaKey) && e.key === 'd') { e.preventDefault(); ctxDuplicate(); }
-  if ((e.ctrlKey||e.metaKey) && e.key === 'c') { e.preventDefault(); ctxCopy(); }
-  if ((e.ctrlKey||e.metaKey) && e.key === 'l') { e.preventDefault(); ctxLock(); }
-  if ((e.ctrlKey||e.metaKey) && e.key === 'a') {
-    e.preventDefault();
-    if (layers.length === 0) return;
-    selIds = layers.map(x=>x.id);
-    selId = selIds[selIds.length-1];
-    refreshLayerList(); render(); updateMultiToolbar();
-    showToast('전체 선택 (' + selIds.length + '개)');
+  // 입력창에 포커스 있으면 단축키 무시
+  const t = e.target;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+  const mod = e.ctrlKey || e.metaKey;
+  const k = (e.key || '').toLowerCase();
+
+  // ── 선택 없어도 동작하는 것들 ──
+  if (mod && k === 'a') { e.preventDefault(); selectAllLayers(); return; }
+  if (mod && k === 'v') { e.preventDefault(); pasteClipboard(); return; }
+  if (mod && k === 'z' && !e.shiftKey) { e.preventDefault(); if (typeof undoCanvas==='function') undoCanvas(); return; }
+  if ((mod && k === 'y') || (mod && k === 'z' && e.shiftKey)) { e.preventDefault(); if (typeof redoCanvas==='function') redoCanvas(); return; }
+  if (k === 'escape') {
+    if (selId || selIds.length) { selId = null; selIds = []; hideLayerToolbar(); refreshLayerList(); renderProps(); render(); }
+    return;
   }
+
+  // ── 선택 필요한 것들 ──
+  if (!selId && selIds.length === 0) return;
+
+  if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); ltbDelete(); return; }
+  if (mod && k === 'c') { e.preventDefault(); copySelected(); return; }
+  if (mod && k === 'x') { e.preventDefault(); cutSelected(); return; }
+  if (mod && k === 'd') { e.preventDefault(); copySelected(true); pasteClipboard(); return; }
+  if (mod && k === 'l') { e.preventDefault(); ctxLock(); return; }
+
+  // 방향키 이동 (Shift = 10배)
+  const step = e.shiftKey ? 0.02 : 0.002;
+  if (e.key === 'ArrowLeft')  { e.preventDefault(); nudgeSelected(-step, 0); return; }
+  if (e.key === 'ArrowRight') { e.preventDefault(); nudgeSelected( step, 0); return; }
+  if (e.key === 'ArrowUp')    { e.preventDefault(); nudgeSelected(0, -step); return; }
+  if (e.key === 'ArrowDown')  { e.preventDefault(); nudgeSelected(0,  step); return; }
 });
 
 
@@ -736,3 +916,134 @@ mc.addEventListener('touchend', e => {
   }
   endDrag();
 });
+
+/* ═══════════════════════════════════════
+   다중 선택 정렬 / 균등 분배
+═══════════════════════════════════════ */
+function _alignTargets() {
+  const sel = _selectedLayers().filter(l => !l.locked);
+  if (sel.length < 2) { showToast('2개 이상 선택하세요'); return null; }
+  return sel;
+}
+
+function _lyrHalf(l) {
+  const dW = mc.clientWidth || mc.width, dH = mc.clientHeight || mc.height;
+  try {
+    const b = getLayerBounds(l, dW, dH);
+    if (b) return { hw: b.hw/dW, hh: b.hh/dH };
+  } catch(e) {}
+  return { hw: 0.05, hh: 0.05 };
+}
+
+function alignLayers(mode) {
+  const sel = _alignTargets(); if (!sel) return;
+  saveHistory();
+  const boxes = sel.map(l => { const h = _lyrHalf(l); return { l, ...h }; });
+
+  if (mode === 'left') {
+    const min = Math.min(...boxes.map(b => b.l.x - b.hw));
+    boxes.forEach(b => b.l.x = min + b.hw);
+  } else if (mode === 'right') {
+    const max = Math.max(...boxes.map(b => b.l.x + b.hw));
+    boxes.forEach(b => b.l.x = max - b.hw);
+  } else if (mode === 'centerX') {
+    const avg = boxes.reduce((s,b) => s + b.l.x, 0) / boxes.length;
+    boxes.forEach(b => b.l.x = avg);
+  } else if (mode === 'top') {
+    const min = Math.min(...boxes.map(b => b.l.y - b.hh));
+    boxes.forEach(b => b.l.y = min + b.hh);
+  } else if (mode === 'bottom') {
+    const max = Math.max(...boxes.map(b => b.l.y + b.hh));
+    boxes.forEach(b => b.l.y = max - b.hh);
+  } else if (mode === 'centerY') {
+    const avg = boxes.reduce((s,b) => s + b.l.y, 0) / boxes.length;
+    boxes.forEach(b => b.l.y = avg);
+  } else if (mode === 'distX') {
+    if (boxes.length < 3) { showToast('3개 이상 필요해요'); return; }
+    const sorted = boxes.slice().sort((a,b) => a.l.x - b.l.x);
+    const first = sorted[0].l.x, last = sorted[sorted.length-1].l.x;
+    const gap = (last - first) / (sorted.length - 1);
+    sorted.forEach((b, i) => b.l.x = first + gap * i);
+  } else if (mode === 'distY') {
+    if (boxes.length < 3) { showToast('3개 이상 필요해요'); return; }
+    const sorted = boxes.slice().sort((a,b) => a.l.y - b.l.y);
+    const first = sorted[0].l.y, last = sorted[sorted.length-1].l.y;
+    const gap = (last - first) / (sorted.length - 1);
+    sorted.forEach((b, i) => b.l.y = first + gap * i);
+  }
+
+  // 캔버스 밖으로 나가지 않게
+  sel.forEach(l => {
+    l.x = Math.max(0, Math.min(1, l.x));
+    l.y = Math.max(0, Math.min(1, l.y));
+  });
+
+  render(); renderProps();
+  const LBL = { left:'왼쪽 맞춤', right:'오른쪽 맞춤', centerX:'가로 가운데',
+                top:'위 맞춤', bottom:'아래 맞춤', centerY:'세로 가운데',
+                distX:'가로 균등', distY:'세로 균등' };
+  showToast(LBL[mode] + ' ✓');
+}
+
+/* 다중 선택 일괄 크기조절 (%) */
+function resizeSelected(pct) {
+  const sel = _selectedLayers().filter(l => !l.locked);
+  if (!sel.length) { showToast('레이어를 선택하세요'); return; }
+  saveHistory();
+  const f = pct / 100;
+  sel.forEach(l => {
+    if (l.type === 'text' || l.type === 'sticker') {
+      l.size = Math.max(8, Math.round((l.size || 40) * f));
+    } else {
+      l.size = Math.max(10, Math.round((l.size || 100) * f));
+    }
+  });
+  render(); renderProps();
+  showToast(sel.length + '개 크기 ' + (pct > 100 ? '확대' : '축소'));
+}
+
+/* 다중 선택 일괄 회전 (도 단위 가감) */
+function rotateSelected(deg) {
+  const sel = _selectedLayers().filter(l => !l.locked);
+  if (!sel.length) { showToast('레이어를 선택하세요'); return; }
+  saveHistory();
+  sel.forEach(l => { l.rotate = ((l.rotate || 0) + deg) % 360; });
+  render(); renderProps();
+  showToast(sel.length + '개 회전 ' + (deg > 0 ? '+' : '') + deg + '°');
+}
+
+/* ═══ 다중선택 정렬바 표시 동기화 ═══ */
+function syncMultiAlignBar() {
+  const bar = document.getElementById('multiAlignBar');
+  if (!bar) return;
+  const n = selIds.length;
+  if (n > 1) {
+    const cnt = document.getElementById('mabCount');
+    if (cnt) cnt.textContent = n;
+    bar.classList.add('show');
+  } else {
+    bar.classList.remove('show');
+  }
+}
+
+// refreshLayerList 가 불릴 때마다 정렬바도 갱신
+(function(){
+  const _orig = window.refreshLayerList;
+  if (typeof _orig === 'function') {
+    window.refreshLayerList = function() {
+      const r = _orig.apply(this, arguments);
+      try { syncMultiAlignBar(); } catch(e) {}
+      return r;
+    };
+  } else {
+    // 로드 순서상 아직 없으면 DOM 준비 후 재시도
+    document.addEventListener('DOMContentLoaded', () => {
+      const f = window.refreshLayerList;
+      if (typeof f === 'function' && !f._wrapped) {
+        const w = function() { const r = f.apply(this, arguments); try { syncMultiAlignBar(); } catch(e) {} return r; };
+        w._wrapped = true;
+        window.refreshLayerList = w;
+      }
+    });
+  }
+})();
