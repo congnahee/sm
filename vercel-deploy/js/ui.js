@@ -1490,4 +1490,3 @@ window.addEventListener('load', ()=>{
   mc.style.cursor='grab';
   try { buildGallery(); } catch(e) { console.warn('buildGallery:', e.message); }
 });
-</script>
