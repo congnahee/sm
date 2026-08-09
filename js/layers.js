@@ -59,14 +59,8 @@ function processCalliLayer(id) {
   try {
     const id2 = oc.getImageData(0,0,img.width,img.height);
     const d = id2.data;
-    const SAT_KEEP = 0.18;
     for (let i=0;i<d.length;i+=4) {
-      const R=d[i], G=d[i+1], B=d[i+2];
-      const mx = R>G ? (R>B?R:B) : (G>B?G:B);
-      const mn = R<G ? (R<B?R:B) : (G<B?G:B);
-      const sat = mx===0 ? 0 : (mx-mn)/mx;
-      if (sat >= SAT_KEEP) continue;
-      const lum = .299*R + .587*G + .114*B;
+      const lum = .299*d[i] + .587*d[i+1] + .114*d[i+2];
       if (lum > thresh) {
         const soft = 45;
         d[i+3] = Math.round(Math.max(0,1-(lum-(thresh-soft))/soft)*255);
