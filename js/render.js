@@ -50,7 +50,9 @@ function render(targetCtx, TW, TH, transparent) {
     const totalCont   = Math.round(_contrast * _fCont / 100);
     const totalSat    = Math.round(_sat * _fSat / 100);
 
-    const baseSc = Math.max(W/bgImg.width, H/bgImg.height);
+    const baseSc = (bgFit === 'contain')
+      ? Math.min(W/bgImg.width, H/bgImg.height)
+      : Math.max(W/bgImg.width, H/bgImg.height);
     const sc2 = baseSc * (bgScale / 100);
     const bW = bgImg.width * sc2, bH = bgImg.height * sc2;
     const ox = bgOffX * W, oy = bgOffY * H;

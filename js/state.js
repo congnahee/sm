@@ -20,6 +20,7 @@ let saveW = 5000, saveH = 5000, saveFmt = 'png';
 // BG image position & scale
 let bgOffX = 0, bgOffY = 0;   // offset in canvas-fraction units (-1 ~ 1)
 let bgScale = 100;             // % scale (100 = cover fit)
+let bgFit = 'cover';           // 'cover'(채우기) | 'contain'(전체보기)
 let bgMode = 'move';           // 'move' | 'layer'  — which thing canvas drag affects
 
 // ③ undo/redo history (최대 40단계)
@@ -52,7 +53,7 @@ function makeSnap() {
   let bgImgUrl = currentBgDataUrl || null;
   if (!bgImgUrl && bgImg) { try { bgImgUrl = imgToDataUrl(bgImg); } catch(e) {} }
   return {
-    bgColor, bgOffX, bgOffY, bgScale, currentFilter, bgImgUrl,
+    bgColor, bgOffX, bgOffY, bgScale, bgFit, currentFilter, bgImgUrl,
     outputW, outputH,
     _bright, _contrast, _sat, _bgOp, _bgBlur,
     _fBright, _fCont, _fSat, _fTemp, _vig, _grain,
@@ -74,6 +75,7 @@ function applySnap(snap) {
     bgOffX = snap.bgOffX || 0;
     bgOffY = snap.bgOffY || 0;
     bgScale = snap.bgScale || 100;
+    bgFit = snap.bgFit || 'cover';
     // ✅ outputW/H 복원
     if (snap.outputW && snap.outputH) {
       outputW = snap.outputW; outputH = snap.outputH;

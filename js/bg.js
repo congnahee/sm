@@ -46,6 +46,8 @@ function applyBgPhoto(photo) {
   activeBgPhotoId = photo.id;
   bgHidden = false;
   bgOffX = 0; bgOffY = 0; bgScale = 100;
+  bgFit = 'cover';
+  if (typeof _syncBgFitBtns === 'function') _syncBgFitBtns('cover');
   // 필터/조정값 초기화
   _bright=100; _contrast=100; _sat=100; _bgOp=100; _bgBlur=0;
   _fBright=100; _fCont=100; _fSat=100; _fTemp=0; _vig=0; _grain=0;
@@ -275,4 +277,64 @@ function setLayerTint(color, el) {
   if (el) el.classList.add('active');
   render(); saveHistory();
   showToast(color && color !== 'null' ? `색상 적용: ${color}` : '원본 색상으로 복원');
+}
+
+/* ═══════════════════════════════════════
+   배경 맞춤 (채우기 / 전체보기 / 비율맞춤)
+═══════════════════════════════════════ */
+function _syncBgFitBtns(mode) {
+  ['bgfitCover','bgfitContain','bgfitCanvas'].forEach(id => {
+    const el = $(id); if (el) el.classList.remove('active');
+  });
+  const map = { cover:'bgfitCover', contain:'bgfitContain', canvas:'bgfitCanvas' };
+  const on = $(map[mode]); if (on) on.classList.add('active');
+}
+
+function setBgFit(mode, el) {
+  if (!bgImg) { showToast('배경사진을 먼저 넣어주세요'); return; }
+  saveHistory();
+
+  if (mode === 'canvas') {
+    // ── 캔버스 비율을 사진에 맞춤 ──
+    const ratio = bgImg.width / bgImg.height;
+    const LONG = Math.max(outputW, outputH) || 5000;
+    let w, h;
+    if (ratio >= 1) { w = LONG; h = Math.round(LONG / ratio); }
+    else            { h = LONG; w = Math.round(LONG * ratio); }
+    w = Math.max(100, Math.min(10000, w));
+    h = Math.max(100, Math.min(10000, h));
+
+    outputW = w; outputH = h; saveW = w; saveH = h;
+    bgFit = 'cover';
+    bgOffX = 0; bgOffY = 0; bgScale = 100;
+
+    // 사이즈칩 active 갱신
+    document.querySelectorAll('.size-chip').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.size-chip[data-w]').forEach(c => {
+      if (+c.dataset.w === w && +c.dataset.h === h) c.classList.add('active');
+    });
+    const lbl = $('sizeLabel');
+    if (lbl) lbl.textContent = w.toLocaleString() + ' × ' + h.toLocaleString() + ' px';
+
+    if (typeof initCanvas === 'function') initCanvas();
+    _syncBgFitBtns('cover');
+    _syncBgSliders();
+    render();
+    showToast('캔버스를 사진 비율로 ' + w.toLocaleString() + '×' + h.toLocaleString());
+    return;
+  }
+
+  // ── cover / contain ──
+  bgFit = mode;
+  bgOffX = 0; bgOffY = 0; bgScale = 100;
+  _syncBgFitBtns(mode);
+  _syncBgSliders();
+  render();
+  showToast(mode === 'contain' ? '사진 전체보기 ✓' : '캔버스 채우기 ✓');
+}
+
+function _syncBgSliders() {
+  if ($('slBgScale')) { $('slBgScale').value = bgScale; $('vBgScale').textContent = bgScale + '%'; }
+  if ($('slBgX'))     { $('slBgX').value = 0; $('vBgX').textContent = '0'; }
+  if ($('slBgY'))     { $('slBgY').value = 0; $('vBgY').textContent = '0'; }
 }
