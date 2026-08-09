@@ -628,6 +628,11 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
 .csz-btn-ok{flex:2;padding:10px;border:none;border-radius:10px;background:linear-gradient(135deg,#C4973A,#a07830);color:#1C0F06;font-size:13px;font-weight:700;font-family:'Gowun Dodum',serif;cursor:pointer}
 
 /* ── 레이어 플로팅 툴바 ── */
+/* 원본사이즈 칩 강조 */
+.sgrid-item.sgrid-native{border-color:rgba(78,205,196,.5);background:rgba(78,205,196,.06)}
+.sgrid-item.sgrid-native .sgrid-ratio{color:#4ECDC4}
+.sgrid-item.sgrid-native.active{border-color:#4ECDC4;background:rgba(78,205,196,.16)}
+
 /* 배경 맞춤 버튼 */
 .bgfit-row{display:flex;gap:5px;margin-bottom:9px}
 .bgfit-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
@@ -1374,6 +1379,11 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
 
     <div class="slabel" style="margin-top:0">출력 크기 선택</div>
     <div class="size-grid" id="modalSizeGrid">
+      <div class="sgrid-item sgrid-native" id="sgridNative" data-native="1" onclick="setModalSize(this)">
+        <div class="sgrid-icon">⬛</div>
+        <div class="sgrid-ratio">원본</div>
+        <div class="sgrid-px" id="sgridNativePx">— × —</div>
+      </div>
       <div class="sgrid-item active" data-w="1080" data-h="1080" onclick="setModalSize(this)">
         <div class="sgrid-icon">■</div>
         <div class="sgrid-ratio">1:1</div>
