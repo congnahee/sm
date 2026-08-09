@@ -129,14 +129,28 @@ function doneCanvas() {
 /* ════════════════════════════════════
    SAVE MODAL
 ════════════════════════════════════ */
-function openSaveModal() { $('saveModal').classList.add('open'); }
+function openSaveModal() { try { syncNativeChip(); } catch(e){} $('saveModal').classList.add('open'); }
 function closeSaveModal() { $('saveModal').classList.remove('open'); }
 $('saveModal').addEventListener('click', e=>{ if(e.target===$('saveModal')) closeSaveModal(); });
 
 function setModalSize(el) {
   document.querySelectorAll('#modalSizeGrid .sgrid-item').forEach(i=>i.classList.remove('active'));
   el.classList.add('active');
-  saveW=+el.dataset.w; saveH=+el.dataset.h;
+  if (el.dataset.native) {
+    // 현재 캔버스 크기 그대로
+    saveW = outputW; saveH = outputH;
+  } else {
+    saveW = +el.dataset.w; saveH = +el.dataset.h;
+  }
+}
+
+/* 원본사이즈 칩 표시 갱신 */
+function syncNativeChip() {
+  const px = $('sgridNativePx');
+  if (px) px.textContent = outputW.toLocaleString() + ' × ' + outputH.toLocaleString();
+  // 현재 선택이 원본칩이면 값도 최신화
+  const chip = $('sgridNative');
+  if (chip && chip.classList.contains('active')) { saveW = outputW; saveH = outputH; }
 }
 function setFmt(el) {
   document.querySelectorAll('.fmt-btn').forEach(b=>b.classList.remove('active'));
@@ -1487,3 +1501,21 @@ window.addEventListener('load', ()=>{
   mc.style.cursor='grab';
   try { buildGallery(); } catch(e) { console.warn('buildGallery:', e.message); }
 });
+
+/* 캔버스 크기 변경 시 원본칩 표시 자동 갱신 */
+(function(){
+  ['setSize','applyCustomSize','initCanvas'].forEach(fn => {
+    const orig = window[fn];
+    if (typeof orig !== 'function' || orig._nativeWrapped) return;
+    const wrapped = function() {
+      const r = orig.apply(this, arguments);
+      try { if (typeof syncNativeChip === 'function') syncNativeChip(); } catch(e) {}
+      return r;
+    };
+    wrapped._nativeWrapped = true;
+    window[fn] = wrapped;
+  });
+  document.addEventListener('DOMContentLoaded', () => {
+    try { if (typeof syncNativeChip === 'function') syncNativeChip(); } catch(e) {}
+  });
+})();
