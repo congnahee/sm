@@ -276,6 +276,7 @@ function setLayerTint(color, el) {
   document.querySelectorAll('.tint-dot').forEach(d => d.classList.remove('active'));
   if (el) el.classList.add('active');
   render(); saveHistory();
+  try { syncTintOrigDot(); } catch(e) {}
   showToast(color && color !== 'null' ? `색상 적용: ${color}` : '원본 색상으로 복원');
 }
 
@@ -337,4 +338,88 @@ function _syncBgSliders() {
   if ($('slBgScale')) { $('slBgScale').value = bgScale; $('vBgScale').textContent = bgScale + '%'; }
   if ($('slBgX'))     { $('slBgX').value = 0; $('vBgX').textContent = '0'; }
   if ($('slBgY'))     { $('slBgY').value = 0; $('vBgY').textContent = '0'; }
+}
+
+/* ═══════════════════════════════════════
+   캘리 원본 대표색 추출 → 원본 점에 반영
+═══════════════════════════════════════ */
+const _origColorCache = {};   // layerId → '#rrggbb'
+
+function getCalliOriginColor(layerId) {
+  if (_origColorCache[layerId]) return _origColorCache[layerId];
+  const cache = calliCache[layerId];
+  if (!cache || !cache.offscreen) return null;
+
+  try {
+    const src = cache.offscreen;
+    // 축소 샘플링 (성능)
+    const SW = 60, SH = Math.max(1, Math.round(60 * src.height / src.width));
+    const tmp = document.createElement('canvas');
+    tmp.width = SW; tmp.height = SH;
+    const tc = tmp.getContext('2d', { willReadFrequently: true });
+    tc.drawImage(src, 0, 0, SW, SH);
+    const d = tc.getImageData(0, 0, SW, SH).data;
+
+    // 불투명하고 너무 밝지 않은 픽셀(=획)만 평균
+    let r = 0, g = 0, b = 0, n = 0;
+    for (let i = 0; i < d.length; i += 4) {
+      const a = d[i+3];
+      if (a < 120) continue;                       // 투명 배경 제외
+      const lum = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
+      if (lum > 235) continue;                     // 흰 여백 제외
+      r += d[i]; g += d[i+1]; b += d[i+2]; n++;
+    }
+    if (n === 0) return null;
+
+    const hex = '#' + [r/n, g/n, b/n]
+      .map(v => Math.round(v).toString(16).padStart(2, '0')).join('');
+    _origColorCache[layerId] = hex;
+    return hex;
+  } catch(e) {
+    console.warn('getCalliOriginColor:', e.message);
+    return null;   // CORS 등
+  }
+}
+
+function syncTintOrigDot() {
+  const dot = $('tintOrigDot');
+  if (!dot) return;
+  const l = layers.find(x => x.id === selId);
+  if (!l || l.type !== 'calli') {
+    dot.style.background = '';
+    dot.classList.remove('has-color');
+    dot.title = '원본 색상으로 되돌리기';
+    return;
+  }
+  const hex = getCalliOriginColor(l.id);
+  if (hex) {
+    dot.style.background = hex;
+    dot.classList.add('has-color');
+    dot.title = '원본 색상 ' + hex.toUpperCase();
+  } else {
+    dot.style.background = '';
+    dot.classList.remove('has-color');
+    dot.title = '원본 색상으로 되돌리기';
+  }
+}
+
+/* 레이어 선택/속성 갱신 시 원본색 점 자동 동기화
+   ⚠ bg.js 는 layers.js 보다 먼저 로드되므로 DOMContentLoaded 후에 감싼다 */
+function _wrapTintSync() {
+  ['renderProps','processCalliLayer'].forEach(fn => {
+    const orig = window[fn];
+    if (typeof orig !== 'function' || orig._tintWrapped) return;
+    const wrapped = function() {
+      const r = orig.apply(this, arguments);
+      try { syncTintOrigDot(); } catch(e) {}
+      return r;
+    };
+    wrapped._tintWrapped = true;
+    window[fn] = wrapped;
+  });
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', _wrapTintSync);
+} else {
+  _wrapTintSync();
 }
