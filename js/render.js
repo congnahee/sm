@@ -216,15 +216,30 @@ function drawCalli(c, W, H, l) {
   if (l.shadow) { c.shadowColor='rgba(0,0,0,0.5)'; c.shadowBlur=18*sc; c.shadowOffsetX=4*sc; c.shadowOffsetY=4*sc; }
   const dW = l.size*sc * ((l.scaleX||100)/100);
   const dH = l.size*sc * (cache.h/cache.w) * ((l.scaleY||100)/100);
-  if (l.tintColor) {
-    const tmp = document.createElement('canvas');
-    tmp.width = cache.offscreen.width; tmp.height = cache.offscreen.height;
-    const tc = tmp.getContext('2d');
-    tc.drawImage(cache.offscreen, 0, 0);
-    tc.globalCompositeOperation = 'source-atop';
-    tc.fillStyle = l.tintColor;
-    tc.fillRect(0, 0, tmp.width, tmp.height);
-    c.drawImage(tmp, -dW/2, -dH/2, dW, dH);
+  // tintColor 유효성 검사 — 'null'/'' 등 잘못된 값이면 원본으로
+  const tint = (l.tintColor && l.tintColor !== 'null' && typeof l.tintColor === 'string')
+    ? l.tintColor : null;
+
+  if (tint) {
+    try {
+      const ow = cache.offscreen.width, oh = cache.offscreen.height;
+      if (!ow || !oh) throw new Error('offscreen 크기 0');
+      const tmp = document.createElement('canvas');
+      tmp.width = ow; tmp.height = oh;
+      const tc = tmp.getContext('2d');
+      tc.clearRect(0, 0, ow, oh);
+      tc.globalCompositeOperation = 'source-over';
+      tc.drawImage(cache.offscreen, 0, 0);
+      tc.globalCompositeOperation = 'source-atop';
+      tc.fillStyle = tint;
+      tc.fillRect(0, 0, ow, oh);
+      tc.globalCompositeOperation = 'source-over';
+      c.drawImage(tmp, -dW/2, -dH/2, dW, dH);
+    } catch(e) {
+      // 실패해도 캘리는 반드시 보이게 — 원본으로 폴백
+      console.warn('tint 적용 실패, 원본 표시:', e.message);
+      c.drawImage(cache.offscreen, -dW/2, -dH/2, dW, dH);
+    }
   } else {
     c.drawImage(cache.offscreen, -dW/2, -dH/2, dW, dH);
   }
