@@ -14,11 +14,17 @@ function computeDisp() {
     const byHeight = maxH / aspect;   // 높이 제한으로부터 역산한 최대 가로
     DISP = Math.max(120, Math.min(byWidth, byHeight));
   } else {
-    const zH = Math.min(window.innerHeight - 120, 650);
+    // 데스크톱: 캔버스존의 실제 여유 공간을 그대로 활용 (기존 650px 상한 제거)
+    //   존 안에 컨트롤바(~40px)+사이즈바(~34px)+gap/padding(~36px)이 함께 들어감
+    const RESERVED = 110;
+    const zoneH = zone.clientHeight || (window.innerHeight - 120);
+    const zH = Math.max(240, Math.min(zoneH - RESERVED, window.innerHeight - 140));
     let dW = Math.min(zW, zH / aspect);
     let dH = dW * aspect;
     if (dH > zH) { dH = zH; dW = dH / aspect; }
-    DISP = Math.max(200, dW * zoomScale);
+    // 표시 해상도 상한 — 초대형 모니터에서 렌더 부하가 과해지지 않도록
+    const MAX_DISP = 1400;
+    DISP = Math.max(200, Math.min(dW * zoomScale, MAX_DISP));
   }
 }
 
