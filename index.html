@@ -125,13 +125,14 @@ header{
 
 
 .canvas-zone{
-  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
   background:var(--warm);
   background-image:radial-gradient(circle at 25% 25%,rgba(196,151,58,.07) 0%,transparent 55%),
                    radial-gradient(circle at 75% 75%,rgba(28,15,6,.05) 0%,transparent 55%);
   padding:10px 20px;gap:10px;overflow:auto;position:relative;
 }
 .canvas-shell{
+  margin-top:auto;margin-bottom:auto;
   position:relative;
   box-shadow:0 8px 48px rgba(28,15,6,.22),0 2px 12px rgba(28,15,6,.12);
   border-radius:3px;overflow:hidden;cursor:move;
@@ -148,7 +149,10 @@ header{
 .canvas-resize-handle.br{bottom:-6px;right:-6px;cursor:nwse-resize;}
 #mainCanvas{display:block;touch-action:none}
 @media(max-width:680px){
-  #mainCanvas{max-width:calc(100vw - 16px) !important;max-height:min(calc(100vw - 16px), 70vh) !important;width:auto !important;height:auto !important}
+  /* ⚠ 캔버스 크기는 initCanvas() 가 outputW:outputH 비율에 맞춰 직접 계산한다.
+     여기서 max-height 로 세로만 제한하면 가로는 그대로라 비율이 깨진다.
+     따라서 CSS 는 가로 안전망만 두고 높이는 JS 에 맡긴다. */
+  #mainCanvas{max-width:calc(100vw - 16px) !important}
 }
 
 /* 크롭 핸들 */
@@ -246,12 +250,20 @@ header{
    SLIDERS
 ──────────────────────────────────────── */
 .ctrl{margin-bottom:11px}
-input[type=range]{touch-action:pan-x;-webkit-appearance:none;width:100%}
+input[type=range]{touch-action:pan-y;-webkit-appearance:none;width:100%}
 .ctrl-row{display:flex;justify-content:space-between;margin-bottom:5px}
 .ctrl-n{font-size:11px;color:var(--muted)}
 .ctrl-v{font-size:11px;font-weight:700;color:var(--gold)}
 input[type=range]{-webkit-appearance:none;width:100%;height:4px;border-radius:2px;background:var(--border);outline:none}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:17px;height:17px;border-radius:50%;background:var(--ink);cursor:pointer;border:2px solid var(--gold2);box-shadow:0 1px 4px rgba(0,0,0,.2)}
+input[type=range]::-moz-range-thumb{width:17px;height:17px;border-radius:50%;background:var(--ink);cursor:pointer;border:2px solid var(--gold2)}
+/* 모바일: 슬라이더 좌우 여백 = 세로 스크롤 전용 통로 */
+@media(max-width:680px){
+  .ctrl{padding-left:14px;padding-right:14px}
+  input[type=range]{touch-action:pan-y}
+  input[type=range]::-webkit-slider-thumb{width:22px;height:22px}
+  input[type=range]::-moz-range-thumb{width:22px;height:22px}
+}
 
 /* ────────────────────────────────────────
    FILTER CHIPS
@@ -588,9 +600,21 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
 .fontcard-badge{font-size:9px;background:rgba(196,151,58,.12);color:var(--gold);border-radius:4px;padding:2px 5px;flex-shrink:0;font-weight:700}
 @media(max-width:680px){
   :root{--panel:100%}
-  .app{flex-direction:column;height:100vh;overflow:hidden}
-  .canvas-zone{flex:none;min-height:200px;max-height:60vh;overflow:hidden;padding:6px 8px 4px;gap:4px;justify-content:center;align-items:center}
-  .canvas-shell{max-width:calc(100vw - 16px);overflow:hidden}
+  /* dvh: 주소창 노출/숨김에도 실제 보이는 높이를 따름 */
+  .app{flex-direction:column;height:100vh;height:100dvh;height:var(--vvh,100dvh);overflow:hidden}
+  /* 키보드가 올라온 동안에는 캔버스존만 줄인다 (캔버스 자체 비율은 유지) */
+  body.kb-open .canvas-zone{max-height:34vh;max-height:34dvh;overflow:auto}
+  /* 페이지 자체는 절대 스크롤되지 않게 — 캔버스가 밀려나는 원인 차단 */
+  html,body{overflow:hidden;overscroll-behavior:none;position:relative}
+  /* ⚠ 캔버스존 max(55vh) + 패널 min(45vh) = 100vh — 합이 넘으면 캔버스가 잘림
+     overflow:auto + justify-content:flex-start 로 상단 잘림 방지 */
+  .canvas-zone{
+    flex:0 0 auto;min-height:180px;
+    overflow:auto;-webkit-overflow-scrolling:touch;
+    padding:6px 8px 4px;gap:4px;
+    justify-content:flex-start;align-items:center;
+  }
+  .canvas-shell{max-width:calc(100vw - 16px);overflow:hidden;margin-top:auto;margin-bottom:auto}
   .canvas-ctrl-bar{max-width:calc(100vw - 16px);padding:0 2px}
   .size-bar{gap:4px;max-width:calc(100vw - 16px);overflow-x:auto}
   .size-chip{font-size:10px;padding:5px 9px;white-space:nowrap;flex-shrink:0}
