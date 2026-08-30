@@ -59,8 +59,17 @@ function processCalliLayer(id) {
   try {
     const id2 = oc.getImageData(0,0,img.width,img.height);
     const d = id2.data;
+    // ⚠ 밝기만으로 지우면 파스텔(하늘·연두) 캘리가 통째로 사라짐
+    //    → 채도가 있으면 밝아도 '획'으로 보고 남긴다.
+    //    흰 여백은 채도가 0에 가까우므로 여전히 제거됨.
+    const SAT_KEEP = 0.18;   // 이 이상 채도면 유채색 획으로 인정
     for (let i=0;i<d.length;i+=4) {
-      const lum = .299*d[i] + .587*d[i+1] + .114*d[i+2];
+      const R=d[i], G=d[i+1], B=d[i+2];
+      const mx = R>G ? (R>B?R:B) : (G>B?G:B);
+      const mn = R<G ? (R<B?R:B) : (G<B?G:B);
+      const sat = mx===0 ? 0 : (mx-mn)/mx;
+      if (sat >= SAT_KEEP) continue;              // 유채색 → 그대로 보존
+      const lum = .299*R + .587*G + .114*B;
       if (lum > thresh) {
         const soft = 45;
         d[i+3] = Math.round(Math.max(0,1-(lum-(thresh-soft))/soft)*255);
