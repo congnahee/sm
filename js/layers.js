@@ -93,7 +93,18 @@ function addTextLayer() {
     selId = id;
     refreshLayerList(); renderProps(); render();
     showToast('텍스트 레이어 추가됨');
-    setTimeout(() => { try { const t = document.getElementById('pe_txt'); if(t){ t.focus(); t.select(); } } catch(e){} }, 80);
+    // ⚠ 모바일에서 자동 focus 하면 키보드가 올라오며 브라우저가 입력창으로
+    //   강제 스크롤 → 캔버스 상단이 화면 밖으로 밀려 안 보이게 됨.
+    //   모바일에서는 자동 포커스를 하지 않는다 (사용자가 직접 탭해서 입력).
+    const _isMobile = window.matchMedia('(max-width:680px)').matches;
+    if (!_isMobile) {
+      setTimeout(() => {
+        try {
+          const t = document.getElementById('pe_txt');
+          if (t) { t.focus({ preventScroll: true }); t.select(); }
+        } catch(e){}
+      }, 80);
+    }
   } catch(e) { showToast('오류: ' + e.message); console.error('addTextLayer:', e); }
 }
 
@@ -179,7 +190,19 @@ function refreshLayerList() {
   // 선택된 레이어로 스크롤
   if (selId) {
     const selEl = list.querySelector(`[data-layer-id="${selId}"]`);
-    if (selEl) selEl.scrollIntoView({ block:'nearest', behavior:'smooth' });
+    // ⚠ scrollIntoView 는 조상 스크롤 컨테이너까지 함께 움직여 캔버스를 밀어냄.
+    //   목록 컨테이너 내부에서만 스크롤되도록 직접 계산한다.
+    if (selEl && list) {
+      try {
+        const lr = list.getBoundingClientRect();
+        const er = selEl.getBoundingClientRect();
+        if (er.top < lr.top) {
+          list.scrollTop += (er.top - lr.top);
+        } else if (er.bottom > lr.bottom) {
+          list.scrollTop += (er.bottom - lr.bottom);
+        }
+      } catch(e) {}
+    }
   }
 }
 

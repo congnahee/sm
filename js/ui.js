@@ -1519,3 +1519,48 @@ window.addEventListener('load', ()=>{
     try { if (typeof syncNativeChip === 'function') syncNativeChip(); } catch(e) {}
   });
 })();
+
+/* ═══════════════════════════════════════
+   모바일 키보드 대응
+   ─ 입력창 포커스 시 키보드가 올라오면 visualViewport 가 줄어들며
+     브라우저가 페이지를 강제 스크롤 → 캔버스 상단이 화면 밖으로 밀림
+   ─ 실제 보이는 높이(dvh 대용)를 CSS 변수로 내려주고,
+     키보드가 닫히면 스크롤 위치를 원복한다
+═══════════════════════════════════════ */
+(function(){
+  if (!window.visualViewport) return;
+  const vv = window.visualViewport;
+  const isMobile = () => window.matchMedia('(max-width:680px)').matches;
+
+  function applyVH() {
+    try {
+      document.documentElement.style.setProperty('--vvh', vv.height + 'px');
+    } catch(e) {}
+  }
+
+  let kbOpen = false;
+  function onResize() {
+    if (!isMobile()) return;
+    applyVH();
+    const shrunk = (window.innerHeight - vv.height) > 120;   // 키보드 추정
+    if (shrunk && !kbOpen) {
+      kbOpen = true;
+      document.body.classList.add('kb-open');
+    } else if (!shrunk && kbOpen) {
+      kbOpen = false;
+      document.body.classList.remove('kb-open');
+      // 키보드가 닫힐 때 브라우저가 남겨둔 스크롤 잔여값 정리
+      setTimeout(() => { try { window.scrollTo(0, 0); } catch(e) {} }, 60);
+    }
+  }
+
+  vv.addEventListener('resize', onResize);
+  vv.addEventListener('scroll', () => {
+    // 키보드로 인해 페이지가 통째로 밀려 올라간 경우 되돌림
+    if (isMobile() && !kbOpen && window.scrollY !== 0) {
+      try { window.scrollTo(0, 0); } catch(e) {}
+    }
+  });
+  applyVH();
+  onResize();
+})();
