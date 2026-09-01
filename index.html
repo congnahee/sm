@@ -273,7 +273,12 @@ input[type=range]::-moz-range-thumb{width:17px;height:17px;border-radius:50%;bac
 .fchip.active{background:var(--ink);color:var(--gold2);border-color:var(--ink)}
 .fchip:hover:not(.active){border-color:var(--ink3);color:var(--ink2)}
 /* 필터 썸네일 그리드 */
-.filter-thumb-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:4px}
+.filter-thumb-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-bottom:4px}
+@media(max-width:680px){
+  .filter-thumb-grid{grid-template-columns:repeat(5,1fr);gap:3px}
+  .fthumb canvas{height:44px}
+  .fthumb-lbl{font-size:8px;padding:2px 0}
+}
 .fthumb{border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:all .15s;position:relative}
 .fthumb.active{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}
 .fthumb canvas{width:100%;height:54px;object-fit:cover;display:block;border-radius:6px}
@@ -1158,8 +1163,9 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
           </div>
         </div>
 
-        <!-- 전체 화면 필터 -->
-        <div class="slabel" style="margin-top:12px">✨ 전체 화면 필터</div>
+        <!-- 선택 레이어 필터 -->
+        <div class="slabel" style="margin-top:12px">선택한 레이어 필터</div>
+        <div style="font-size:10px;color:var(--muted);margin:-2px 0 6px">레이어를 선택한 뒤 필터를 누르면 그 레이어에만 적용돼요</div>
         <div class="filter-thumb-grid" id="filterThumbGrid2"></div>
         <div class="ctrl" style="margin-top:8px"><div class="ctrl-row"><span class="ctrl-n">비네팅</span><span class="ctrl-v" id="vVig2">0</span></div><input type="range" id="slVig2" min="0" max="100" value="0" oninput="cv('vVig2',this);_vig=+this.value;syncSlider('slVig','vVig',this.value);render()" ontouchend="this.oninput({target:this})"></div>
         <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">필름 그레인</span><span class="ctrl-v" id="vGrain2">0</span></div><input type="range" id="slGrain2" min="0" max="80" value="0" oninput="cv('vGrain2',this);_grain=+this.value;syncSlider('slGrain','vGrain',this.value);render()" ontouchend="this.oninput({target:this})"></div>

@@ -199,9 +199,14 @@ function drawText(c, W, H, l) {
   c.textAlign = l.align||'center';
   c.textBaseline = 'middle';
   if (l.shadow) { c.shadowColor='rgba(0,0,0,0.45)'; c.shadowBlur=10*sc; c.shadowOffsetX=2*sc; c.shadowOffsetY=2*sc; }
+  // 레이어 필터 (텍스트는 벡터라 그대로 적용됨)
+  if (l.filter && l.filter !== 'none') {
+    try { c.filter = FILTERS[l.filter] || 'none'; } catch(e) {}
+  }
   const lines = l.text.split('\n');
   const lh = fs * 1.45;
   lines.forEach((line,i) => { c.fillText(line, 0, (i-(lines.length-1)/2)*lh); });
+  try { c.filter = 'none'; } catch(e) {}
   c.restore();
 }
 
@@ -219,6 +224,12 @@ function drawCalli(c, W, H, l) {
   // tintColor 유효성 검사 — 'null'/'' 등 잘못된 값이면 원본으로
   const tint = (l.tintColor && l.tintColor !== 'null' && typeof l.tintColor === 'string')
     ? l.tintColor : null;
+
+  // ── 레이어 필터 ──
+  // ⚠ tint 는 임시 캔버스에서 합성하므로, 필터는 '최종 그리기' 단계에서 한 번만 적용한다.
+  //   (임시 캔버스에도 걸면 이중 적용되어 색이 뭉개짐)
+  const lFilt = (l.filter && l.filter !== 'none') ? (FILTERS[l.filter] || '') : '';
+  if (lFilt) { try { c.filter = lFilt; } catch(e) {} }
 
   if (tint) {
     try {
@@ -243,5 +254,6 @@ function drawCalli(c, W, H, l) {
   } else {
     c.drawImage(cache.offscreen, -dW/2, -dH/2, dW, dH);
   }
+  if (lFilt) { try { c.filter = 'none'; } catch(e) {} }
   c.restore();
 }

@@ -12,7 +12,7 @@ function onCalliLoad(e) {
       try {
         saveHistory(); // 레이어 추가 전 상태 저장
         const id = ++idCtr;
-        layers.push({ id, type:'calli', name:f.name.replace(/\.[^.]+$/,''), srcImg:img, srcDataUrl:ev.target.result, size:Math.round(mc.width*.7), scaleX:100, scaleY:100, x:.5, y:.5, rotate:0, flipH:false, opacity:100, thresh:200, visible:true, tintColor:null });
+        layers.push({ id, type:'calli', name:f.name.replace(/\.[^.]+$/,''), srcImg:img, srcDataUrl:ev.target.result, size:Math.round(mc.width*.7), scaleX:100, scaleY:100, x:.5, y:.5, rotate:0, flipH:false, opacity:100, thresh:200, visible:true, tintColor:null, filter:'none' });
         selId = id;
         processCalliLayer(id);
         refreshLayerList(); renderProps(); render();
@@ -36,7 +36,7 @@ function onImgLoad(e) {
       try {
         saveHistory();
         const id = ++idCtr;
-        layers.push({ id, type:'calli', name:f.name.replace(/\.[^.]+$/,''), srcImg:img, srcDataUrl:ev.target.result, size:Math.round(mc.width*.7), scaleX:100, scaleY:100, x:.5, y:.5, rotate:0, flipH:false, opacity:100, thresh:255, noBgRemove:true, visible:true, tintColor:null });
+        layers.push({ id, type:'calli', name:f.name.replace(/\.[^.]+$/,''), srcImg:img, srcDataUrl:ev.target.result, size:Math.round(mc.width*.7), scaleX:100, scaleY:100, x:.5, y:.5, rotate:0, flipH:false, opacity:100, thresh:255, noBgRemove:true, visible:true, tintColor:null, filter:'none' });
         selId = id;
         processCalliLayer(id);
         refreshLayerList(); renderProps(); render();
@@ -89,7 +89,7 @@ function addTextLayer() {
   try {
     saveHistory();
     const id = ++idCtr;
-    layers.push({ id, type:'text', text:'', font:FONTS[0].v, size:Math.round(mc.width*.09), color:'#1C0F06', weight:'700', align:'center', x:.5, y:.5, rotate:0, opacity:100, shadow:false, visible:true });
+    layers.push({ id, type:'text', text:'', font:FONTS[0].v, size:Math.round(mc.width*.09), color:'#1C0F06', weight:'700', align:'center', x:.5, y:.5, rotate:0, opacity:100, shadow:false, visible:true, filter:'none' });
     selId = id;
     refreshLayerList(); renderProps(); render();
     showToast('텍스트 레이어 추가됨');

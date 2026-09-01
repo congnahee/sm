@@ -178,18 +178,50 @@ function redoCanvas() {
   } catch(e) { console.warn('redoCanvas 오류:', e.message); showToast('앞으로가기 실패'); }
 }
 
+/* 필터 25종 — 이름과 색감이 일치하도록 조합
+   ⚠ 기존 12종 id 유지 (저장된 작업물 호환) */
 const FILTERS = {
-  none:'', bw:'grayscale(100%)', sepia:'sepia(75%)',
-  warm:'saturate(130%) hue-rotate(-12deg) brightness(105%)',
-  cool:'saturate(80%) hue-rotate(18deg) brightness(102%)',
-  vintage:'sepia(45%) contrast(88%) brightness(88%) saturate(80%)',
-  fade:'brightness(118%) saturate(65%) contrast(88%)',
-  vivid:'saturate(165%) contrast(112%)',
-  dramatic:'contrast(125%) saturate(110%) brightness(90%)',
-  matte:'contrast(85%) saturate(75%) brightness(108%)',
-  soft:'brightness(110%) contrast(90%) saturate(85%)',
-  cinematic:'contrast(115%) saturate(90%) brightness(88%) hue-rotate(5deg)',
+  /* ⚠ hue-rotate 는 20~35deg 이내로만 사용한다.
+     그 이상 돌리면 살구빛 피부가 청록색이 되는 등 사진이 망가진다.
+     색조 차이는 sepia / saturate / brightness / contrast 조합으로 만든다. */
+
+  // ── 기본 ──
+  none:'',
+  soft:'brightness(112%) contrast(86%) saturate(82%)',                        // 부드러운
+  clean:'brightness(107%) contrast(114%) saturate(115%)',                     // 깨끗한
+  vivid:'saturate(180%) contrast(120%)',                                      // 선명한
+  bw:'grayscale(100%) contrast(105%)',                                        // 그레이
+
+  // ── 따뜻한 계열 (sepia 농도로 차등) ──
+  warm:'saturate(140%) hue-rotate(-8deg) brightness(107%)',                   // 따스한
+  champagne:'sepia(40%) brightness(120%) saturate(95%) contrast(86%)',        // 샴페인 — 밝은 금빛
+  honey:'sepia(62%) saturate(170%) hue-rotate(-10deg) brightness(104%)',      // 꿀빛 — 진한 황금
+  autumn:'sepia(48%) saturate(185%) hue-rotate(-20deg) contrast(115%) brightness(92%)', // 가을날 — 짙은 주황
+  sepia:'sepia(85%) contrast(98%)',                                           // 세피아
+
+  // ── 서늘한 계열 (hue 소폭 + 밝기·대비로 차등) ──
+  cool:'saturate(90%) hue-rotate(22deg) brightness(106%)',                    // 그겨울 — 맑고 서늘
+  moonlight:'saturate(58%) hue-rotate(28deg) brightness(88%) contrast(122%)', // 달빛 — 어둡고 푸른기
+  mist:'brightness(132%) contrast(64%) saturate(48%) hue-rotate(15deg)',      // 안개 — 가장 흐림
+  frost:'grayscale(30%) hue-rotate(25deg) brightness(112%) contrast(96%)',    // 서리 — 창백함
+  dawn:'saturate(75%) hue-rotate(18deg) brightness(96%) contrast(112%) sepia(15%)', // 새벽
+
+  // ── 은은한 계열 (채도·대비로 확실히 구분) ──
+  fade:'brightness(114%) saturate(45%) contrast(94%) sepia(10%)',             // 빛바랜
+  matte:'contrast(76%) saturate(92%) brightness(106%)',                       // 단아함 — 최저 대비
+  faint:'brightness(94%) saturate(65%) contrast(88%) sepia(32%)',             // 아련한 — 가라앉음
+  cotton:'brightness(118%) saturate(125%) contrast(82%) hue-rotate(-18deg)',  // 솜사탕 — 분홍빛
+  romantic:'sepia(30%) saturate(165%) hue-rotate(-16deg) brightness(105%) contrast(90%)', // 로맨틱
+
+  // ── 깊은 계열 ──
+  vintage:'sepia(58%) contrast(90%) brightness(80%) saturate(88%)',           // 회상 — 어두운 갈색
+  film:'sepia(18%) contrast(138%) saturate(75%) brightness(97%)',             // 필름 — 고대비
+  dramatic:'contrast(148%) saturate(130%) brightness(82%)',                   // 깊은밤 — 가장 강함
+  cinematic:'contrast(124%) saturate(88%) brightness(84%) sepia(30%) hue-rotate(-8deg)', // 늦은오후 — 어스름 노을
+  elegant:'grayscale(60%) contrast(115%) brightness(103%)',                   // 우아한 — 준무채색
 };
+
+
 
 /* ── 픽셀 기반 이미지 필터 (Safari/iOS Canvas filter 미지원 대응) ── */
 /* 픽셀 직접 조작 필터 (Safari/iOS Canvas filter 미지원 대응)

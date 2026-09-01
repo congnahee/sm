@@ -187,29 +187,84 @@ function syncSlider(sliderId, valId, val) {
   if (vl) vl.textContent = val;
 }
 
+/* ═══════════════════════════════════════
+   필터 적용 — 대상 분리
+   ─ 배경 필터  : 전역 currentFilter → 배경 이미지에만
+   ─ 레이어 필터: l.filter          → 해당 레이어에만
+═══════════════════════════════════════ */
+
+/* 배경 필터 */
 function setFilter(name, clickedEl) {
   saveHistory();
   currentFilter = name;
-  document.querySelectorAll('.fthumb').forEach(t => t.classList.toggle('active', t.dataset.filter === name));
+  const grid = $('filterThumbGrid');
+  if (grid) grid.querySelectorAll('.fthumb').forEach(t => t.classList.toggle('active', t.dataset.filter === name));
   document.querySelectorAll('.fchip').forEach(c => c.classList.remove('active'));
   if (clickedEl && clickedEl.classList.contains('fchip')) clickedEl.classList.add('active');
   render();
 }
 
+/* 레이어 필터 — 선택된 레이어(들)에만 적용 */
+function setLayerFilter(name, clickedEl) {
+  const targets = (selIds && selIds.length > 1)
+    ? selIds.map(id => layers.find(x => x.id === id)).filter(Boolean)
+    : (layers.find(x => x.id === selId) ? [layers.find(x => x.id === selId)] : []);
+
+  if (!targets.length) { showToast('레이어를 먼저 선택하세요'); return; }
+
+  saveHistory();
+  targets.forEach(l => { l.filter = name; });
+
+  const grid = $('filterThumbGrid2');
+  if (grid) grid.querySelectorAll('.fthumb').forEach(t => t.classList.toggle('active', t.dataset.filter === name));
+
+  render();
+  const lbl = (FILTER_LIST.find(f => f.id === name) || {}).lbl || name;
+  showToast(targets.length > 1 ? targets.length + '개 레이어 · ' + lbl : '필터: ' + lbl);
+}
+
+/* 선택 레이어가 바뀔 때 레이어 필터 그리드의 active 표시 동기화 */
+function syncLayerFilterActive() {
+  const grid = $('filterThumbGrid2'); if (!grid) return;
+  const l = layers.find(x => x.id === selId);
+  const cur = (l && l.filter) ? l.filter : 'none';
+  grid.querySelectorAll('.fthumb').forEach(t => t.classList.toggle('active', t.dataset.filter === cur));
+}
+
 // 필터 썸네일 빌드 (bgImg가 있으면 실제 미리보기, 없으면 색상 스왓치)
+/* 필터 25종 — 모바일 가로 5개 × 5줄로 딱 맞음
+   ⚠ 기존 12종의 id 는 그대로 유지 (저장된 작업물 호환). 이름(lbl)만 감성 어휘로 정리 */
 const FILTER_LIST = [
-  {id:'none',     lbl:'원본'},
-  {id:'bw',       lbl:'흑백'},
-  {id:'sepia',    lbl:'세피아'},
-  {id:'warm',     lbl:'따뜻'},
-  {id:'cool',     lbl:'차갑'},
-  {id:'vintage',  lbl:'빈티지'},
-  {id:'fade',     lbl:'페이드'},
-  {id:'vivid',    lbl:'선명'},
-  {id:'dramatic', lbl:'드라마틱'},
-  {id:'matte',    lbl:'매트'},
-  {id:'soft',     lbl:'소프트'},
-  {id:'cinematic',lbl:'시네마틱'},
+  // 1줄 — 기본
+  {id:'none',      lbl:'원본'},
+  {id:'soft',      lbl:'부드러운'},
+  {id:'clean',     lbl:'깨끗한'},
+  {id:'vivid',     lbl:'선명한'},
+  {id:'bw',        lbl:'그레이'},
+  // 2줄 — 따뜻한 계열
+  {id:'warm',      lbl:'따스한'},
+  {id:'autumn',    lbl:'가을날'},
+  {id:'champagne', lbl:'샴페인'},
+  {id:'honey',     lbl:'꿀빛'},
+  {id:'sepia',     lbl:'세피아'},
+  // 3줄 — 차갑고 맑은 계열
+  {id:'cool',      lbl:'그겨울'},
+  {id:'moonlight', lbl:'달빛'},
+  {id:'mist',      lbl:'안개'},
+  {id:'frost',     lbl:'서리'},
+  {id:'dawn',      lbl:'새벽'},
+  // 4줄 — 은은하고 아련한 계열
+  {id:'fade',      lbl:'빛바랜'},
+  {id:'matte',     lbl:'단아함'},
+  {id:'faint',     lbl:'아련한'},
+  {id:'cotton',    lbl:'솜사탕'},
+  {id:'romantic',  lbl:'로맨틱'},
+  // 5줄 — 무겁고 깊은 계열
+  {id:'vintage',   lbl:'회상'},
+  {id:'film',      lbl:'필름'},
+  {id:'dramatic',  lbl:'깊은밤'},
+  {id:'cinematic', lbl:'늦은오후'},
+  {id:'elegant',   lbl:'우아한'},
 ];
 
 function buildFilterThumbs(gridId) {
@@ -219,22 +274,27 @@ function buildFilterThumbs(gridId) {
   // gridId에 따라 썸네일 소스 결정
   // filterThumbGrid → 배경사진 기준
   // filterThumbGrid2 → 선택된 캘리 레이어 기준
-  const isCalliGrid = gridId === 'filterThumbGrid2';
+  const isLayerGrid = gridId === 'filterThumbGrid2';
   let thumbSrc = null; // Image or canvas to use as thumb source
 
-  if (isCalliGrid) {
-    // 선택된 캘리 레이어 또는 첫 번째 캘리 레이어
-    const cl = layers.find(x=>x.id===selId && x.type==='calli') || layers.find(x=>x.type==='calli');
+  // 현재 활성 필터 기준 — 레이어 그리드는 선택된 레이어의 filter 를 따른다
+  let activeId = 'none';
+  if (isLayerGrid) {
+    const sl = layers.find(x => x.id === selId);
+    activeId = (sl && sl.filter) ? sl.filter : 'none';
+    // 썸네일 소스: 선택 레이어(캘리) → 없으면 첫 캘리
+    const cl = (sl && sl.type === 'calli') ? sl : layers.find(x => x.type === 'calli');
     if (cl && calliCache[cl.id]) thumbSrc = calliCache[cl.id].offscreen;
   } else {
+    activeId = currentFilter;
     thumbSrc = bgImg;
   }
 
   FILTER_LIST.forEach(f => {
     const div = document.createElement('div');
-    div.className = 'fthumb' + (currentFilter === f.id ? ' active' : '');
+    div.className = 'fthumb' + (activeId === f.id ? ' active' : '');
     div.dataset.filter = f.id;
-    div.onclick = () => setFilter(f.id, div);
+    div.onclick = () => (isLayerGrid ? setLayerFilter(f.id, div) : setFilter(f.id, div));
 
     const cv2 = document.createElement('canvas');
     cv2.width = 120; cv2.height = 70;
@@ -248,12 +308,18 @@ function buildFilterThumbs(gridId) {
       ctx2.filter = 'none';
     } else {
       // 소스 없을 때 색상 데모
-      const DEMO = {none:'#F0EBE0',bw:'#888',sepia:'#c8a96e',warm:'#f5c87a',cool:'#a0bfdc',vintage:'#b5926e',fade:'#ddd8cc',vivid:'#f08030',dramatic:'#444',matte:'#bcb8b0',soft:'#e8e0d8',cinematic:'#3a3a4a'};
+      const DEMO = {
+        none:'#F0EBE0', soft:'#e8e0d8', clean:'#f2efe8', vivid:'#f08030', bw:'#888',
+        warm:'#f5c87a', autumn:'#d9a441', champagne:'#ecd9a8', honey:'#e0a83c', sepia:'#c8a96e',
+        cool:'#a0bfdc', moonlight:'#8fa8c4', mist:'#dfe4e6', frost:'#cfd8dc', dawn:'#a9b0ba',
+        fade:'#ddd8cc', matte:'#bcb8b0', faint:'#e3dcd0', cotton:'#f0cfd6', romantic:'#eec4bb',
+        vintage:'#b5926e', film:'#a89578', dramatic:'#444', cinematic:'#3a3a4a', elegant:'#9c9890'
+      };
       ctx2.fillStyle = DEMO[f.id] || '#eee';
       ctx2.fillRect(0,0,120,70);
       ctx2.fillStyle = 'rgba(0,0,0,0.18)';
       ctx2.font = 'bold 13px sans-serif'; ctx2.textAlign = 'center'; ctx2.textBaseline = 'middle';
-      ctx2.fillText(isCalliGrid ? '캘리' : '가나다', 60, 35);
+      ctx2.fillText(isLayerGrid ? '레이어' : '가나다', 60, 35);
     }
 
     const lbl = document.createElement('div');
@@ -553,3 +619,24 @@ function fixCalli() {
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', guard);
   else guard();
 })();
+
+
+/* 선택 레이어 변경 시 레이어 필터 그리드 갱신
+   ⚠ bg.js 는 layers.js 보다 먼저 로드되므로 DOM 준비 후 감싼다 */
+function _wrapLayerFilterSync() {
+  const orig = window.renderProps;
+  if (typeof orig !== 'function' || orig._lfWrapped) return;
+  const wrapped = function() {
+    const r = orig.apply(this, arguments);
+    try {
+      syncLayerFilterActive();
+      // 썸네일 소스도 선택 레이어에 맞춰 다시 그림
+      if ($('filterThumbGrid2')) buildFilterThumbs('filterThumbGrid2');
+    } catch(e) {}
+    return r;
+  };
+  wrapped._lfWrapped = true;
+  window.renderProps = wrapped;
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _wrapLayerFilterSync);
+else _wrapLayerFilterSync();

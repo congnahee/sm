@@ -1416,7 +1416,7 @@ function closeStickerModal() {
 function addStickerLayer(emoji) {
   saveHistory();
   const id = ++idCtr;
-  layers.push({ id, type:'sticker', text:emoji, font:"'Noto Serif KR',serif", size:Math.round(mc.width*.15), color:'#000000', weight:'400', align:'center', x:.5, y:.5, rotate:0, opacity:100, shadow:false, visible:true });
+  layers.push({ id, type:'sticker', text:emoji, font:"'Noto Serif KR',serif", size:Math.round(mc.width*.15), color:'#000000', weight:'400', align:'center', x:.5, y:.5, rotate:0, opacity:100, shadow:false, visible:true, filter:'none' });
   selId = id;
   refreshLayerList(); renderProps(); render();
   showToast(emoji + ' 스티커 추가됨');
