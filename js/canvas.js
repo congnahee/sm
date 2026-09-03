@@ -561,9 +561,11 @@ window.addEventListener('resize', initCanvas);
 (function() {
   let resizing = false;
   let resizeCorner = '';
+  let resizingBackground = false;
   let startX = 0, startY = 0;
   let startW = 0, startH = 0;
   let startRatio = 1;
+  let startBgScaleX=100, startBgScaleY=100, startBgOffX=0, startBgOffY=0, startBgW=0, startBgH=0;
   const MIN_SIZE = 200;
   const MAX_SIZE = 8000;
 
@@ -573,6 +575,7 @@ window.addEventListener('resize', initCanvas);
     e.preventDefault();
     e.stopPropagation();
     resizing = true;
+    resizingBackground = !!(bgDirectEdit && bgImg);
     resizeCorner = corner;
     const src = e.touches ? e.touches[0] : e;
     startX = src.clientX;
@@ -580,6 +583,16 @@ window.addEventListener('resize', initCanvas);
     startW = outputW;
     startH = outputH;
     startRatio = outputH / outputW;
+    if (resizingBackground) {
+      const baseSc = bgFit === 'contain'
+        ? Math.min(outputW/bgImg.width, outputH/bgImg.height)
+        : Math.max(outputW/bgImg.width, outputH/bgImg.height);
+      const uniform = baseSc * (bgScale/100);
+      startBgScaleX=bgScaleX; startBgScaleY=bgScaleY;
+      startBgOffX=bgOffX; startBgOffY=bgOffY;
+      startBgW=bgImg.width*uniform*(bgScaleX/100);
+      startBgH=bgImg.height*uniform*(bgScaleY/100);
+    }
     saveHistory();
   }
 
@@ -596,6 +609,27 @@ window.addEventListener('resize', initCanvas);
     let newW = startW, newH = startH;
     const sx = resizeCorner.includes('l') ? -1 : resizeCorner.includes('r') ? 1 : 0;
     const sy = resizeCorner.includes('t') ? -1 : resizeCorner.includes('b') ? 1 : 0;
+
+    if (resizingBackground) {
+      const dxOut = dx / mc.clientWidth * outputW;
+      const dyOut = dy / mc.clientHeight * outputH;
+      if (sx) {
+        const newBgW = clamp(startBgW + sx*dxOut, startBgW*.1, startBgW*4);
+        bgScaleX = Math.max(10, Math.min(400, startBgScaleX*newBgW/startBgW));
+        bgOffX = startBgOffX + sx*(newBgW-startBgW)/(2*outputW);
+      }
+      if (sy) {
+        const newBgH = clamp(startBgH + sy*dyOut, startBgH*.1, startBgH*4);
+        bgScaleY = Math.max(10, Math.min(400, startBgScaleY*newBgH/startBgH));
+        bgOffY = startBgOffY + sy*(newBgH-startBgH)/(2*outputH);
+      }
+      if ($('slBgScaleX')) { $('slBgScaleX').value=Math.round(bgScaleX); $('vBgScaleX').textContent=Math.round(bgScaleX)+'%'; }
+      if ($('slBgScaleY')) { $('slBgScaleY').value=Math.round(bgScaleY); $('vBgScaleY').textContent=Math.round(bgScaleY)+'%'; }
+      if ($('slBgX')) { $('slBgX').value=Math.round(bgOffX*100); $('vBgX').textContent=Math.round(bgOffX*100); }
+      if ($('slBgY')) { $('slBgY').value=Math.round(bgOffY*100); $('vBgY').textContent=Math.round(bgOffY*100); }
+      render();
+      return;
+    }
 
     if (sx) newW = clamp(Math.round(startW + sx * dx / dispScale), MIN_SIZE, MAX_SIZE);
     if (sy) newH = clamp(Math.round(startH + sy * dy / dispScale), MIN_SIZE, MAX_SIZE);
@@ -620,7 +654,9 @@ window.addEventListener('resize', initCanvas);
   function onResizeEnd() {
     if (!resizing) return;
     resizing = false;
-    showToast(`캔버스 ${outputW}×${outputH}px`);
+    if (resizingBackground) showToast(`배경 가로 ${Math.round(bgScaleX)}% · 세로 ${Math.round(bgScaleY)}%`);
+    else showToast(`캔버스 ${outputW}×${outputH}px`);
+    resizingBackground = false;
   }
 
   window.addEventListener('load', () => {

@@ -322,7 +322,8 @@ function doResetAll() {
 
   // 모든 상태 초기화
   bgImg=null; layers=[]; selId=null; idCtr=0;
-  bgOffX=0; bgOffY=0; bgScale=100; bgScaleX=100; bgScaleY=100; bgMode='move';
+  bgOffX=0; bgOffY=0; bgScale=100; bgScaleX=100; bgScaleY=100; bgMode='move'; bgDirectEdit=false;
+  const canvasShell=document.querySelector('.canvas-shell'); if(canvasShell) canvasShell.classList.remove('bg-direct-edit');
   activeBgPhotoId=null; currentBgDataUrl=null; bgHidden=false;
   bgPhotos=[]; bgPhotoPage=0;
   currentFilter='none';

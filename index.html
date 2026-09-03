@@ -152,6 +152,7 @@ header{
 .canvas-resize-handle.bc{bottom:-6px;left:calc(50% - 8px);cursor:ns-resize;}
 .canvas-resize-handle.ml{left:-6px;top:calc(50% - 8px);cursor:ew-resize;}
 .canvas-resize-handle.mr{right:-6px;top:calc(50% - 8px);cursor:ew-resize;}
+.canvas-shell.bg-direct-edit .canvas-resize-handle{background:#4ECDC4;border-color:#fff;box-shadow:0 1px 7px rgba(78,205,196,.75)}
 #mainCanvas{display:block;touch-action:none}
 @media(max-width:680px){
   /* ⚠ 캔버스 크기는 initCanvas() 가 outputW:outputH 비율에 맞춰 직접 계산한다.
@@ -1382,6 +1383,7 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
             <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">배경 크기</span><span class="ctrl-v" id="vBgScale">100%</span></div><input type="range" id="slBgScale" min="10" max="400" value="100" oninput="setBgScale(this)" onchange="saveHistory()" ontouchend="this.oninput({target:this})"></div>
             <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">배경 가로 크기</span><span class="ctrl-v" id="vBgScaleX">100%</span></div><input type="range" id="slBgScaleX" min="10" max="400" value="100" onpointerdown="saveHistory()" oninput="setBgScaleX(this)" ontouchend="this.oninput({target:this})"></div>
             <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">배경 세로 크기</span><span class="ctrl-v" id="vBgScaleY">100%</span></div><input type="range" id="slBgScaleY" min="10" max="400" value="100" onpointerdown="saveHistory()" oninput="setBgScaleY(this)" ontouchend="this.oninput({target:this})"></div>
+            <div class="togbtn" id="bgDirectEditBtn" onclick="toggleBgDirectEdit()" style="text-align:center;padding:9px;margin-bottom:8px;font-size:11px">⤢ 배경 직접 조정</div>
             <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">좌우 위치</span><span class="ctrl-v" id="vBgX">0</span></div><input type="range" id="slBgX" min="-200" max="200" value="0" oninput="setBgX(this)" onchange="saveHistory()" ontouchend="this.oninput({target:this})"></div>
             <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">상하 위치</span><span class="ctrl-v" id="vBgY">0</span></div><input type="range" id="slBgY" min="-200" max="200" value="0" oninput="setBgY(this)" onchange="saveHistory()" ontouchend="this.oninput({target:this})"></div>
             <div class="slabel" style="margin-top:6px">배경 맞춤</div>

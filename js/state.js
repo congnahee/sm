@@ -23,6 +23,7 @@ let bgScale = 100;             // % scale (100 = cover fit)
 let bgScaleX = 100, bgScaleY = 100; // independent background image stretch
 let bgFit = 'cover';           // 'cover'(채우기) | 'contain'(전체보기)
 let bgMode = 'move';           // 'move' | 'layer'  — which thing canvas drag affects
+let bgDirectEdit = false;      // canvas handles transform the background image
 
 // ③ undo/redo history (최대 40단계)
 let undoStack = [], redoStack = [];
