@@ -187,26 +187,78 @@ function openCustomSize() {
   // 방향 버튼
   $('cszDirP').classList.toggle('active', _cszDir==='portrait');
   $('cszDirL').classList.toggle('active', _cszDir==='landscape');
+  // ⚠ 브라우저가 체크박스 상태를 기억해 비율 고정이 켜진 채 열리면
+  //   가로를 입력해도 세로가 따라와 '가로가 안 바뀐다'고 느끼게 된다 → 항상 해제로 시작
+  const lock = $('cszLock');
+  if (lock) lock.checked = false;
   modal.classList.add('show');
   // px 기본 → DPI 행 숨김
   const dpiRow = $('cszDpiRow');
   if (dpiRow) dpiRow.style.display = 'none';
-  setTimeout(() => $('cszW').focus(), 100);
+  // ⚠ 모바일에서 자동 focus 하면 키보드가 모달을 밀어올려 하단 버튼이 잘린다
+  if (!window.matchMedia('(max-width:680px)').matches) {
+    setTimeout(() => { try { $('cszW').focus({ preventScroll: true }); } catch(e) { $('cszW').focus(); } }, 100);
+  }
 }
 
 function closeCustomSize() {
   const modal = $('customSizeModal');
   if (modal) modal.classList.remove('show');
+  // ⚠ 입력창 포커스로 생긴 키보드 상태가 남으면 캔버스 영역이 계속 축소된 채
+  //   유지되어 배경 조절이 막힌 것처럼 보인다 → 명시적으로 해제
+  try {
+    const a = document.activeElement;
+    if (a && (a.id === 'cszW' || a.id === 'cszH')) a.blur();
+    document.body.classList.remove('kb-open');
+    window.scrollTo(0, 0);
+  } catch(e) {}
+  // 캔버스 크기 재계산 (모달 동안 뷰포트가 변했을 수 있음)
+  try { initCanvas(); render(); } catch(e) {}
 }
 
+/* 비율 고정 입력
+   ⚠ 입력 도중(예: 5000 → 지우고 3 입력)에 즉시 상대값을 덮어쓰면
+     두 칸이 서로를 계속 갱신해 가로 입력이 잠긴 것처럼 동작한다.
+     → 값이 유효한 범위에 들어왔을 때만 반영하고, 갱신 중 재진입을 막는다. */
+let _cszSyncing = false;
+
 function onCszInput(changed) {
-  if (!$('cszLock').checked) return;
-  const w = +$('cszW').value, h = +$('cszH').value;
-  if (changed === 'w' && w > 0) {
-    $('cszH').value = _cszUnit==='px' ? Math.round(w / _cszRatio) : Math.round(w / _cszRatio * 100)/100;
-  } else if (changed === 'h' && h > 0) {
-    $('cszW').value = _cszUnit==='px' ? Math.round(h * _cszRatio) : Math.round(h * _cszRatio * 100)/100;
+  if (_cszSyncing) return;
+  const lock = $('cszLock');
+  if (!lock || !lock.checked) return;
+  if (!_cszRatio || !isFinite(_cszRatio) || _cszRatio <= 0) return;
+
+  const wEl = $('cszW'), hEl = $('cszH');
+  if (!wEl || !hEl) return;
+
+  const raw = changed === 'w' ? wEl.value : hEl.value;
+  // 빈칸이거나 아직 입력 중인 작은 값이면 상대칸을 건드리지 않는다
+  if (raw === '' || raw === '-') return;
+  const v = +raw;
+  if (!isFinite(v) || v <= 0) return;
+  const minV = _cszUnit === 'px' ? 100 : 1;
+  if (v < minV) return;
+
+  _cszSyncing = true;
+  try {
+    if (changed === 'w') {
+      const nh = v / _cszRatio;
+      hEl.value = _cszUnit === 'px' ? Math.round(nh) : Math.round(nh * 100) / 100;
+    } else {
+      const nw = v * _cszRatio;
+      wEl.value = _cszUnit === 'px' ? Math.round(nw) : Math.round(nw * 100) / 100;
+    }
+  } finally {
+    _cszSyncing = false;
   }
+}
+
+/* 비율 고정 체크박스를 끄거나 켤 때 현재 입력값으로 비율을 다시 잡는다 */
+function onCszLockToggle() {
+  const lock = $('cszLock');
+  if (!lock || !lock.checked) return;
+  const w = +$('cszW').value, h = +$('cszH').value;
+  if (w > 0 && h > 0) _cszRatio = w / h;
 }
 
 function cszPreset(w, h) {
