@@ -13,7 +13,7 @@ function switchTab(name, el) {
     bgMode = 'move';
     mc.style.cursor = bgImg ? 'grab' : 'default';
     // 캔버스 리사이즈 핸들 표시
-    ['rh-tl','rh-tr','rh-bl','rh-br'].forEach(id => {
+    ['rh-tl','rh-tc','rh-tr','rh-ml','rh-mr','rh-bl','rh-bc','rh-br'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = '';
     });
@@ -29,7 +29,7 @@ function switchTab(name, el) {
     // 배경 드래그 상태 초기화
     bgDrag = false;
     // 캔버스 리사이즈 핸들 숨기기
-    ['rh-tl','rh-tr','rh-bl','rh-br'].forEach(id => {
+    ['rh-tl','rh-tc','rh-tr','rh-ml','rh-mr','rh-bl','rh-bc','rh-br'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
@@ -70,7 +70,7 @@ function saveToGallery(dataUrl) {
     const layersSnap = layers.map(l => { const c2=Object.assign({},l); delete c2.srcImg; return c2; });
 
     const snapshot = {
-      bgColor, bgOffX, bgOffY, bgScale, currentFilter,
+      bgColor, bgOffX, bgOffY, bgScale, bgScaleX, bgScaleY, currentFilter,
       bright: _bright, contrast: _contrast, sat: _sat,
       bgOp: _bgOp, bgBlur: _bgBlur, vig: _vig, grain: _grain,
       fBright: _fBright, fCont: _fCont, fSat: _fSat, fTemp: _fTemp,
@@ -322,7 +322,7 @@ function doResetAll() {
 
   // 모든 상태 초기화
   bgImg=null; layers=[]; selId=null; idCtr=0;
-  bgOffX=0; bgOffY=0; bgScale=100; bgMode='move';
+  bgOffX=0; bgOffY=0; bgScale=100; bgScaleX=100; bgScaleY=100; bgMode='move';
   activeBgPhotoId=null; currentBgDataUrl=null; bgHidden=false;
   bgPhotos=[]; bgPhotoPage=0;
   currentFilter='none';
@@ -345,6 +345,8 @@ function doResetAll() {
   const thumb=$('bgCurrentThumb'); if(thumb) thumb.style.display='none';
   const props=$('bgOverlayProps'); if(props) props.style.display='none';
   if($('slBgScale')){$('slBgScale').value=100;$('vBgScale').textContent='100%';}
+  if($('slBgScaleX')){$('slBgScaleX').value=100;$('vBgScaleX').textContent='100%';}
+  if($('slBgScaleY')){$('slBgScaleY').value=100;$('vBgScaleY').textContent='100%';}
   if($('slBgX')){$('slBgX').value=0;$('vBgX').textContent='0';}
   if($('slBgY')){$('slBgY').value=0;$('vBgY').textContent='0';}
   ['slBright','slContrast','slSat','slBgOp'].forEach(id=>{if($(id))$(id).value=100;});
@@ -714,7 +716,11 @@ function applyGradient(c1, c2, dir) {
   else gObj=ctx2.createLinearGradient(sz,0,0,sz);
   gObj.addColorStop(0,c1); gObj.addColorStop(1,c2);
   ctx2.fillStyle=gObj; ctx2.fillRect(0,0,sz,sz);
-  const img=new Image(); img.onload=()=>{saveHistory();bgImg=img;bgOffX=0;bgOffY=0;bgScale=100;render();showToast('그라데이션 적용됨 ✓');};
+  const img=new Image(); img.onload=()=>{
+    saveHistory(); bgImg=img; bgOffX=0; bgOffY=0; bgScale=100; bgScaleX=100; bgScaleY=100;
+    const props=$('bgOverlayProps'); if(props) props.style.display='block';
+    render(); showToast('그라데이션 적용됨 ✓');
+  };
   img.src=cv2.toDataURL();
 }
 
@@ -1254,7 +1260,8 @@ function loadWork(work) {
   if (!snap) { showToast('편집 데이터가 없어요'); return; }
 
   bgColor = snap.bgColor;
-  bgOffX = snap.bgOffX; bgOffY = snap.bgOffY; bgScale = snap.bgScale;
+  bgOffX = snap.bgOffX; bgOffY = snap.bgOffY; bgScale = snap.bgScale || 100;
+  bgScaleX = snap.bgScaleX || 100; bgScaleY = snap.bgScaleY || 100;
   currentFilter = snap.currentFilter || 'none';
   layers = JSON.parse(JSON.stringify(snap.layers));
   calliCache = {};
@@ -1268,6 +1275,8 @@ function loadWork(work) {
   if ($('slVig'))       { $('slVig').value = snap.vig||0;             $('vVig').textContent = snap.vig||0; }
   if ($('slGrain'))     { $('slGrain').value = snap.grain||0;         $('vGrain').textContent = snap.grain||0; }
   if ($('slBgScale'))   { $('slBgScale').value = snap.bgScale||100;   $('vBgScale').textContent = (snap.bgScale||100)+'%'; }
+  if ($('slBgScaleX'))  { $('slBgScaleX').value = bgScaleX; $('vBgScaleX').textContent = bgScaleX+'%'; }
+  if ($('slBgScaleY'))  { $('slBgScaleY').value = bgScaleY; $('vBgScaleY').textContent = bgScaleY+'%'; }
 
   // 배경 이미지 복원
   if (snap.bgDataUrl) {
@@ -1600,6 +1609,9 @@ window.addEventListener('load', ()=>{
     document.documentElement.style.setProperty('--panel-h', clamped + 'px');
     // 캔버스는 남은 공간에 맞춰 다시 계산
     try { if (typeof initCanvas === 'function') initCanvas(); } catch(e) {}
+    if (animate) setTimeout(() => {
+      try { if (typeof initCanvas === 'function') initCanvas(); } catch(e) {}
+    }, 240);
   }
 
   function nearestSnap(px) {

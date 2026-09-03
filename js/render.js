@@ -54,7 +54,8 @@ function render(targetCtx, TW, TH, transparent) {
       ? Math.min(W/bgImg.width, H/bgImg.height)
       : Math.max(W/bgImg.width, H/bgImg.height);
     const sc2 = baseSc * (bgScale / 100);
-    const bW = bgImg.width * sc2, bH = bgImg.height * sc2;
+    const bW = bgImg.width * sc2 * (bgScaleX / 100);
+    const bH = bgImg.height * sc2 * (bgScaleY / 100);
     const ox = bgOffX * W, oy = bgOffY * H;
     const dx = (W-bW)/2 + ox, dy = (H-bH)/2 + oy;
 

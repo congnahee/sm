@@ -7,6 +7,7 @@ let drag=false, pendingDrag=false, dsx,dsy,dlx,dly; // 레이어 드래그
 let _multiDragInit=null, _multiDragStartX=0, _multiDragStartY=0;
 let bgDrag=false, bdsx,bdsy,bdox,bdoy;     // 배경 드래그
 let handleDrag=false, handleDragStartSize=0, handleDragStartX=0, handleDragStartY=0, handleDragStartSX=100, handleDragStartSY=100, handleDragDir=[0,0]; // 핸들 드래그
+let handleDragCenterX=0, handleDragCenterY=0, handleDragStartHW=0, handleDragStartHH=0;
 let pinchStartDist=0, pinchStartSize=0, pinchTarget='layer'; // pinch zoom
 
 function getCanvasXY(e) {
@@ -82,6 +83,10 @@ function startDrag(e) {
               handleDragStartSize = l.size;
               handleDragStartSX = l.scaleX || 100;
               handleDragStartSY = l.scaleY || 100;
+              handleDragCenterX = l.x;
+              handleDragCenterY = l.y;
+              handleDragStartHW = nhw;
+              handleDragStartHH = nhh;
               // 다중선택 스냅샷
               if (selIds.length > 1) {
                 _multiDragInit = {};
@@ -279,7 +284,14 @@ function moveDrag(e) {
               if (sl && init && !sl.locked) sl.size = Math.max(10, Math.round(init.size * ratio));
             });
           } else {
-            l.size = Math.max(10, Math.round(handleDragStartSize * ratio));
+            l.size = Math.max(10, handleDragStartSize * ratio);
+            const newHW = handleDragStartHW * (l.size / handleDragStartSize);
+            const newHH = handleDragStartHH * (l.size / handleDragStartSize);
+            const rot = (l.rotate || 0) * Math.PI / 180;
+            const localDX = dirX * (newHW - handleDragStartHW);
+            const localDY = dirY * (newHH - handleDragStartHH);
+            l.x = handleDragCenterX + localDX * Math.cos(rot) - localDY * Math.sin(rot);
+            l.y = handleDragCenterY + localDX * Math.sin(rot) + localDY * Math.cos(rot);
             const ps = $('pe_size'); if (ps) { ps.value = l.size; $('pe_vsize').textContent = l.size; }
           }
         }
@@ -289,6 +301,11 @@ function moveDrag(e) {
         const totalDy = (fy - handleDragStartY) * dirY;
         const newSY = Math.max(10, Math.min(300, handleDragStartSY + totalDy * 150));
         l.scaleY = newSY;
+        const newHH = handleDragStartHH * (newSY / handleDragStartSY);
+        const shift = dirY * (newHH - handleDragStartHH);
+        const rot = (l.rotate || 0) * Math.PI / 180;
+        l.x = handleDragCenterX - shift * Math.sin(rot);
+        l.y = handleDragCenterY + shift * Math.cos(rot);
         const ps = $('pe_scaleY'); if (ps) { ps.value = Math.round(newSY); $('pe_vscaleY').textContent = Math.round(newSY)+'%'; }
 
       } else if (dirX !== 0) {
@@ -296,6 +313,11 @@ function moveDrag(e) {
         const totalDx = (fx - handleDragStartX) * dirX;
         const newSX = Math.max(10, Math.min(300, handleDragStartSX + totalDx * 150));
         l.scaleX = newSX;
+        const newHW = handleDragStartHW * (newSX / handleDragStartSX);
+        const shift = dirX * (newHW - handleDragStartHW);
+        const rot = (l.rotate || 0) * Math.PI / 180;
+        l.x = handleDragCenterX + shift * Math.cos(rot);
+        l.y = handleDragCenterY + shift * Math.sin(rot);
         const ps = $('pe_scaleX'); if (ps) { ps.value = Math.round(newSX); $('pe_vscaleX').textContent = Math.round(newSX)+'%'; }
       }
 

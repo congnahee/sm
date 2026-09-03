@@ -419,6 +419,16 @@ function setBgScale(el) {
   $('vBgScale').textContent = el.value + '%';
   render();
 }
+function setBgScaleX(el) {
+  bgScaleX = +el.value;
+  $('vBgScaleX').textContent = el.value + '%';
+  render();
+}
+function setBgScaleY(el) {
+  bgScaleY = +el.value;
+  $('vBgScaleY').textContent = el.value + '%';
+  render();
+}
 function setBgX(el) {
   bgOffX = +el.value / 100;
   $('vBgX').textContent = el.value;
@@ -431,8 +441,10 @@ function setBgY(el) {
 }
 function resetBgPos() {
   saveHistory();
-  bgOffX=0; bgOffY=0; bgScale=100;
+  bgOffX=0; bgOffY=0; bgScale=100; bgScaleX=100; bgScaleY=100;
   $('slBgScale').value=100; $('vBgScale').textContent='100%';
+  $('slBgScaleX').value=100; $('vBgScaleX').textContent='100%';
+  $('slBgScaleY').value=100; $('vBgScaleY').textContent='100%';
   $('slBgX').value=0; $('vBgX').textContent='0';
   $('slBgY').value=0; $('vBgY').textContent='0';
   render(); showToast('배경 위치·크기 초기화');

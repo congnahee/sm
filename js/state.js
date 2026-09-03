@@ -20,6 +20,7 @@ let saveW = 5000, saveH = 5000, saveFmt = 'png';
 // BG image position & scale
 let bgOffX = 0, bgOffY = 0;   // offset in canvas-fraction units (-1 ~ 1)
 let bgScale = 100;             // % scale (100 = cover fit)
+let bgScaleX = 100, bgScaleY = 100; // independent background image stretch
 let bgFit = 'cover';           // 'cover'(채우기) | 'contain'(전체보기)
 let bgMode = 'move';           // 'move' | 'layer'  — which thing canvas drag affects
 
@@ -53,7 +54,7 @@ function makeSnap() {
   let bgImgUrl = currentBgDataUrl || null;
   if (!bgImgUrl && bgImg) { try { bgImgUrl = imgToDataUrl(bgImg); } catch(e) {} }
   return {
-    bgColor, bgOffX, bgOffY, bgScale, bgFit, currentFilter, bgImgUrl,
+    bgColor, bgOffX, bgOffY, bgScale, bgScaleX, bgScaleY, bgFit, currentFilter, bgImgUrl,
     outputW, outputH,
     _bright, _contrast, _sat, _bgOp, _bgBlur,
     _fBright, _fCont, _fSat, _fTemp, _vig, _grain,
@@ -75,6 +76,8 @@ function applySnap(snap) {
     bgOffX = snap.bgOffX || 0;
     bgOffY = snap.bgOffY || 0;
     bgScale = snap.bgScale || 100;
+    bgScaleX = snap.bgScaleX || 100;
+    bgScaleY = snap.bgScaleY || 100;
     bgFit = snap.bgFit || 'cover';
     // ✅ outputW/H 복원
     if (snap.outputW && snap.outputH) {
@@ -85,6 +88,8 @@ function applySnap(snap) {
     }
     // ✅ 슬라이더 UI 동기화
     if ($('slBgScale')) { $('slBgScale').value = bgScale; $('vBgScale').textContent = bgScale + '%'; }
+    if ($('slBgScaleX')) { $('slBgScaleX').value = bgScaleX; $('vBgScaleX').textContent = bgScaleX + '%'; }
+    if ($('slBgScaleY')) { $('slBgScaleY').value = bgScaleY; $('vBgScaleY').textContent = bgScaleY + '%'; }
     if ($('slBgX'))     { const sx = Math.round(bgOffX*100); $('slBgX').value = sx; $('vBgX').textContent = sx; }
     if ($('slBgY'))     { const sy = Math.round(bgOffY*100); $('slBgY').value = sy; $('vBgY').textContent = sy; }
     if (snap.currentFilter !== undefined) currentFilter = snap.currentFilter;
@@ -110,6 +115,8 @@ function applySnap(snap) {
         if (props) props.style.display = bgImg ? 'block' : 'none';
         // ✅ 슬라이더 UI 재동기화 (비동기 로드 후)
         if ($('slBgScale')) { $('slBgScale').value = bgScale; $('vBgScale').textContent = bgScale + '%'; }
+        if ($('slBgScaleX')) { $('slBgScaleX').value = bgScaleX; $('vBgScaleX').textContent = bgScaleX + '%'; }
+        if ($('slBgScaleY')) { $('slBgScaleY').value = bgScaleY; $('vBgScaleY').textContent = bgScaleY + '%'; }
         if ($('slBgX'))     { const sx = Math.round(bgOffX*100); $('slBgX').value = sx; $('vBgX').textContent = sx; }
         if ($('slBgY'))     { const sy = Math.round(bgOffY*100); $('slBgY').value = sy; $('vBgY').textContent = sy; }
         initCanvas(); refreshLayerList(); renderProps(); render();
@@ -121,6 +128,8 @@ function applySnap(snap) {
       const props = $('bgOverlayProps');
       if (props) props.style.display = 'none';
       if ($('slBgScale')) { $('slBgScale').value = bgScale; $('vBgScale').textContent = bgScale + '%'; }
+      if ($('slBgScaleX')) { $('slBgScaleX').value = bgScaleX; $('vBgScaleX').textContent = bgScaleX + '%'; }
+      if ($('slBgScaleY')) { $('slBgScaleY').value = bgScaleY; $('vBgScaleY').textContent = bgScaleY + '%'; }
       if ($('slBgX'))     { const sx = Math.round(bgOffX*100); $('slBgX').value = sx; $('vBgX').textContent = sx; }
       if ($('slBgY'))     { const sy = Math.round(bgOffY*100); $('slBgY').value = sy; $('vBgY').textContent = sy; }
       initCanvas(); refreshLayerList(); renderProps(); render();
