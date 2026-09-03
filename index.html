@@ -206,6 +206,7 @@ header{
 }
 .ptabs{display:flex;background:var(--cream);border-bottom:1px solid var(--border);flex-shrink:0}
 .ptabs{display:flex;background:var(--ink);flex-shrink:0}
+.panel-grip{display:none}
 .ptab{
   flex:1;padding:11px 4px;text-align:center;font-size:13px;
   color:rgba(255,255,255,.5);cursor:pointer;border-bottom:2px solid transparent;
@@ -614,18 +615,46 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
   /* ⚠ 캔버스존 max(55vh) + 패널 min(45vh) = 100vh — 합이 넘으면 캔버스가 잘림
      overflow:auto + justify-content:flex-start 로 상단 잘림 방지 */
   .canvas-zone{
-    flex:0 0 auto;min-height:180px;
+    flex:1 1 auto;min-height:120px;
     overflow:auto;-webkit-overflow-scrolling:touch;
     padding:6px 8px 4px;gap:4px;
     justify-content:flex-start;align-items:center;
   }
+
+  /* ═══ 하단 패널 드래그 (카톡 사진 선택창 방식) ═══ */
+  .panel{
+    flex:0 0 auto;
+    height:var(--panel-h,52dvh);
+    min-height:24px;
+    border-left:none;
+    border-top:1px solid var(--border);
+    border-radius:16px 16px 0 0;
+    box-shadow:0 -4px 20px rgba(0,0,0,.10);
+    transition:height .22s cubic-bezier(.32,.72,0,1);
+    position:relative;
+    display:flex;flex-direction:column;overflow:hidden;
+  }
+  .panel.dragging{transition:none}
+  /* 드래그 손잡이 */
+  .panel-grip{
+    display:flex;align-items:center;justify-content:center;
+    height:24px;flex-shrink:0;cursor:grab;
+    touch-action:none;
+    background:var(--parchment);
+    border-radius:16px 16px 0 0;
+  }
+  .panel-grip::before{
+    content:'';width:44px;height:5px;border-radius:3px;
+    background:var(--border);transition:background .15s;
+  }
+  .panel-grip:active::before{background:var(--gold)}
+  .panel-grip.dragging::before{background:var(--gold);width:56px}
   .canvas-shell{max-width:calc(100vw - 16px);overflow:hidden;margin-top:auto;margin-bottom:auto}
   .canvas-ctrl-bar{max-width:calc(100vw - 16px);padding:0 2px}
   .size-bar{gap:4px;max-width:calc(100vw - 16px);overflow-x:auto}
   .size-chip{font-size:10px;padding:5px 9px;white-space:nowrap;flex-shrink:0}
   .zoom-bar{display:none} /* 모바일 줌버튼 숨김 */
-  .panel{flex:1;border-left:none;border-top:1px solid var(--border);min-height:45vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
-  .pcontent{overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .pcontent{overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;min-height:0}
   .pane{padding-bottom:calc(14px + env(safe-area-inset-bottom,20px) + 80px)}
   .logo-ver{display:none}
   .fmt-row{flex-wrap:wrap}
@@ -643,9 +672,26 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
 /* 적용/취소 버튼은 항상 보이도록 하단 고정 */
 .csz-btns{position:sticky;bottom:-20px;background:var(--parchment);padding:10px 0 0;margin-top:4px;box-shadow:0 -8px 12px -6px rgba(0,0,0,.12)}
 @media(max-width:680px){
-  #customSizeBox{padding:16px 14px}
-  #customSizeBox h3{margin-bottom:10px}
+  /* 모바일: 중앙 모달 → 바텀시트 (키보드/화면높이와 충돌하지 않음) */
+  #customSizeModal{align-items:flex-end;padding:0;overflow:hidden}
+  #customSizeBox{
+    width:100%;max-width:100%;margin:0;
+    border-radius:20px 20px 0 0;
+    padding:8px 16px 20px;
+    max-height:86vh;max-height:86dvh;
+    overflow-y:auto;-webkit-overflow-scrolling:touch;
+    animation:cszUp .22s ease-out;
+  }
+  #customSizeBox h3{margin:6px 0 12px}
+  /* 드래그 핸들 */
+  #customSizeBox::before{
+    content:'';display:block;width:40px;height:4px;border-radius:2px;
+    background:var(--border);margin:0 auto 6px;
+  }
+  .csz-btns{bottom:-20px;padding:12px 0 0}
+  .csz-btn-ok,.csz-btn-cancel{padding:13px !important;font-size:14px !important}
 }
+@keyframes cszUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 #customSizeBox h3{margin:0 0 14px;font-size:15px;color:var(--ink);letter-spacing:.04em;text-align:center}
 .csz-unit-row{display:flex;gap:6px;margin-bottom:10px;justify-content:center}
 .csz-unit-btn{padding:5px 14px;border-radius:7px;border:1.5px solid var(--border);font-size:12px;cursor:pointer;color:var(--ink2);background:var(--bg);font-family:'Gowun Dodum',serif;transition:all .12s}
@@ -1065,7 +1111,9 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
       © 2025 Congsim. All rights reserved.
     </div>
   </div>
-  <div class="panel">
+  <div class="panel" id="sidePanel">
+    <!-- 모바일 바텀시트 드래그 손잡이 -->
+    <div class="panel-grip" id="panelGrip" title="위아래로 끌어 크기 조절"></div>
     <!-- ⑦ 3단계 표시바 -->
     <div class="ptabs">
       <div class="ptab active" id="ptab-bg" onclick="switchTab('bg',this)">① 배경사진</div>

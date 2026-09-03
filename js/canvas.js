@@ -48,9 +48,18 @@ function initCanvas() {
   if (isMobile) {
     const zone = $('canvasZone');
     const availW = zone.clientWidth - 16;
-    // 화면 높이에서 헤더/탭/사이즈바 등 UI 빼고 남은 공간 계산
-    const uiHeight = 200; // 헤더+탭+사이즈바+여백 대략적 높이
-    const maxAvailH = Math.min(window.innerHeight * 0.55, window.innerHeight - uiHeight);
+    // ── 남은 공간 실측 ──
+    // 바텀시트(패널) 높이가 드래그로 변하므로 고정값 대신 실제 높이를 잰다.
+    // 패널을 내리면 그만큼 캔버스가 커진다.
+    let uiHeight = 200;
+    try {
+      const h = (sel) => { const el = typeof sel==='string' ? document.querySelector(sel) : sel;
+                           return el ? el.getBoundingClientRect().height : 0; };
+      const measured = h('.hdr') + h('#sidePanel') + h('.size-bar') + h('.canvas-ctrl-bar') + 30;
+      if (measured > 80) uiHeight = measured;
+    } catch(e) {}
+    const winH = (window.visualViewport ? window.visualViewport.height : window.innerHeight);
+    const maxAvailH = Math.max(120, winH - uiHeight);
     // 가로 기준 계산
     dW = availW;
     dH = Math.round(dW * aspect);

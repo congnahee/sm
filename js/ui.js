@@ -1564,3 +1564,120 @@ window.addEventListener('load', ()=>{
   applyVH();
   onResize();
 })();
+
+/* ═══════════════════════════════════════
+   모바일 바텀시트 — 하단 패널 드래그로 높이 조절
+   (카톡 사진 선택창 / iOS 시트 방식)
+   ─ 3단계 스냅: 최대(82%) / 기본(52%) / 최소(그립만)
+   ─ 패널을 내리면 캔버스가 그만큼 커져 전체를 볼 수 있다
+═══════════════════════════════════════ */
+(function(){
+  const GRIP_H = 24;          // 손잡이 높이(px) — 최소 단계에서 남는 높이
+  let sheetH = null;          // 현재 시트 높이(px)
+  let startY = 0, startH = 0, dragging = false, moved = false;
+
+  const isMobile = () => window.matchMedia('(max-width:680px)').matches;
+  const vh = () => (window.visualViewport ? window.visualViewport.height : window.innerHeight);
+
+  // 스냅 지점 (px)
+  function snaps() {
+    const H = vh();
+    return [
+      GRIP_H,                       // 최소 — 캔버스 최대
+      Math.round(H * 0.52),         // 기본
+      Math.round(H * 0.82),         // 최대 — 패널 넓게
+    ];
+  }
+
+  function applyH(px, animate) {
+    const H = vh();
+    const clamped = Math.max(GRIP_H, Math.min(px, Math.round(H * 0.86)));
+    sheetH = clamped;
+    const panel = $('sidePanel');
+    if (!panel) return;
+    if (animate) panel.classList.remove('dragging');
+    else panel.classList.add('dragging');
+    document.documentElement.style.setProperty('--panel-h', clamped + 'px');
+    // 캔버스는 남은 공간에 맞춰 다시 계산
+    try { if (typeof initCanvas === 'function') initCanvas(); } catch(e) {}
+  }
+
+  function nearestSnap(px) {
+    return snaps().reduce((a, b) => Math.abs(b - px) < Math.abs(a - px) ? b : a);
+  }
+
+  /* 탭을 누르면 시트가 접혀 있어도 펼쳐준다 */
+  function ensureOpen() {
+    if (!isMobile()) return;
+    const s = snaps();
+    if (sheetH !== null && sheetH < s[1] * 0.6) applyH(s[1], true);
+  }
+
+  function onStart(e) {
+    if (!isMobile()) return;
+    const panel = $('sidePanel'); if (!panel) return;
+    dragging = true; moved = false;
+    startY = (e.touches ? e.touches[0].clientY : e.clientY);
+    startH = panel.getBoundingClientRect().height;
+    $('panelGrip').classList.add('dragging');
+    if (e.cancelable) e.preventDefault();
+  }
+
+  function onMove(e) {
+    if (!dragging) return;
+    const y = (e.touches ? e.touches[0].clientY : e.clientY);
+    const dy = startY - y;               // 위로 끌면 +
+    if (Math.abs(dy) > 3) moved = true;
+    applyH(startH + dy, false);
+    if (e.cancelable) e.preventDefault();
+  }
+
+  function onEnd() {
+    if (!dragging) return;
+    dragging = false;
+    const grip = $('panelGrip');
+    if (grip) grip.classList.remove('dragging');
+    const panel = $('sidePanel'); if (!panel) return;
+    const cur = panel.getBoundingClientRect().height;
+
+    if (!moved) {
+      // 탭(제자리 클릭) → 기본 ↔ 최소 토글
+      const s = snaps();
+      applyH(cur <= GRIP_H + 20 ? s[1] : GRIP_H, true);
+    } else {
+      applyH(nearestSnap(cur), true);
+    }
+  }
+
+  function init() {
+    const grip = $('panelGrip');
+    if (!grip) return;
+    grip.addEventListener('touchstart', onStart, { passive:false });
+    grip.addEventListener('mousedown',  onStart);
+    window.addEventListener('touchmove', onMove, { passive:false });
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('touchend',  onEnd);
+    window.addEventListener('touchcancel', onEnd);
+    window.addEventListener('mouseup',   onEnd);
+
+    // 탭 클릭 시 접힌 시트 펼침
+    document.querySelectorAll('.ptab').forEach(t => t.addEventListener('click', ensureOpen));
+
+    // 초기 높이 / 화면 회전·리사이즈 대응
+    const setDefault = () => {
+      if (!isMobile()) {
+        document.documentElement.style.removeProperty('--panel-h');
+        sheetH = null;
+        return;
+      }
+      applyH(sheetH === null ? snaps()[1] : nearestSnap(sheetH), true);
+    };
+    setDefault();
+    window.addEventListener('orientationchange', () => setTimeout(setDefault, 250));
+    let rt = null;
+    window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(setDefault, 160); });
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
