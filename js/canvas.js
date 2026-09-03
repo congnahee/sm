@@ -40,6 +40,9 @@ function zoomCanvas(dir) {
 }
 
 function initCanvas() {
+  // Preserve each layer's size relative to the displayed canvas when responsive
+  // layout or the mobile bottom sheet changes the canvas width.
+  const previousDisplayW = mc && mc.width ? mc.width : 0;
   computeDisp();
   const aspect = outputH / outputW;
   const isMobile = window.innerWidth <= 680;
@@ -59,7 +62,13 @@ function initCanvas() {
       if (measured > 80) uiHeight = measured;
     } catch(e) {}
     const winH = (window.visualViewport ? window.visualViewport.height : window.innerHeight);
-    const maxAvailH = Math.max(120, winH - uiHeight);
+    const windowAvailH = Math.max(80, winH - uiHeight);
+    // The flex container already represents the space above the bottom sheet.
+    // Reserve room for its bars/padding so the canvas never extends underneath it.
+    const zoneChrome = (($('sizeBar') && $('sizeBar').getBoundingClientRect().height) || 0)
+      + (($('canvasCtrlBar') && $('canvasCtrlBar').getBoundingClientRect().height) || 0) + 28;
+    const zoneAvailH = Math.max(80, zone.clientHeight - zoneChrome);
+    const maxAvailH = Math.min(windowAvailH, zoneAvailH);
     // 가로 기준 계산
     dW = availW;
     dH = Math.round(dW * aspect);
@@ -75,11 +84,24 @@ function initCanvas() {
     }
     dW = Math.max(80, dW);
     dH = Math.max(80, dH);
-    // canvas-zone 높이를 캔버스에 맞게 동적 조절
-    zone.style.height = (dH + 60) + 'px';
+    // Let flexbox own the available height. An inline height leaves the canvas
+    // underneath the panel when the bottom sheet opens again.
+    zone.style.height = '';
   } else {
     dW = Math.round(DISP);
     dH = Math.round(DISP * aspect);
+  }
+
+  if (previousDisplayW > 0 && dW > 0 && previousDisplayW !== dW && layers.length) {
+    const displayRatio = dW / previousDisplayW;
+    layers.forEach(l => {
+      if (Number.isFinite(l.size)) l.size *= displayRatio;
+    });
+    const sizeInput = $('pe_size');
+    const sizeValue = $('pe_vsize');
+    const selected = layers.find(l => l.id === selId);
+    if (selected && sizeInput) sizeInput.value = selected.size;
+    if (selected && sizeValue) sizeValue.textContent = Math.round(selected.size * 10) / 10;
   }
 
   mc.width = dW; mc.height = dH;
@@ -201,6 +223,7 @@ function openCustomSize() {
   const lock = $('cszLock');
   if (lock) lock.checked = false;
   modal.classList.add('show');
+  document.body.classList.add('custom-size-open');
   // px 기본 → DPI 행 숨김
   const dpiRow = $('cszDpiRow');
   if (dpiRow) dpiRow.style.display = 'none';
@@ -213,6 +236,7 @@ function openCustomSize() {
 function closeCustomSize() {
   const modal = $('customSizeModal');
   if (modal) modal.classList.remove('show');
+  document.body.classList.remove('custom-size-open');
   // ⚠ 입력창 포커스로 생긴 키보드 상태가 남으면 캔버스 영역이 계속 축소된 채
   //   유지되어 배경 조절이 막힌 것처럼 보인다 → 명시적으로 해제
   try {
@@ -332,7 +356,7 @@ function cropCanvas() {
           bgImg = img;
           currentBgDataUrl = dataUrl;
           activeBgPhotoId = id;
-          bgOffX = 0; bgOffY = 0; bgScale = 100;
+          bgOffX = 0; bgOffY = 0; bgScale = 100; bgScaleX = 100; bgScaleY = 100;
           layers = []; selId = null;
           refreshLayerList(); renderProps();
           renderBgPhotoGallery();
@@ -367,7 +391,7 @@ function cropBg() {
   tctx.fillRect(0, 0, outputW, outputH);
   const baseSc = Math.max(outputW / bgImg.width, outputH / bgImg.height);
   const sc2 = baseSc * (bgScale / 100);
-  const bW = bgImg.width * sc2, bH = bgImg.height * sc2;
+  const bW = bgImg.width * sc2 * (bgScaleX / 100), bH = bgImg.height * sc2 * (bgScaleY / 100);
   const ox = bgOffX * outputW, oy = bgOffY * outputH;
   tctx.drawImage(bgImg, (outputW - bW) / 2 + ox, (outputH - bH) / 2 + oy, bW, bH);
   const dataUrl = tmp.toDataURL('image/png');
@@ -379,8 +403,10 @@ function cropBg() {
     bgImg = img;
     currentBgDataUrl = dataUrl;
     activeBgPhotoId = id;
-    bgOffX = 0; bgOffY = 0; bgScale = 100;
+    bgOffX = 0; bgOffY = 0; bgScale = 100; bgScaleX = 100; bgScaleY = 100;
     if ($('slBgScale')) { $('slBgScale').value=100; $('vBgScale').textContent='100%'; }
+    if ($('slBgScaleX')) { $('slBgScaleX').value=100; $('vBgScaleX').textContent='100%'; }
+    if ($('slBgScaleY')) { $('slBgScaleY').value=100; $('vBgScaleY').textContent='100%'; }
     if ($('slBgX'))     { $('slBgX').value=0;       $('vBgX').textContent='0'; }
     if ($('slBgY'))     { $('slBgY').value=0;       $('vBgY').textContent='0'; }
     // 레이어는 유지
@@ -554,6 +580,7 @@ window.addEventListener('resize', initCanvas);
     startW = outputW;
     startH = outputH;
     startRatio = outputH / outputW;
+    saveHistory();
   }
 
   function onResizeMove(e) {
@@ -567,18 +594,18 @@ window.addEventListener('resize', initCanvas);
     const dispScale = mc.clientWidth / startW;
 
     let newW = startW, newH = startH;
-    if (resizeCorner === 'br') {
-      newW = clamp(Math.round(startW + dx / dispScale), MIN_SIZE, MAX_SIZE);
-      newH = clamp(Math.round(startH + dy / dispScale), MIN_SIZE, MAX_SIZE);
-    } else if (resizeCorner === 'bl') {
-      newW = clamp(Math.round(startW - dx / dispScale), MIN_SIZE, MAX_SIZE);
-      newH = clamp(Math.round(startH + dy / dispScale), MIN_SIZE, MAX_SIZE);
-    } else if (resizeCorner === 'tr') {
-      newW = clamp(Math.round(startW + dx / dispScale), MIN_SIZE, MAX_SIZE);
-      newH = clamp(Math.round(startH - dy / dispScale), MIN_SIZE, MAX_SIZE);
-    } else if (resizeCorner === 'tl') {
-      newW = clamp(Math.round(startW - dx / dispScale), MIN_SIZE, MAX_SIZE);
-      newH = clamp(Math.round(startH - dy / dispScale), MIN_SIZE, MAX_SIZE);
+    const sx = resizeCorner.includes('l') ? -1 : resizeCorner.includes('r') ? 1 : 0;
+    const sy = resizeCorner.includes('t') ? -1 : resizeCorner.includes('b') ? 1 : 0;
+
+    if (sx) newW = clamp(Math.round(startW + sx * dx / dispScale), MIN_SIZE, MAX_SIZE);
+    if (sy) newH = clamp(Math.round(startH + sy * dy / dispScale), MIN_SIZE, MAX_SIZE);
+
+    // Corners resize both axes while keeping the current aspect ratio.
+    if (sx && sy) {
+      const widthDelta = Math.abs(newW - startW) / startW;
+      const heightDelta = Math.abs(newH - startH) / startH;
+      if (widthDelta >= heightDelta) newH = clamp(Math.round(newW * startRatio), MIN_SIZE, MAX_SIZE);
+      else newW = clamp(Math.round(newH / startRatio), MIN_SIZE, MAX_SIZE);
     }
 
     outputW = newW; outputH = newH;
@@ -593,12 +620,11 @@ window.addEventListener('resize', initCanvas);
   function onResizeEnd() {
     if (!resizing) return;
     resizing = false;
-    saveHistory();
     showToast(`캔버스 ${outputW}×${outputH}px`);
   }
 
   window.addEventListener('load', () => {
-    ['tl','tr','bl','br'].forEach(corner => {
+    ['tl','tc','tr','ml','mr','bl','bc','br'].forEach(corner => {
       const el = $('rh-' + corner);
       if (!el) return;
       el.addEventListener('mousedown',  e => onResizeStart(e, corner));

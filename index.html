@@ -133,6 +133,7 @@ header{
 }
 .canvas-shell{
   margin-top:auto;margin-bottom:auto;
+  flex-shrink:0;
   position:relative;
   box-shadow:0 8px 48px rgba(28,15,6,.22),0 2px 12px rgba(28,15,6,.12);
   border-radius:3px;overflow:hidden;cursor:move;
@@ -147,6 +148,10 @@ header{
 .canvas-resize-handle.tr{top:-6px;right:-6px;cursor:nesw-resize;}
 .canvas-resize-handle.bl{bottom:-6px;left:-6px;cursor:nesw-resize;}
 .canvas-resize-handle.br{bottom:-6px;right:-6px;cursor:nwse-resize;}
+.canvas-resize-handle.tc{top:-6px;left:calc(50% - 8px);cursor:ns-resize;}
+.canvas-resize-handle.bc{bottom:-6px;left:calc(50% - 8px);cursor:ns-resize;}
+.canvas-resize-handle.ml{left:-6px;top:calc(50% - 8px);cursor:ew-resize;}
+.canvas-resize-handle.mr{right:-6px;top:calc(50% - 8px);cursor:ew-resize;}
 #mainCanvas{display:block;touch-action:none}
 @media(max-width:680px){
   /* ⚠ 캔버스 크기는 initCanvas() 가 outputW:outputH 비율에 맞춰 직접 계산한다.
@@ -654,6 +659,7 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
   .size-bar{gap:4px;max-width:calc(100vw - 16px);overflow-x:auto}
   .size-chip{font-size:10px;padding:5px 9px;white-space:nowrap;flex-shrink:0}
   .zoom-bar{display:none} /* 모바일 줌버튼 숨김 */
+  body.custom-size-open #sidePanel{visibility:hidden;pointer-events:none}
   .pcontent{overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;min-height:0}
   .pane{padding-bottom:calc(14px + env(safe-area-inset-bottom,20px) + 80px)}
   .logo-ver{display:none}
@@ -990,6 +996,9 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
       </div>
 
       <div class="canvas-resize-handle tl" id="rh-tl"></div>
+      <div class="canvas-resize-handle tc" id="rh-tc"></div>
+      <div class="canvas-resize-handle ml" id="rh-ml"></div>
+      <div class="canvas-resize-handle mr" id="rh-mr"></div>
       <!-- 크롭 오버레이 -->
       <div id="cropOverlay" style="display:none;position:absolute;inset:0;z-index:30;">
         <!-- 4방향 어두운 영역 -->
@@ -1024,6 +1033,7 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
       </div>
       <div class="canvas-resize-handle tr" id="rh-tr"></div>
       <div class="canvas-resize-handle bl" id="rh-bl"></div>
+      <div class="canvas-resize-handle bc" id="rh-bc"></div>
       <div class="canvas-resize-handle br" id="rh-br"></div>
       <div id="sizeLabel" style="position:absolute;bottom:5px;right:6px;font-size:10px;color:rgba(255,255,255,.85);background:rgba(0,0,0,.38);padding:2px 7px;border-radius:5px;letter-spacing:.03em;pointer-events:none;z-index:10;white-space:nowrap">5,000 × 5,000 px</div>
       <div class="canvas-hint" id="canvasHint">
@@ -1370,6 +1380,8 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
               <div id="bgVisToggle" onclick="toggleBgVisible()" style="cursor:pointer;padding:2px 6px;border-radius:6px;border:1.5px solid var(--border);background:var(--parchment)" title="배경사진 숨기기/보이기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
             </div>
             <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">배경 크기</span><span class="ctrl-v" id="vBgScale">100%</span></div><input type="range" id="slBgScale" min="10" max="400" value="100" oninput="setBgScale(this)" onchange="saveHistory()" ontouchend="this.oninput({target:this})"></div>
+            <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">배경 가로 크기</span><span class="ctrl-v" id="vBgScaleX">100%</span></div><input type="range" id="slBgScaleX" min="10" max="400" value="100" onpointerdown="saveHistory()" oninput="setBgScaleX(this)" ontouchend="this.oninput({target:this})"></div>
+            <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">배경 세로 크기</span><span class="ctrl-v" id="vBgScaleY">100%</span></div><input type="range" id="slBgScaleY" min="10" max="400" value="100" onpointerdown="saveHistory()" oninput="setBgScaleY(this)" ontouchend="this.oninput({target:this})"></div>
             <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">좌우 위치</span><span class="ctrl-v" id="vBgX">0</span></div><input type="range" id="slBgX" min="-200" max="200" value="0" oninput="setBgX(this)" onchange="saveHistory()" ontouchend="this.oninput({target:this})"></div>
             <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">상하 위치</span><span class="ctrl-v" id="vBgY">0</span></div><input type="range" id="slBgY" min="-200" max="200" value="0" oninput="setBgY(this)" onchange="saveHistory()" ontouchend="this.oninput({target:this})"></div>
             <div class="slabel" style="margin-top:6px">배경 맞춤</div>

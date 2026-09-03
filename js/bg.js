@@ -45,7 +45,7 @@ function applyBgPhoto(photo) {
   currentBgDataUrl = photo.dataUrl;
   activeBgPhotoId = photo.id;
   bgHidden = false;
-  bgOffX = 0; bgOffY = 0; bgScale = 100;
+  bgOffX = 0; bgOffY = 0; bgScale = 100; bgScaleX = 100; bgScaleY = 100;
   bgFit = 'cover';
   if (typeof _syncBgFitBtns === 'function') _syncBgFitBtns('cover');
   // 필터/조정값 초기화
@@ -65,6 +65,8 @@ function applyBgPhoto(photo) {
   if ($('slGrain'))    { $('slGrain').value=0;      $('vGrain').textContent='0'; }
   if ($('slGrain2'))   { $('slGrain2').value=0;     $('vGrain2').textContent='0'; }
   if ($('slBgScale'))  { $('slBgScale').value=100;  $('vBgScale').textContent='100%'; }
+  if ($('slBgScaleX')) { $('slBgScaleX').value=100; $('vBgScaleX').textContent='100%'; }
+  if ($('slBgScaleY')) { $('slBgScaleY').value=100; $('vBgScaleY').textContent='100%'; }
   if ($('slBgX'))      { $('slBgX').value=0;        $('vBgX').textContent='0'; }
   if ($('slBgY'))      { $('slBgY').value=0;        $('vBgY').textContent='0'; }
   // 눈 아이콘 초기화
@@ -383,7 +385,7 @@ function setBgFit(mode, el) {
 
     outputW = w; outputH = h; saveW = w; saveH = h;
     bgFit = 'cover';
-    bgOffX = 0; bgOffY = 0; bgScale = 100;
+    bgOffX = 0; bgOffY = 0; bgScale = 100; bgScaleX = 100; bgScaleY = 100;
 
     // 사이즈칩 active 갱신
     document.querySelectorAll('.size-chip').forEach(c => c.classList.remove('active'));
@@ -403,7 +405,7 @@ function setBgFit(mode, el) {
 
   // ── cover / contain ──
   bgFit = mode;
-  bgOffX = 0; bgOffY = 0; bgScale = 100;
+  bgOffX = 0; bgOffY = 0; bgScale = 100; bgScaleX = 100; bgScaleY = 100;
   _syncBgFitBtns(mode);
   _syncBgSliders();
   render();
@@ -412,6 +414,8 @@ function setBgFit(mode, el) {
 
 function _syncBgSliders() {
   if ($('slBgScale')) { $('slBgScale').value = bgScale; $('vBgScale').textContent = bgScale + '%'; }
+  if ($('slBgScaleX')) { $('slBgScaleX').value = bgScaleX; $('vBgScaleX').textContent = bgScaleX + '%'; }
+  if ($('slBgScaleY')) { $('slBgScaleY').value = bgScaleY; $('vBgScaleY').textContent = bgScaleY + '%'; }
   if ($('slBgX'))     { $('slBgX').value = 0; $('vBgX').textContent = '0'; }
   if ($('slBgY'))     { $('slBgY').value = 0; $('vBgY').textContent = '0'; }
 }
