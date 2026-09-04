@@ -278,4 +278,373 @@ function buildFilterThumbs(gridId) {
   grid.innerHTML = '';
 
   // gridId에 따라 썸네일 소스 결정
-  // 
+  // filterThumbGrid → 배경사진 기준
+  // filterThumbGrid2 → 선택된 캘리 레이어 기준
+  const isLayerGrid = gridId === 'filterThumbGrid2';
+  let thumbSrc = null; // Image or canvas to use as thumb source
+
+  // 현재 활성 필터 기준 — 레이어 그리드는 선택된 레이어의 filter 를 따른다
+  let activeId = 'none';
+  if (isLayerGrid) {
+    const sl = layers.find(x => x.id === selId);
+    activeId = (sl && sl.filter) ? sl.filter : 'none';
+    // 썸네일 소스: 선택 레이어(캘리) → 없으면 첫 캘리
+    const cl = (sl && sl.type === 'calli') ? sl : layers.find(x => x.type === 'calli');
+    if (cl && calliCache[cl.id]) thumbSrc = calliCache[cl.id].offscreen;
+  } else {
+    activeId = currentFilter;
+    thumbSrc = bgImg;
+  }
+
+  FILTER_LIST.forEach(f => {
+    const div = document.createElement('div');
+    div.className = 'fthumb' + (activeId === f.id ? ' active' : '');
+    div.dataset.filter = f.id;
+    div.onclick = () => (isLayerGrid ? setLayerFilter(f.id, div) : setFilter(f.id, div));
+
+    const cv2 = document.createElement('canvas');
+    cv2.width = 120; cv2.height = 70;
+    const ctx2 = cv2.getContext('2d', {willReadFrequently: true});
+
+    if (thumbSrc) {
+      const sc2 = Math.max(120/thumbSrc.width, 70/thumbSrc.height);
+      const dw = thumbSrc.width*sc2, dh = thumbSrc.height*sc2;
+      ctx2.filter = FILTERS[f.id] || 'none';
+      ctx2.drawImage(thumbSrc, (120-dw)/2, (70-dh)/2, dw, dh);
+      ctx2.filter = 'none';
+    } else {
+      // 소스 없을 때 색상 데모
+      const DEMO = {
+        none:'#F0EBE0', soft:'#e8e0d8', clean:'#f2efe8', vivid:'#f08030', bw:'#888',
+        warm:'#f5c87a', autumn:'#d9a441', champagne:'#ecd9a8', honey:'#e0a83c', sepia:'#c8a96e',
+        cool:'#a0bfdc', moonlight:'#8fa8c4', mist:'#dfe4e6', frost:'#cfd8dc', dawn:'#a9b0ba',
+        fade:'#ddd8cc', matte:'#bcb8b0', faint:'#e3dcd0', cotton:'#f0cfd6', romantic:'#eec4bb',
+        vintage:'#b5926e', film:'#a89578', dramatic:'#444', cinematic:'#3a3a4a', elegant:'#9c9890'
+      };
+      ctx2.fillStyle = DEMO[f.id] || '#eee';
+      ctx2.fillRect(0,0,120,70);
+      ctx2.fillStyle = 'rgba(0,0,0,0.18)';
+      ctx2.font = 'bold 13px sans-serif'; ctx2.textAlign = 'center'; ctx2.textBaseline = 'middle';
+      ctx2.fillText(isLayerGrid ? '레이어' : '가나다', 60, 35);
+    }
+
+    const lbl = document.createElement('div');
+    lbl.className = 'fthumb-lbl';
+    lbl.textContent = f.lbl;
+    div.appendChild(cv2);
+    div.appendChild(lbl);
+    grid.appendChild(div);
+  });
+}
+
+/* ════════════════════════════════════
+   LAYER TINT (캘리 레이어 색상)
+════════════════════════════════════ */
+function setLayerTint(color, el) {
+  const l = layers.find(x => x.id === selId);
+  if (!l || l.type !== 'calli') { showToast('캘리 레이어를 선택하세요'); return; }
+
+  // ⚠ 색 변경 전 원본 데이터 보존 — 참조가 끊기면 레이어가 사라짐
+  try {
+    if (!l.srcDataUrl && !l.srcImg) _restoreSrcFromCache(l);
+  } catch(e) {}
+  const _cacheBefore = calliCache[l.id];
+
+  l.tintColor = (!color || color === 'null' || color === 'undefined') ? null : String(color);
+
+  // 캐시가 유실됐으면 즉시 되살림
+  if (!calliCache[l.id] && _cacheBefore) calliCache[l.id] = _cacheBefore;
+  // dot active 상태
+  document.querySelectorAll('.tint-dot').forEach(d => d.classList.remove('active'));
+  if (el) el.classList.add('active');
+  render(); saveHistory();
+  try { syncTintOrigDot(); } catch(e) {}
+  showToast(color && color !== 'null' ? `색상 적용: ${color}` : '원본 색상으로 복원');
+}
+
+/* ═══════════════════════════════════════
+   배경 맞춤 (채우기 / 전체보기 / 비율맞춤)
+═══════════════════════════════════════ */
+function _syncBgFitBtns(mode) {
+  ['bgfitCover','bgfitContain','bgfitCanvas'].forEach(id => {
+    const el = $(id); if (el) el.classList.remove('active');
+  });
+  const map = { cover:'bgfitCover', contain:'bgfitContain', canvas:'bgfitCanvas' };
+  const on = $(map[mode]); if (on) on.classList.add('active');
+}
+
+function setBgFit(mode, el) {
+  if (!bgImg) { showToast('배경사진을 먼저 넣어주세요'); return; }
+  saveHistory();
+
+  if (mode === 'canvas') {
+    // ── 캔버스 비율을 사진에 맞춤 ──
+    const ratio = bgImg.width / bgImg.height;
+    const LONG = Math.max(outputW, outputH) || 5000;
+    let w, h;
+    if (ratio >= 1) { w = LONG; h = Math.round(LONG / ratio); }
+    else            { h = LONG; w = Math.round(LONG * ratio); }
+    w = Math.max(100, Math.min(10000, w));
+    h = Math.max(100, Math.min(10000, h));
+
+    outputW = w; outputH = h; saveW = w; saveH = h;
+    bgFit = 'cover';
+    bgOffX = 0; bgOffY = 0; bgScale = 100; bgScaleX = 100; bgScaleY = 100;
+
+    // 사이즈칩 active 갱신
+    document.querySelectorAll('.size-chip').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.size-chip[data-w]').forEach(c => {
+      if (+c.dataset.w === w && +c.dataset.h === h) c.classList.add('active');
+    });
+    const lbl = $('sizeLabel');
+    if (lbl) lbl.textContent = w.toLocaleString() + ' × ' + h.toLocaleString() + ' px';
+
+    if (typeof initCanvas === 'function') initCanvas();
+    _syncBgFitBtns('cover');
+    _syncBgSliders();
+    render();
+    showToast('캔버스를 사진 비율로 ' + w.toLocaleString() + '×' + h.toLocaleString());
+    return;
+  }
+
+  // ── cover / contain ──
+  bgFit = mode;
+  bgOffX = 0; bgOffY = 0; bgScale = 100; bgScaleX = 100; bgScaleY = 100;
+  _syncBgFitBtns(mode);
+  _syncBgSliders();
+  render();
+  showToast(mode === 'contain' ? '사진 전체보기 ✓' : '캔버스 채우기 ✓');
+}
+
+function _syncBgSliders() {
+  if ($('slBgScale')) { $('slBgScale').value = bgScale; $('vBgScale').textContent = bgScale + '%'; }
+  if ($('slBgScaleX')) { $('slBgScaleX').value = bgScaleX; $('vBgScaleX').textContent = Math.round(bgScaleX) + '%'; }
+  if ($('slBgScaleY')) { $('slBgScaleY').value = bgScaleY; $('vBgScaleY').textContent = Math.round(bgScaleY) + '%'; }
+  if ($('slBgX'))     { $('slBgX').value = 0; $('vBgX').textContent = '0'; }
+  if ($('slBgY'))     { $('slBgY').value = 0; $('vBgY').textContent = '0'; }
+}
+
+/* ═══════════════════════════════════════
+   캘리 원본 대표색 추출 → 원본 점에 반영
+═══════════════════════════════════════ */
+const _origColorCache = {};   // layerId → '#rrggbb'
+
+function getCalliOriginColor(layerId) {
+  if (_origColorCache[layerId]) return _origColorCache[layerId];
+  const cache = calliCache[layerId];
+  if (!cache || !cache.offscreen) return null;
+
+  try {
+    const src = cache.offscreen;
+    if (!src.width || !src.height) return null;
+    // ⚠ 원본 offscreen 을 직접 getImageData 하면 렌더 성능모드가 바뀌어
+    //   이후 합성이 깨질 수 있음 → 반드시 별도 복사본에서만 읽는다
+    const SW = 60, SH = Math.max(1, Math.round(60 * src.height / src.width));
+    const tmp = document.createElement('canvas');
+    tmp.width = SW; tmp.height = SH;
+    const tc = tmp.getContext('2d', { willReadFrequently: true });
+    tc.drawImage(src, 0, 0, SW, SH);
+    const d = tc.getImageData(0, 0, SW, SH).data;
+
+    // ── 획 픽셀 추출 ──
+    // ⚠ 밝기만으로 거르면 파스텔(연두·하늘)이 흰색으로 오인돼 전부 제외됨
+    //    → '무채색에 가까운 밝은 픽셀'만 여백으로 보고, 채도가 있으면 살린다
+    const pick = (maxLum, minSat) => {
+      let r = 0, g = 0, b = 0, n = 0;
+      for (let i = 0; i < d.length; i += 4) {
+        if (d[i+3] < 120) continue;                // 투명 배경 제외
+        const R = d[i], G = d[i+1], B = d[i+2];
+        const mx = Math.max(R, G, B), mn = Math.min(R, G, B);
+        const sat = mx === 0 ? 0 : (mx - mn) / mx; // 채도 0~1
+        const lum = 0.299*R + 0.587*G + 0.114*B;
+        // 밝더라도 채도가 있으면 유채색 획으로 인정
+        if (lum > maxLum && sat < minSat) continue;
+        r += R; g += G; b += B; n++;
+      }
+      return n ? { r: r/n, g: g/n, b: b/n, n } : null;
+    };
+
+    // 1차: 표준 기준 → 2차: 더 관대하게 → 3차: 불투명 픽셀 전체
+    let avg = pick(235, 0.12) || pick(248, 0.05) || pick(255, 0);
+    if (!avg) return null;
+    const r = avg.r * avg.n, g = avg.g * avg.n, b = avg.b * avg.n, n = avg.n;
+
+    const hex = '#' + [r/n, g/n, b/n]
+      .map(v => Math.round(v).toString(16).padStart(2, '0')).join('');
+    _origColorCache[layerId] = hex;
+    return hex;
+  } catch(e) {
+    console.warn('getCalliOriginColor:', e.message);
+    return null;   // CORS 등
+  }
+}
+
+function syncTintOrigDot() {
+  const dot = $('tintOrigDot');
+  if (!dot) return;
+  const l = layers.find(x => x.id === selId);
+  if (!l || l.type !== 'calli') {
+    dot.style.background = '';
+    dot.classList.remove('has-color');
+    dot.title = '원본 색상으로 되돌리기';
+    return;
+  }
+  const hex = getCalliOriginColor(l.id);
+  if (hex) {
+    dot.style.background = hex;
+    dot.classList.add('has-color');
+    dot.title = '원본 색상 ' + hex.toUpperCase();
+  } else {
+    dot.style.background = '';
+    dot.classList.remove('has-color');
+    dot.title = '원본 색상으로 되돌리기';
+  }
+}
+
+/* 레이어 선택/속성 갱신 시 원본색 점 자동 동기화
+   ⚠ bg.js 는 layers.js 보다 먼저 로드되므로 DOMContentLoaded 후에 감싼다 */
+function _wrapTintSync() {
+  ['renderProps','processCalliLayer'].forEach(fn => {
+    const orig = window[fn];
+    if (typeof orig !== 'function' || orig._tintWrapped) return;
+    const wrapped = function() {
+      const r = orig.apply(this, arguments);
+      try { syncTintOrigDot(); } catch(e) {}
+      return r;
+    };
+    wrapped._tintWrapped = true;
+    window[fn] = wrapped;
+  });
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', _wrapTintSync);
+} else {
+  _wrapTintSync();
+}
+
+/* ═══════════════════════════════════════
+   캘리 레이어 자동 진단 & 복구
+   ─ 원인: 색상 변경 중 srcImg/srcDataUrl 참조가 끊기면
+           히스토리에 캘리가 안 담기고(calli=0) 복원 시 사라짐
+   ─ 대응: calliCache.offscreen 이 살아있으면 그걸로 원본을 되살린다
+═══════════════════════════════════════ */
+function _restoreSrcFromCache(l) {
+  const cache = calliCache[l.id];
+  if (!cache || !cache.offscreen) return false;
+  if (!cache.offscreen.width || !cache.offscreen.height) return false;
+  try {
+    // 캐시(배경제거 완료본)를 dataURL 로 굳혀 srcDataUrl 복구
+    const url = cache.offscreen.toDataURL('image/png');
+    if (!url || url.length < 100) return false;
+    l.srcDataUrl = url;
+    const img = new Image();
+    img.onload = () => { l.srcImg = img; render(); };
+    img.src = url;
+    // 이미 처리된 이미지이므로 재처리 방지
+    l.thresh = 255;
+    return true;
+  } catch(e) {
+    console.warn('_restoreSrcFromCache:', e.message);
+    return false;
+  }
+}
+
+function diagnoseCalli(silent) {
+  const report = [];
+  layers.forEach(l => {
+    if (l.type !== 'calli') return;
+    const cache = calliCache[l.id];
+    report.push({
+      id: l.id,
+      이름: (l.name || '').slice(0, 12),
+      srcImg: !!l.srcImg,
+      srcDataUrl: !!l.srcDataUrl,
+      캐시: !!cache,
+      캐시크기: cache && cache.offscreen ? cache.offscreen.width + '×' + cache.offscreen.height : '없음',
+      보임: l.visible !== false,
+      크기: l.size,
+      투명도: l.opacity,
+      색상: l.tintColor
+    });
+  });
+  if (!silent) console.table(report);
+  return report;
+}
+
+function fixCalli() {
+  let n = 0, restored = 0;
+  layers.forEach(l => {
+    if (l.type !== 'calli') return;
+
+    // ① 잘못된 속성값 정리
+    if (l.tintColor === 'null' || l.tintColor === 'undefined' || l.tintColor === '') { l.tintColor = null; n++; }
+    if (l.visible === false) { l.visible = true; n++; }
+    if (!l.opacity || l.opacity <= 0) { l.opacity = 100; n++; }
+    if (!l.size || l.size < 10) { l.size = 300; n++; }
+    if (!l.scaleX || l.scaleX <= 0) { l.scaleX = 100; n++; }
+    if (!l.scaleY || l.scaleY <= 0) { l.scaleY = 100; n++; }
+
+    // ② 원본 참조가 끊겼으면 캐시에서 되살림
+    if (!l.srcImg && !l.srcDataUrl) {
+      if (_restoreSrcFromCache(l)) { restored++; n++; }
+    }
+
+    // ③ 캐시가 없는데 원본은 있으면 캐시 재생성
+    if (!calliCache[l.id] && l.srcImg) {
+      try { processCalliLayer(l.id); n++; } catch(e) {}
+    }
+  });
+
+  // ④ 원본색 캐시 비우기 (잘못 계산된 값 제거)
+  Object.keys(_origColorCache).forEach(k => delete _origColorCache[k]);
+
+  render();
+  try { syncTintOrigDot(); } catch(e) {}
+  const msg = restored > 0
+    ? '캘리 ' + restored + '개 이미지 복구 ✓'
+    : (n > 0 ? '속성 ' + n + '건 정리됨 ✓' : '이상 없음');
+  showToast(msg);
+  console.log('fixCalli:', { 정리: n, 이미지복구: restored });
+  return n;
+}
+
+/* 히스토리 저장 직전 자동 방어 — srcDataUrl 없는 캘리를 캐시에서 되살림 */
+(function(){
+  function guard() {
+    const orig = window.saveHistory;
+    if (typeof orig !== 'function' || orig._calliGuard) return;
+    const wrapped = function() {
+      try {
+        layers.forEach(l => {
+          if (l.type === 'calli' && !l.srcDataUrl && !l.srcImg) _restoreSrcFromCache(l);
+        });
+      } catch(e) {}
+      return orig.apply(this, arguments);
+    };
+    wrapped._calliGuard = true;
+    window.saveHistory = wrapped;
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', guard);
+  else guard();
+})();
+
+
+/* 선택 레이어 변경 시 레이어 필터 그리드 갱신
+   ⚠ bg.js 는 layers.js 보다 먼저 로드되므로 DOM 준비 후 감싼다 */
+function _wrapLayerFilterSync() {
+  const orig = window.renderProps;
+  if (typeof orig !== 'function' || orig._lfWrapped) return;
+  const wrapped = function() {
+    const r = orig.apply(this, arguments);
+    try {
+      syncLayerFilterActive();
+      // 썸네일 소스도 선택 레이어에 맞춰 다시 그림
+      if ($('filterThumbGrid2')) buildFilterThumbs('filterThumbGrid2');
+    } catch(e) {}
+    return r;
+  };
+  wrapped._lfWrapped = true;
+  window.renderProps = wrapped;
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _wrapLayerFilterSync);
+else _wrapLayerFilterSync();

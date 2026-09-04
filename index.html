@@ -166,4 +166,1458 @@ header{
   /* ⚠ 캔버스 크기는 initCanvas() 가 outputW:outputH 비율에 맞춰 직접 계산한다.
      여기서 max-height 로 세로만 제한하면 가로는 그대로라 비율이 깨진다.
      따라서 CSS 는 가로 안전망만 두고 높이는 JS 에 맡긴다. */
-  #mainCanvas{
+  #mainCanvas{max-width:calc(100vw - 16px) !important}
+}
+
+/* 크롭 핸들 */
+.crop-handle{
+  position:absolute;width:10px;height:10px;
+  background:#fff;border:1.5px solid rgba(0,0,0,0.5);
+  border-radius:2px;
+}
+
+/* canvas hint */
+.canvas-hint{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:6px;pointer-events:none;opacity:.72;
+}
+.canvas-hint-char{width:40%;max-width:160px;object-fit:contain;display:block;filter:contrast(1.15) saturate(1.3)}
+.canvas-hint-txt{font-size:13px;color:var(--ink3);text-align:center;line-height:1.6;margin-top:4px}
+
+/* bottom size bar */
+.size-bar{
+  display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap;justify-content:center;
+}
+.size-chip{
+  padding:6px 12px;border-radius:20px;font-size:11px;
+  border:1.5px solid var(--border2);background:rgba(255,255,255,.6);
+  color:var(--muted);cursor:pointer;transition:all .15s;
+  backdrop-filter:blur(4px);font-family:'Gowun Dodum',serif;
+}
+.size-chip.active{background:var(--ink);color:var(--gold2);border-color:var(--ink)}
+.size-chip:hover:not(.active){border-color:var(--ink3);color:var(--ink2)}
+
+/* zoom +/- bar */
+.zoom-bar{display:flex;align-items:center;gap:4px;margin-left:4px}
+.zoom-btn{
+  width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border2);
+  background:rgba(255,255,255,.7);color:var(--ink);font-size:16px;line-height:1;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .15s;font-family:inherit;backdrop-filter:blur(4px);
+  padding:0;
+}
+.zoom-btn:hover{background:var(--ink);color:var(--gold2);border-color:var(--ink)}
+.zoom-pct{font-size:11px;color:var(--muted);min-width:36px;text-align:center;font-family:'Gowun Dodum',serif}
+
+/* ────────────────────────────────────────
+   RIGHT PANEL
+──────────────────────────────────────── */
+.panel{
+  width:var(--panel);flex-shrink:0;
+  background:var(--parchment);
+  border-left:1px solid var(--border);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.ptabs{display:flex;background:var(--cream);border-bottom:1px solid var(--border);flex-shrink:0}
+.ptabs{display:flex;background:var(--ink);flex-shrink:0}
+.panel-grip{display:none}
+.ptab{
+  flex:1;padding:11px 4px;text-align:center;font-size:13px;
+  color:rgba(255,255,255,.5);cursor:pointer;border-bottom:2px solid transparent;
+  transition:all .15s;letter-spacing:.03em;
+}
+.ptab.active{color:var(--gold2);border-bottom-color:var(--gold2);background:rgba(196,151,58,.12);font-weight:700}
+.pcontent{flex:1;overflow-y:auto;overflow-x:hidden}
+.pcontent::-webkit-scrollbar{width:3px}
+.pcontent::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.pane{display:none;padding:14px;padding-bottom:calc(14px + env(safe-area-inset-bottom, 20px) + 60px);overflow-y:auto;-webkit-overflow-scrolling:touch}
+.pane.active{display:block}
+
+/* ────────────────────────────────────────
+   SECTION LABEL
+──────────────────────────────────────── */
+.slabel{
+  font-size:11px;font-weight:700;color:var(--ink3);letter-spacing:.18em;
+  text-transform:uppercase;margin-bottom:8px;margin-top:14px;
+  display:flex;align-items:center;gap:5px;
+}
+.slabel:first-child{margin-top:0}
+.slabel::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ────────────────────────────────────────
+   UPLOAD ZONE
+──────────────────────────────────────── */
+.uzone{
+  border:2px dashed var(--border2);border-radius:var(--radius);
+  padding:20px 14px;text-align:center;cursor:pointer;
+  transition:all .2s;background:rgba(255,255,255,.5);margin-bottom:10px;
+}
+.uzone:hover{border-color:var(--gold);background:rgba(196,151,58,.05)}
+.uzone:active{transform:scale(.98)}
+.uzone input{display:none}
+.uzone.has-img{padding:0;border-style:solid;border-color:var(--border)}
+.uz-thumb{width:100%;border-radius:10px;display:none;max-height:90px;object-fit:cover}
+.uz-icon{font-size:28px;margin-bottom:6px}
+.uz-title{font-size:13px;font-weight:600;color:var(--ink2);margin-bottom:3px}
+.uz-desc{font-size:11px;color:var(--muted);line-height:1.6}
+
+/* ────────────────────────────────────────
+   SLIDERS
+──────────────────────────────────────── */
+.ctrl{margin-bottom:11px}
+input[type=range]{touch-action:pan-y;-webkit-appearance:none;width:100%}
+.ctrl-row{display:flex;justify-content:space-between;margin-bottom:5px}
+.ctrl-n{font-size:11px;color:var(--muted)}
+.ctrl-v{font-size:11px;font-weight:700;color:var(--gold)}
+input[type=range]{-webkit-appearance:none;width:100%;height:4px;border-radius:2px;background:var(--border);outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:17px;height:17px;border-radius:50%;background:var(--ink);cursor:pointer;border:2px solid var(--gold2);box-shadow:0 1px 4px rgba(0,0,0,.2)}
+input[type=range]::-moz-range-thumb{width:17px;height:17px;border-radius:50%;background:var(--ink);cursor:pointer;border:2px solid var(--gold2)}
+/* 모바일: 슬라이더 좌우 여백 = 세로 스크롤 전용 통로 */
+@media(max-width:680px){
+  .ctrl{padding-left:14px;padding-right:14px}
+  input[type=range]{touch-action:pan-y}
+  input[type=range]::-webkit-slider-thumb{width:22px;height:22px}
+  input[type=range]::-moz-range-thumb{width:22px;height:22px}
+}
+
+/* ────────────────────────────────────────
+   FILTER CHIPS
+──────────────────────────────────────── */
+.frow{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+.fchip{padding:5px 10px;border-radius:16px;font-size:11px;border:1.5px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s;font-family:'Gowun Dodum',serif}
+.fchip.active{background:var(--ink);color:var(--gold2);border-color:var(--ink)}
+.fchip:hover:not(.active){border-color:var(--ink3);color:var(--ink2)}
+/* 필터 썸네일 그리드 */
+.filter-thumb-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-bottom:4px}
+@media(max-width:680px){
+  .filter-thumb-grid{grid-template-columns:repeat(5,1fr);gap:3px}
+  .fthumb canvas{height:44px}
+  .fthumb-lbl{font-size:8px;padding:2px 0}
+}
+.fthumb{border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:all .15s;position:relative}
+.fthumb.active{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}
+.fthumb canvas{width:100%;height:54px;object-fit:cover;display:block;border-radius:6px}
+.fthumb-lbl{font-size:9px;text-align:center;padding:2px 1px;color:var(--ink2);font-family:'Gowun Dodum',serif;white-space:nowrap;overflow:hidden}
+.fthumb.active .fthumb-lbl{color:var(--gold);font-weight:700}
+/* 갤러리 작품 그리드 */
+.works-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.work-card{border-radius:12px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:all .18s;background:var(--warm);position:relative}
+.work-card:hover{border-color:var(--gold);box-shadow:0 4px 16px rgba(196,151,58,.2);transform:translateY(-2px)}
+.work-card.drag-over{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold);opacity:.8}
+.work-card img{width:100%;aspect-ratio:1;object-fit:cover;display:block}
+.work-card-lbl{padding:4px 6px;font-size:9px;color:var(--ink2);font-family:'Gowun Dodum',serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:var(--parchment)}
+.work-card-del{position:absolute;top:5px;right:5px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.5);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;cursor:pointer;line-height:1}
+.work-card:hover .work-card-del{opacity:1}
+.work-add-card{border-radius:12px;border:2px dashed var(--border2);aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);transition:all .15s;gap:6px;background:transparent}
+.work-add-card:hover{border-color:var(--gold);color:var(--gold)}
+.work-add-icon{font-size:24px;line-height:1}
+.work-add-lbl{font-size:11px;font-family:'Gowun Dodum',serif}
+/* 갤러리 페이지네이션 */
+.gallery-pagination{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px}
+.gallery-pg-btn{width:28px;height:28px;border-radius:8px;border:1.5px solid var(--border);background:transparent;color:var(--ink2);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;font-family:'Gowun Dodum',serif}
+.gallery-pg-btn:hover{border-color:var(--gold);color:var(--gold)}
+.gallery-pg-btn.active{background:var(--gold);color:var(--ink);border-color:var(--gold);font-weight:700}
+.gallery-pg-dots{font-size:12px;color:var(--muted);letter-spacing:2px}
+/* 갤러리 폴더 */
+.gallery-toolbar{display:flex;align-items:center;gap:7px;margin-bottom:10px}
+.gallery-folder-btn{flex:1;padding:6px 10px;border-radius:8px;border:1.5px solid var(--border2);background:transparent;color:var(--ink2);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;font-family:'Gowun Dodum',serif;transition:all .15s}
+.gallery-folder-btn:hover{border-color:var(--gold);color:var(--gold)}
+.gallery-folder-section{margin-bottom:12px}
+.gallery-folder-list{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+.bg-photo-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:6px}
+.bg-photo-card{border-radius:8px;overflow:hidden;cursor:pointer;border:2.5px solid transparent;transition:all .2s;position:relative;background:var(--warm);aspect-ratio:1}
+.bg-photo-card:hover{border-color:var(--gold);transform:scale(1.03)}
+.bg-photo-card.active{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold)}
+.bg-photo-card img{width:100%;height:100%;object-fit:cover;display:block}
+.bg-photo-del{position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:rgba(184,75,60,.85);color:white;font-size:10px;display:none;align-items:center;justify-content:center;cursor:pointer;z-index:5;line-height:1}
+.bg-photo-card:hover .bg-photo-del{display:flex}
+.bg-photo-pg{display:flex;align-items:center;justify-content:center;gap:4px;padding:4px 0 2px}
+.bg-pg-btn{min-width:22px;height:22px;border-radius:6px;border:1px solid var(--border);background:var(--parchment);color:var(--ink2);font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.bg-pg-btn.active{background:var(--gold);color:#fff;border-color:var(--gold)}
+.bg-pg-dots{font-size:10px;color:var(--muted);padding:0 2px}
+.folder-card{border-radius:10px;border:1.5px solid var(--border);background:var(--parchment);overflow:hidden;transition:all .15s}
+.folder-card.drag-over{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold)}
+.folder-card-header{display:flex;align-items:center;gap:8px;padding:8px 10px;cursor:pointer}
+.folder-card-icon{font-size:16px}
+.folder-card-name{flex:1;font-size:12px;font-weight:700;color:var(--ink2);font-family:'Gowun Dodum',serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.folder-card-count{font-size:10px;color:var(--muted);font-family:'Gowun Dodum',serif}
+.folder-header-thumb{width:36px;height:36px;border-radius:6px;overflow:hidden;flex-shrink:0;background:var(--border)}
+.folder-header-thumb img{width:100%;height:100%;object-fit:cover}
+.folder-inner-pg{display:flex;align-items:center;justify-content:center;gap:4px;padding:6px 0 2px}
+.folder-pg-btn{min-width:22px;height:22px;border-radius:6px;border:1px solid var(--border);background:var(--parchment);color:var(--ink2);font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.folder-pg-btn.active{background:var(--gold);color:#fff;border-color:var(--gold)}
+.folder-pg-dots{font-size:10px;color:var(--muted);cursor:pointer;padding:0 2px}
+.folder-card-actions{display:flex;gap:4px}
+.folder-card-act{width:24px;height:24px;border-radius:6px;border:none;background:transparent;color:var(--muted);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.folder-card-act:hover{background:rgba(196,151,58,.15);color:var(--gold)}
+.folder-card-body{padding:0 8px 8px;display:none}
+.folder-card-body.open{display:block}
+.folder-inner-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+/* 레이어 색상변경 */
+.layer-tint-row{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0 2px}
+.tint-dot{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15s;flex-shrink:0}
+.tint-dot.active{border-color:var(--gold);box-shadow:0 0 0 1.5px var(--gold)}
+/* 원본 색상 점 — 실제 캘리 대표색 표시 + 원본 표식 */
+.tint-dot.tint-orig{position:relative;background:
+  linear-gradient(135deg,#f4f1ea 0%,#f4f1ea 48%,#d8d2c4 48%,#d8d2c4 52%,#f4f1ea 52%);
+  border-color:var(--border)}
+.tint-dot.tint-orig::after{content:'';position:absolute;left:50%;top:50%;
+  width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border-radius:50%;
+  border:1.5px solid rgba(0,0,0,.35);box-sizing:border-box}
+.tint-dot.tint-orig.has-color::after{border-color:rgba(255,255,255,.85);
+  box-shadow:0 0 0 1px rgba(0,0,0,.28)}
+.tint-custom-row{display:flex;gap:6px;align-items:center;margin-top:4px}
+
+/* ────────────────────────────────────────
+   LAYER LIST
+──────────────────────────────────────── */
+.llist{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
+.litem{
+  background:white;border:1.5px solid var(--border);border-radius:10px;
+  padding:9px 11px;cursor:pointer;transition:all .15s;
+  display:flex;align-items:center;gap:8px;
+}
+.litem.locked{opacity:.6}
+.litem.hidden-layer{opacity:.45}
+.litem.locked::after{content:'🔒';font-size:10px;margin-left:4px}
+.litem.sel-multi{border-color:#4ECDC4;background:rgba(78,205,196,.06)}
+.litem.sel{border-color:var(--gold);background:rgba(196,151,58,.06)}
+.litem:hover:not(.sel){border-color:var(--border2)}
+.litem-icon{font-size:18px;flex-shrink:0}
+.litem-info{flex:1;min-width:0}
+.litem-name{font-size:14px;font-weight:600;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.litem-sub{font-size:12px;color:var(--muted);margin-top:1px}
+.litem-btns{display:flex;gap:3px;flex-shrink:0}
+.lbtn{width:26px;height:26px;border-radius:5px;background:transparent;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;color:var(--muted);transition:all .15s}
+.lbtn:hover{background:var(--cream);border-color:var(--ink3);color:var(--ink)}
+.lbtn.del:hover{background:#fef0ef;border-color:var(--red);color:var(--red)}
+
+/* ────────────────────────────────────────
+   ADD BUTTONS
+──────────────────────────────────────── */
+.addrow{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:12px}
+.addbtn{
+  background:white;border:1.5px dashed var(--border2);border-radius:10px;
+  padding:12px 6px;text-align:center;cursor:pointer;transition:all .15s;
+}
+.addbtn:hover{border-color:var(--gold);background:rgba(196,151,58,.05)}
+.addbtn:active{transform:scale(.97)}
+.addbtn-icon{font-size:20px;margin-bottom:3px}
+.addbtn-lbl{font-size:12px;color:var(--ink3)}
+
+/* ────────────────────────────────────────
+   PROPERTY EDITOR
+──────────────────────────────────────── */
+.propbox{background:white;border:1px solid var(--border);border-radius:var(--radius);padding:13px;margin-bottom:10px}
+.prop-title{font-size:10px;font-weight:700;color:var(--ink2);letter-spacing:.08em;margin-bottom:11px;display:flex;align-items:center;gap:5px}
+.prop-dot{width:5px;height:5px;border-radius:50%;background:var(--gold);flex-shrink:0}
+
+.tinput{width:100%;background:var(--parchment);border:1.5px solid var(--border);border-radius:8px;padding:9px;font-size:13px;outline:none;resize:vertical;font-family:'Noto Serif KR',serif;color:var(--ink);line-height:1.7;min-height:56px;transition:border-color .15s;margin-bottom:9px}
+.tinput:focus{border-color:var(--gold)}
+
+.fselect{width:100%;background:var(--parchment);border:1.5px solid var(--border);border-radius:8px;padding:7px 9px;font-size:12px;outline:none;color:var(--ink);cursor:pointer;margin-bottom:9px;font-family:'Gowun Dodum',serif}
+.fselect:focus{border-color:var(--gold)}
+
+.btnrow{display:flex;gap:5px;margin-bottom:9px}
+.togbtn{flex:1;padding:7px 3px;border-radius:7px;background:var(--parchment);border:1.5px solid var(--border);font-size:11px;color:var(--muted);cursor:pointer;text-align:center;transition:all .15s;font-family:'Gowun Dodum',serif}
+.togbtn.active{background:var(--ink);color:var(--gold2);border-color:var(--ink)}
+.togbtn:hover:not(.active){border-color:var(--ink3);color:var(--ink2)}
+
+/* color swatches */
+.cswrow{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-bottom:9px}
+.csw{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .15s,border-color .15s;flex-shrink:0}
+.csw.active{border-color:var(--gold);transform:scale(1.18)}
+.csw:hover:not(.active){transform:scale(1.1)}
+input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(--border2);cursor:pointer;padding:1px;background:var(--parchment);flex-shrink:0}
+
+/* ────────────────────────────────────────
+   PANEL FOOTER
+──────────────────────────────────────── */
+.pfooter{padding:12px 14px calc(12px + var(--safe-b));border-top:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column;gap:7px}
+.cbtn{width:100%;padding:13px;border-radius:var(--radius);font-family:'Noto Serif KR',serif;font-size:14px;cursor:pointer;border:none;transition:all .15s;letter-spacing:.05em;font-weight:700}
+.cbtn-primary{background:linear-gradient(135deg,var(--ink) 0%,#3D2210 100%);color:var(--gold2)}
+.cbtn-primary:hover{background:linear-gradient(135deg,#3D2210 0%,var(--ink) 100%)}
+.cbtn-gold{background:linear-gradient(135deg,var(--gold) 0%,var(--gold2) 100%);color:var(--ink)}
+.cbtn-gold:hover{filter:brightness(1.05)}
+.cbtn:active{transform:scale(.98);opacity:.85}
+
+/* ────────────────────────────────────────
+   SAVE MODAL
+──────────────────────────────────────── */
+.modal-bg{position:fixed;inset:0;z-index:400;background:rgba(28,15,6,.65);backdrop-filter:blur(6px);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+.modal-bg.open{opacity:1;pointer-events:all}
+.modal{
+  background:var(--parchment);border-radius:20px 20px 0 0;
+  padding:20px 20px calc(20px + var(--safe-b));width:100%;max-width:480px;
+  transform:translateY(40px);transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+  border-top:1px solid var(--border);
+}
+.modal-bg.open .modal{transform:translateY(0)}
+.modal-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 16px}
+.modal-title{font-family:'Noto Serif KR',serif;font-size:17px;font-weight:700;color:var(--ink);text-align:center;margin-bottom:18px}
+
+/* size grid in modal */
+.size-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px}
+.sgrid-item{
+  background:white;border:2px solid var(--border);border-radius:10px;
+  padding:12px 8px;text-align:center;cursor:pointer;transition:all .15s;
+}
+.sgrid-item.active{border-color:var(--gold);background:rgba(196,151,58,.07)}
+.sgrid-item:hover:not(.active){border-color:var(--ink3)}
+.sgrid-ratio{font-size:14px;font-weight:700;color:var(--ink2);margin-bottom:2px}
+.sgrid-px{font-size:10px;color:var(--muted)}
+.sgrid-icon{font-size:20px;margin-bottom:4px}
+
+/* format row */
+.fmt-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.fmt-btn{flex:1;min-width:calc(33% - 6px);padding:10px 4px;border-radius:9px;background:white;border:2px solid var(--border);text-align:center;cursor:pointer;transition:all .15s;font-size:12px;color:var(--ink3);font-family:'Gowun Dodum',serif}
+.fmt-btn.active{border-color:var(--gold);background:rgba(196,151,58,.07);color:var(--ink);font-weight:700}
+
+.share-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.share-btn{
+  padding:14px 10px;border-radius:12px;border:1.5px solid var(--border);
+  background:white;display:flex;flex-direction:column;align-items:center;gap:5px;
+  cursor:pointer;transition:all .15s;
+}
+.share-btn:hover{border-color:var(--gold);background:rgba(196,151,58,.05)}
+.share-btn:active{transform:scale(.97)}
+.share-icon{font-size:22px}
+.share-lbl{font-size:12px;color:var(--muted)}
+
+/* ────────────────────────────────────────
+   TOAST
+──────────────────────────────────────── */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--ink);color:var(--gold2);padding:10px 22px;border-radius:24px;font-size:13px;z-index:999;opacity:0;transition:all .28s cubic-bezier(.34,1.56,.64,1);pointer-events:none;white-space:nowrap;box-shadow:0 4px 20px rgba(28,15,6,.35)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ────────────────────────────────────────
+   LOADING
+──────────────────────────────────────── */
+.loading{position:fixed;inset:0;z-index:300;background:rgba(250,246,240,.88);backdrop-filter:blur(5px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;opacity:0;pointer-events:none;transition:opacity .2s}
+.loading.show{opacity:1;pointer-events:all}
+.spinner{width:38px;height:38px;border-radius:50%;border:3px solid var(--border2);border-top-color:var(--ink);animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-txt{font-size:13px;color:var(--ink3)}
+
+/* ────────────────────────────────────────
+   GALLERY — ALBUM STRUCTURE
+──────────────────────────────────────── */
+.gallery-tabs{display:flex;gap:6px;margin-bottom:12px}
+.gtab{flex:1;padding:8px 4px;border-radius:8px;text-align:center;font-size:11px;border:1.5px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s;font-family:'Gowun Dodum',serif}
+.gtab.active{background:var(--ink);color:var(--gold2);border-color:var(--ink)}
+
+/* 앨범 그리드 */
+.album-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.album-card{
+  border-radius:14px;border:2px solid transparent;
+  cursor:pointer;transition:all .2s;position:relative;overflow:hidden;
+  display:flex;flex-direction:column;
+  aspect-ratio:1;box-shadow:0 2px 8px rgba(28,15,6,.08);
+}
+.album-card:hover{border-color:var(--gold);box-shadow:0 6px 22px rgba(196,151,58,.28);transform:translateY(-2px) scale(1.02)}
+.album-card:active{transform:scale(.97)}
+.album-footer{padding:5px 8px 8px;text-align:center;background:inherit;flex-shrink:0}
+.album-name{font-size:14px;font-weight:900;letter-spacing:.04em;font-family:'Noto Serif KR',serif}
+.album-count{font-size:10px;color:var(--muted);margin-top:1px}
+.album-actions{position:absolute;top:5px;right:5px;display:none;gap:3px}
+.album-card:hover .album-actions{display:flex}
+.aact-btn{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;cursor:pointer;border:none;transition:all .15s;line-height:1}
+.aact-edit{background:rgba(28,15,6,.55);color:var(--gold2)}
+.aact-del{background:rgba(184,75,60,.82);color:white}
+.album-add-btn{
+  border-radius:14px;border:2px dashed var(--border2);background:rgba(255,255,255,.5);
+  cursor:pointer;transition:all .2s;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  aspect-ratio:1;gap:4px;
+}
+.album-add-btn:hover{border-color:var(--gold);background:rgba(196,151,58,.05)}
+
+/* 앨범 내부 이미지 그리드 */
+.album-inner-header{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.album-back-btn{width:30px;height:30px;border-radius:8px;background:var(--cream);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;flex-shrink:0;transition:all .15s}
+.album-back-btn:hover{border-color:var(--ink3);background:var(--warm)}
+.album-inner-title{font-size:15px;font-weight:700;color:var(--ink);font-family:'Noto Serif KR',serif;flex:1}
+
+.img-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px}
+.igcard{border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:all .2s;position:relative;background:var(--warm);aspect-ratio:1}
+.igcard:hover{border-color:var(--gold);transform:scale(1.04)}
+.igcard:active{transform:scale(.96)}
+.igcard img{width:100%;height:100%;object-fit:cover;display:block}
+.igcard-del{position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:rgba(184,75,60,.85);color:white;font-size:10px;display:none;align-items:center;justify-content:center;cursor:pointer;z-index:5;line-height:1}
+.igcard:hover .igcard-del{display:flex}
+/* ② hover "click" 오버레이 */
+.igcard::after{
+  content:'click';
+  position:absolute;inset:0;
+  background:rgba(0,0,0,.32);
+  color:white;font-size:12px;font-weight:700;
+  font-family:'Gowun Dodum',serif;letter-spacing:.08em;
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;transition:opacity .18s;pointer-events:none;
+}
+.igcard:hover::after{opacity:1}
+
+/* 커스텀 컬러 목록 */
+.custom-color-list{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;margin-bottom:4px;min-height:14px}
+.cpal-custom{width:100%;aspect-ratio:1;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15s;position:relative}
+.cpal-custom:hover{border-color:var(--gold);transform:scale(1.1)}
+.cpal-custom .cdel{position:absolute;top:-4px;right:-4px;width:12px;height:12px;border-radius:50%;background:var(--red);color:white;font-size:8px;display:none;align-items:center;justify-content:center;line-height:1;cursor:pointer;z-index:2}
+.cpal-custom:hover .cdel{display:flex}
+/* 텍스처 버튼 */
+.tex-btn:hover{border-color:var(--gold);color:var(--gold)}
+.tex-btn.active{border-color:var(--gold);background:rgba(196,151,58,.12);color:var(--gold);font-weight:700}
+
+/* 그라데이션 에디터 */
+.grad-editor{background:white;border:1.5px solid var(--border);border-radius:10px;padding:12px;margin-top:8px}
+/* 커스텀 그라데이션 목록 */
+.custom-grad-list{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+.cgrad-item{display:flex;align-items:center;gap:8px;background:white;border:1.5px solid var(--border);border-radius:9px;padding:7px 9px;cursor:pointer;transition:all .15s}
+.cgrad-item:hover{border-color:var(--gold)}
+.cgrad-preview{width:48px;height:28px;border-radius:5px;flex-shrink:0}
+.cgrad-name{flex:1;font-size:12px;color:var(--ink2);font-weight:600}
+.cgrad-actions{display:flex;gap:4px;flex-shrink:0}
+.cgrad-btn{width:22px;height:22px;border-radius:5px;border:1px solid var(--border);background:transparent;display:flex;align-items:center;justify-content:center;font-size:11px;cursor:pointer;transition:all .15s;color:var(--muted)}
+.cgrad-btn:hover{background:var(--cream);border-color:var(--ink3);color:var(--ink)}
+.cgrad-btn.del:hover{background:#fef0ef;border-color:var(--red);color:var(--red)}
+/* 내 이미지 그리드 */
+.my-img-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px}
+.micard{border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:all .2s;position:relative;background:var(--warm);aspect-ratio:1}
+.micard:hover{border-color:var(--gold);transform:scale(1.04)}
+.micard img{width:100%;height:100%;object-fit:cover;display:block}
+.micard-del{position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:rgba(184,75,60,.85);color:white;font-size:10px;display:none;align-items:center;justify-content:center;cursor:pointer;z-index:5;line-height:1}
+.micard:hover .micard-del{display:flex}
+/* BG 서브탭 */
+.bgtabs{display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap}
+.bgtab{flex:1;min-width:0;padding:7px 2px;border-radius:8px;text-align:center;font-size:10px;border:1.5px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s;font-family:'Gowun Dodum',serif;white-space:nowrap}
+.bgtab.active{background:var(--parchment);color:var(--ink);border-color:var(--gold2);font-weight:700}
+.bgpane{display:none}.bgpane.active{display:block}
+/* 컬러 팔레트 */
+.color-palette{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;margin-bottom:4px}
+.cpal{width:100%;aspect-ratio:1;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15s}
+.cpal:hover,.cpal.active{border-color:var(--gold);transform:scale(1.15)}
+/* 그라데이션 그리드 */
+.grad-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+.grad-card{border-radius:10px;aspect-ratio:2/1;cursor:pointer;border:2px solid transparent;transition:all .2s;position:relative;overflow:hidden}
+.grad-card:hover{border-color:var(--gold);transform:scale(1.03)}
+.grad-card-lbl{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.32);padding:3px 4px;font-size:9px;color:white;text-align:center}
+/* 질감 그리드 */
+.texture-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px}
+.tex-card{border-radius:10px;aspect-ratio:1;cursor:pointer;border:2px solid transparent;transition:all .2s;position:relative;overflow:hidden}
+.tex-card:hover{border-color:var(--gold);transform:scale(1.03)}
+.tex-card canvas{width:100%;height:100%;display:block}
+.tex-card-lbl{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.32);padding:5px 6px;font-size:11px;color:white;text-align:center}
+/* 앨범 드래그 정렬 */
+.album-card.dragging{opacity:.45;border:2px dashed var(--gold)!important;transform:scale(.97)}
+.album-card.drag-over{border-color:var(--gold)!important;background:rgba(196,151,58,.08)!important}
+.font-grid{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.fontcard{background:white;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:10px}
+.fontcard.active{border-color:var(--gold);background:rgba(196,151,58,.06)}
+.fontcard:hover:not(.active){border-color:var(--border2)}
+.fontcard-preview{font-size:22px;line-height:1;color:var(--ink);flex-shrink:0;width:52px;text-align:center}
+.fontcard-info{flex:1;min-width:0}
+.fontcard-name{font-size:11px;font-weight:700;color:var(--ink2)}
+.fontcard-sample{font-size:11px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fontcard-badge{font-size:9px;background:rgba(196,151,58,.12);color:var(--gold);border-radius:4px;padding:2px 5px;flex-shrink:0;font-weight:700}
+@media(max-width:680px){
+  :root{--panel:100%}
+  /* dvh: 주소창 노출/숨김에도 실제 보이는 높이를 따름 */
+  .app{flex-direction:column;height:100vh;height:100dvh;height:var(--vvh,100dvh);overflow:hidden}
+  /* 키보드가 올라온 동안에는 캔버스존만 줄인다 (캔버스 자체 비율은 유지) */
+  body.kb-open .canvas-zone{max-height:34vh;max-height:34dvh;overflow:auto}
+  /* 페이지 자체는 절대 스크롤되지 않게 — 캔버스가 밀려나는 원인 차단 */
+  html,body{overflow:hidden;overscroll-behavior:none;position:relative}
+  /* ⚠ 캔버스존 max(55vh) + 패널 min(45vh) = 100vh — 합이 넘으면 캔버스가 잘림
+     overflow:auto + justify-content:flex-start 로 상단 잘림 방지 */
+  .canvas-zone{
+    flex:1 1 auto;min-height:120px;
+    overflow:auto;-webkit-overflow-scrolling:touch;
+    padding:6px 8px 4px;gap:4px;
+    justify-content:flex-start;align-items:center;
+  }
+
+  /* ═══ 하단 패널 드래그 (카톡 사진 선택창 방식) ═══ */
+  .panel{
+    flex:0 0 auto;
+    height:var(--panel-h,52dvh);
+    min-height:24px;
+    border-left:none;
+    border-top:1px solid var(--border);
+    border-radius:16px 16px 0 0;
+    box-shadow:0 -4px 20px rgba(0,0,0,.10);
+    transition:height .22s cubic-bezier(.32,.72,0,1);
+    position:relative;
+    display:flex;flex-direction:column;overflow:hidden;
+  }
+  .panel.dragging{transition:none}
+  /* 드래그 손잡이 */
+  .panel-grip{
+    display:flex;align-items:center;justify-content:center;
+    height:24px;flex-shrink:0;cursor:grab;
+    touch-action:none;
+    background:var(--parchment);
+    border-radius:16px 16px 0 0;
+  }
+  .panel-grip::before{
+    content:'';width:44px;height:5px;border-radius:3px;
+    background:var(--border);transition:background .15s;
+  }
+  .panel-grip:active::before{background:var(--gold)}
+  .panel-grip.dragging::before{background:var(--gold);width:56px}
+  .canvas-shell{max-width:calc(100vw - 16px);overflow:hidden;margin-top:auto;margin-bottom:auto}
+  .canvas-shell.bg-direct-edit{overflow:visible}
+  .canvas-ctrl-bar{max-width:calc(100vw - 16px);padding:0 2px}
+  .size-bar{gap:4px;max-width:calc(100vw - 16px);overflow-x:auto}
+  .size-chip{font-size:10px;padding:5px 9px;white-space:nowrap;flex-shrink:0}
+  .zoom-bar{display:none} /* 모바일 줌버튼 숨김 */
+  body.custom-size-open #sidePanel{visibility:hidden;pointer-events:none}
+  .pcontent{overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;min-height:0}
+  .pane{padding-bottom:calc(14px + env(safe-area-inset-bottom,20px) + 80px)}
+  .logo-ver{display:none}
+  .fmt-row{flex-wrap:wrap}
+  .fmt-btn{min-width:calc(33% - 6px);flex:none}
+}
+@media(max-width:380px){
+  .hbtn-ghost{display:none}
+  .logo-txt{font-size:15px}
+}
+
+/* ── 직접 입력 사이즈 모달 ── */
+#customSizeModal{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.55);align-items:center;justify-content:center;padding:16px 8px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+#customSizeModal.show{display:flex}
+#customSizeBox{background:var(--parchment);border-radius:16px;padding:20px 18px;width:320px;max-width:93vw;font-family:'Gowun Dodum',serif;box-shadow:0 8px 32px rgba(0,0,0,.3);max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overflow-y:auto;-webkit-overflow-scrolling:touch;margin:auto}
+/* 적용/취소 버튼은 항상 보이도록 하단 고정 */
+.csz-btns{position:sticky;bottom:-20px;background:var(--parchment);padding:10px 0 0;margin-top:4px;box-shadow:0 -8px 12px -6px rgba(0,0,0,.12)}
+@media(max-width:680px){
+  /* 모바일: 중앙 모달 → 바텀시트 (키보드/화면높이와 충돌하지 않음) */
+  #customSizeModal{align-items:flex-end;padding:0;overflow:hidden}
+  #customSizeBox{
+    width:100%;max-width:100%;margin:0;
+    border-radius:20px 20px 0 0;
+    padding:8px 16px 20px;
+    max-height:86vh;max-height:86dvh;
+    overflow-y:auto;-webkit-overflow-scrolling:touch;
+    animation:cszUp .22s ease-out;
+  }
+  #customSizeBox h3{margin:6px 0 12px}
+  /* 드래그 핸들 */
+  #customSizeBox::before{
+    content:'';display:block;width:40px;height:4px;border-radius:2px;
+    background:var(--border);margin:0 auto 6px;
+  }
+  .csz-btns{bottom:-20px;padding:12px 0 0}
+  .csz-btn-ok,.csz-btn-cancel{padding:13px !important;font-size:14px !important}
+}
+@keyframes cszUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+#customSizeBox h3{margin:0 0 14px;font-size:15px;color:var(--ink);letter-spacing:.04em;text-align:center}
+.csz-unit-row{display:flex;gap:6px;margin-bottom:10px;justify-content:center}
+.csz-unit-btn{padding:5px 14px;border-radius:7px;border:1.5px solid var(--border);font-size:12px;cursor:pointer;color:var(--ink2);background:var(--bg);font-family:'Gowun Dodum',serif;transition:all .12s}
+.csz-unit-btn.active{border-color:var(--gold);color:var(--gold);background:rgba(196,151,58,.08);font-weight:700}
+.csz-dpi-row{display:flex;gap:5px;margin-bottom:12px;justify-content:center;flex-wrap:wrap}
+.csz-dpi-btn{padding:4px 10px;border-radius:7px;border:1.5px solid var(--border);font-size:11px;cursor:pointer;color:var(--ink2);background:var(--bg);font-family:'Gowun Dodum',serif;transition:all .12s}
+.csz-dpi-btn.active{border-color:#7B9E87;color:#7B9E87;background:rgba(123,158,135,.08);font-weight:700}
+.csz-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.csz-row label{font-size:12px;color:var(--ink2);width:32px;flex-shrink:0}
+.csz-row input{flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:'Gowun Dodum',serif;background:var(--bg);color:var(--ink);outline:none;text-align:center}
+.csz-row input:focus{border-color:var(--gold)}
+.csz-unit-lbl{font-size:12px;color:var(--ink3);width:28px;flex-shrink:0}
+.csz-dir-row{display:flex;gap:6px;margin-bottom:12px;align-items:center}
+.csz-dir-lbl{font-size:12px;color:var(--ink2);width:32px;flex-shrink:0}
+.csz-dir-btn{display:flex;align-items:center;gap:4px;padding:5px 10px;border-radius:7px;border:1.5px solid var(--border);font-size:12px;cursor:pointer;color:var(--ink2);background:var(--bg);font-family:'Gowun Dodum',serif;transition:all .12s}
+.csz-dir-btn.active{border-color:var(--gold);color:var(--gold);background:rgba(196,151,58,.08)}
+.csz-lock{display:flex;align-items:center;gap:6px;margin-bottom:12px;cursor:pointer;font-size:12px;color:var(--ink2)}
+.csz-lock input{width:14px;height:14px;cursor:pointer;accent-color:var(--gold)}
+.csz-presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.csz-preset{padding:4px 10px;border-radius:6px;border:1.5px solid var(--border);font-size:11px;cursor:pointer;color:var(--ink2);background:var(--bg);font-family:'Gowun Dodum',serif;transition:all .12s}
+.csz-preset:hover{border-color:var(--gold);color:var(--gold)}
+.csz-btns{display:flex;gap:8px}
+.csz-btn-cancel{flex:1;padding:10px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);color:var(--ink2);font-size:13px;font-family:'Gowun Dodum',serif;cursor:pointer}
+.csz-btn-ok{flex:2;padding:10px;border:none;border-radius:10px;background:linear-gradient(135deg,#C4973A,#a07830);color:#1C0F06;font-size:13px;font-weight:700;font-family:'Gowun Dodum',serif;cursor:pointer}
+
+/* ── 레이어 플로팅 툴바 ── */
+/* 원본사이즈 칩 강조 */
+.sgrid-item.sgrid-native{border-color:rgba(78,205,196,.5);background:rgba(78,205,196,.06)}
+.sgrid-item.sgrid-native .sgrid-ratio{color:#4ECDC4}
+.sgrid-item.sgrid-native.active{border-color:#4ECDC4;background:rgba(78,205,196,.16)}
+
+/* 배경 맞춤 버튼 */
+.bgfit-row{display:flex;gap:5px;margin-bottom:9px}
+.bgfit-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  padding:8px 3px;border:1.5px solid var(--border);border-radius:9px;background:var(--parchment);
+  cursor:pointer;font-size:10px;color:var(--muted);transition:.15s;line-height:1.2;text-align:center}
+.bgfit-btn:hover{border-color:var(--gold);color:var(--ink)}
+.bgfit-btn:active{transform:scale(.95)}
+.bgfit-btn.active{border-color:var(--gold);background:rgba(196,151,58,.14);color:var(--gold);font-weight:700}
+.bgfit-ic{font-size:15px;line-height:1}
+
+/* 다중선택 정렬 바 */
+#multiAlignBar{display:none;background:rgba(78,205,196,0.08);border:1px solid rgba(78,205,196,0.35);
+  border-radius:12px;padding:9px 10px;margin-bottom:10px}
+#multiAlignBar.show{display:block}
+.mab-head{font-size:11px;color:#4ECDC4;font-weight:700;margin-bottom:7px;letter-spacing:.3px}
+.mab-row{display:flex;gap:5px;margin-bottom:5px}
+.mab-row:last-child{margin-bottom:0}
+.mab-btn{flex:1;height:30px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);
+  color:#e8e0d4;border-radius:7px;font-size:14px;cursor:pointer;display:flex;align-items:center;
+  justify-content:center;transition:.15s;padding:0}
+.mab-btn:hover{background:rgba(78,205,196,.22);border-color:#4ECDC4}
+.mab-btn:active{transform:scale(.94)}
+.mab-btn.sm{font-size:11px;font-weight:600}
+#layerToolbar{
+  display:none;position:absolute;z-index:200;
+  background:rgba(28,15,6,.92);border-radius:10px;
+  padding:4px 6px;gap:2px;align-items:center;
+  box-shadow:0 4px 16px rgba(0,0,0,.4);
+  transform:translateX(-50%);
+  pointer-events:all;
+  left:50% !important;
+  top:8px !important;
+}
+#layerToolbar.show{display:flex}
+.ltb-btn{
+  width:32px;height:32px;border:none;background:transparent;
+  color:rgba(255,255,255,.85);font-size:15px;border-radius:7px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:background .12s;
+}
+.ltb-btn:hover{background:rgba(255,255,255,.15)}
+.ltb-sep{width:1px;height:20px;background:rgba(255,255,255,.15);margin:0 2px}
+
+/* ── 컨텍스트 메뉴 ── */
+#layerCtxMenu{
+  display:none;position:absolute;z-index:300;
+  background:var(--parchment);border-radius:12px;
+  box-shadow:0 8px 28px rgba(0,0,0,.25);
+  min-width:190px;padding:6px 0;
+  font-family:'Gowun Dodum',serif;
+}
+#layerCtxMenu.show{display:block}
+.ctx-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 16px;font-size:13px;color:var(--ink);
+  cursor:pointer;transition:background .1s;
+}
+.ctx-item:hover{background:rgba(196,151,58,.1)}
+.ctx-item .ctx-icon{width:18px;text-align:center;font-size:14px;color:var(--ink2)}
+.ctx-item .ctx-key{margin-left:auto;font-size:11px;color:var(--ink3)}
+.ctx-item.red{color:#E84855}
+.ctx-item.red .ctx-icon{color:#E84855}
+.ctx-sep{height:1px;background:var(--border);margin:4px 0}
+.ctx-sub{display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:13px;color:var(--ink);cursor:pointer;transition:background .1s;position:relative}
+.ctx-sub:hover{background:rgba(196,151,58,.1)}
+.ctx-sub .ctx-icon{width:18px;text-align:center;font-size:14px;color:var(--ink2)}
+.ctx-sub-arrow{margin-left:auto;font-size:11px;color:var(--ink3)}
+
+/* ── 레이어 자르기 오버레이 ── */
+#lyrCropOverlay{position:absolute;inset:0;display:none;z-index:52;touch-action:none;pointer-events:none}
+#lyrCropOverlay.active{pointer-events:all}
+.lyrcrop-mask{position:absolute;background:rgba(0,0,0,.52);pointer-events:none}
+.lyrcrop-border-box{position:absolute;border:2.5px solid #4ECDC4;cursor:move;box-shadow:0 0 0 1px rgba(78,205,196,.3)}
+#lyrCropSzLbl{position:absolute;top:-26px;left:0;background:rgba(10,40,38,.9);color:#4ECDC4;font-size:.62rem;padding:2px 9px;border-radius:5px;pointer-events:none;white-space:nowrap;font-family:'Gowun Dodum',serif}
+.lyrcrop-handle{position:absolute;touch-action:none;z-index:57;pointer-events:all}
+.lyrcrop-handle.corner{width:16px;height:16px;background:#4ECDC4;border-radius:3px;box-shadow:0 2px 8px rgba(78,205,196,.6)}
+.lyrcrop-handle.edge-h{height:5px;background:#4ECDC4;border-radius:3px;width:34px}
+.lyrcrop-handle.edge-v{width:5px;background:#4ECDC4;border-radius:3px;height:34px}
+.lyrcrop-handle[data-d=nw]{top:-8px;left:-8px;cursor:nw-resize}
+.lyrcrop-handle[data-d=ne]{top:-8px;right:-8px;cursor:ne-resize}
+.lyrcrop-handle[data-d=sw]{bottom:-8px;left:-8px;cursor:sw-resize}
+.lyrcrop-handle[data-d=se]{bottom:-8px;right:-8px;cursor:se-resize}
+.lyrcrop-handle[data-d=n]{top:-2.5px;left:calc(50% - 17px);cursor:n-resize}
+.lyrcrop-handle[data-d=s]{bottom:-2.5px;left:calc(50% - 17px);cursor:s-resize}
+.lyrcrop-handle[data-d=w]{left:-2.5px;top:calc(50% - 17px);cursor:w-resize}
+.lyrcrop-handle[data-d=e]{right:-2.5px;top:calc(50% - 17px);cursor:e-resize}
+#lyrCropConfirmBar{display:none;position:absolute;bottom:0;left:0;right:0;height:50px;background:rgba(10,38,36,.96);z-index:62;align-items:center;justify-content:center;gap:10px;padding:0 14px}
+#lyrCropConfirmBar.show{display:flex}
+.lyrcrop-btn{padding:8px 22px;border-radius:9px;font-size:12px;font-weight:700;font-family:'Gowun Dodum',serif;cursor:pointer;border:none;transition:all .15s}
+.lyrcrop-btn-cancel{background:rgba(255,255,255,.12);color:rgba(255,255,255,.8)}
+.lyrcrop-btn-ok{background:linear-gradient(135deg,#4ECDC4,#2EAF9F);color:#fff}
+</style>
+</head>
+<body>
+<!-- ══════════════════════════════
+     🔐 비밀번호 잠금 화면 (서버검증)
+══════════════════════════════ -->
+<div id="lockScreen" style="
+  position:fixed;inset:0;z-index:99999;
+  background:linear-gradient(160deg,#1C0F06 0%,#2d1a0a 60%,#1C0F06 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-family:'Gowun Dodum',serif;
+">
+  <div style="text-align:center;padding:0 30px;max-width:340px;width:100%">
+    <div style="font-size:42px;margin-bottom:8px;line-height:1"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="1em" height="1em" style="vertical-align:middle;display:inline-block">
+<g transform="translate(50,50)">
+<ellipse cx="0" cy="-28" rx="7" ry="24" fill="#F2EFE9" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(0)"/>
+<ellipse cx="0" cy="-27" rx="6" ry="22" fill="#EDEAE3" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(26)"/>
+<ellipse cx="0" cy="-29" rx="7.5" ry="25" fill="#F2EFE9" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(52)"/>
+<ellipse cx="0" cy="-26" rx="5.5" ry="21" fill="#EEEBe4" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(78)"/>
+<ellipse cx="0" cy="-28" rx="7" ry="24" fill="#F1EEE8" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(104)"/>
+<ellipse cx="0" cy="-26" rx="6" ry="21" fill="#EDEAE3" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(130)"/>
+<ellipse cx="0" cy="-29" rx="7.5" ry="25" fill="#F2EFE9" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(156)"/>
+<ellipse cx="0" cy="-27" rx="6.5" ry="23" fill="#EEEBe4" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(182)"/>
+<ellipse cx="0" cy="-28" rx="7" ry="24" fill="#F0EDE7" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(208)"/>
+<ellipse cx="0" cy="-26" rx="5.5" ry="21" fill="#ECEAE3" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(234)"/>
+<ellipse cx="0" cy="-29" rx="7.5" ry="24" fill="#F1EEE8" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(260)"/>
+<ellipse cx="0" cy="-27" rx="6" ry="22" fill="#EEEBe4" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(286)"/>
+<ellipse cx="0" cy="-28" rx="7" ry="23" fill="#F0EDE8" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(312)"/>
+<ellipse cx="0" cy="-26" rx="5.5" ry="21" fill="#EDEAE3" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(338)"/>
+<circle r="14" fill="#1a1a1a"/>
+<circle r="11" fill="#FFB820"/>
+</g>
+</svg></div>
+    <div style="font-size:22px;font-weight:700;color:#C4973A;letter-spacing:.08em;margin-bottom:4px">콩심캘리</div>
+    <div style="font-size:12px;color:rgba(196,151,58,.6);letter-spacing:.06em;margin-bottom:36px">STUDIO</div>
+    <div style="position:relative;margin-bottom:14px">
+      <input id="lockInput" type="password" placeholder="비밀번호를 입력하세요"
+        style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.06);border:1.5px solid rgba(196,151,58,.3);border-radius:12px;color:#fff;font-size:16px;font-family:'Gowun Dodum',serif;padding:14px 18px;outline:none;letter-spacing:.15em;text-align:center;"
+        onkeydown="if(event.key==='Enter')checkLock()"
+      >
+    </div>
+    <div id="lockMsg" style="font-size:12px;color:#E84855;min-height:18px;margin-bottom:16px;letter-spacing:.04em"></div>
+    <button id="lockBtn" onclick="checkLock()" style="width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,#C4973A,#a07830);color:#1C0F06;font-size:15px;font-weight:700;font-family:'Gowun Dodum',serif;cursor:pointer;letter-spacing:.06em;transition:filter .15s;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter=''">
+      입장하기
+    </button>
+    <div style="margin-top:28px;font-size:11px;color:rgba(255,255,255,.25);line-height:1.8">
+      이용권 구매 문의<br>
+      <span style="color:rgba(196,151,58,.5)">카카오톡 채널 @콩심캘리</span>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  if(sessionStorage.getItem('csk_auth')==='1'){
+    document.getElementById('lockScreen').style.display='none';
+    return;
+  }
+  window.checkLock=function(){
+    var pw=document.getElementById('lockInput').value.trim();
+    if(!pw)return;
+    var btn=document.getElementById('lockBtn');
+    var msg=document.getElementById('lockMsg');
+    btn.disabled=true; btn.textContent='확인 중...'; msg.textContent='';
+    fetch('/api/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw})})
+    .then(function(r){return r.json();})
+    .then(function(data){
+      if(data.ok){
+        sessionStorage.setItem('csk_auth','1');
+        var ls=document.getElementById('lockScreen');
+        ls.style.transition='opacity .4s'; ls.style.opacity='0';
+        setTimeout(function(){ls.style.display='none';},400);
+      } else {
+        msg.textContent=data.msg||'비밀번호가 올바르지 않습니다.';
+        document.getElementById('lockInput').value='';
+        document.getElementById('lockInput').focus();
+        btn.disabled=false; btn.textContent='입장하기';
+      }
+    })
+    .catch(function(){
+      msg.textContent='서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+      btn.disabled=false; btn.textContent='입장하기';
+    });
+  };
+})();
+</script>
+
+
+<!-- ══ HEADER ══ -->
+<header>
+  <div class="logo">
+    <div class="logo-bean" style="font-size:inherit;line-height:1"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="1em" height="1em" style="vertical-align:middle;display:inline-block">
+<g transform="translate(50,50)">
+<ellipse cx="0" cy="-28" rx="7" ry="24" fill="#F2EFE9" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(0)"/>
+<ellipse cx="0" cy="-27" rx="6" ry="22" fill="#EDEAE3" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(26)"/>
+<ellipse cx="0" cy="-29" rx="7.5" ry="25" fill="#F2EFE9" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(52)"/>
+<ellipse cx="0" cy="-26" rx="5.5" ry="21" fill="#EEEBe4" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(78)"/>
+<ellipse cx="0" cy="-28" rx="7" ry="24" fill="#F1EEE8" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(104)"/>
+<ellipse cx="0" cy="-26" rx="6" ry="21" fill="#EDEAE3" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(130)"/>
+<ellipse cx="0" cy="-29" rx="7.5" ry="25" fill="#F2EFE9" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(156)"/>
+<ellipse cx="0" cy="-27" rx="6.5" ry="23" fill="#EEEBe4" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(182)"/>
+<ellipse cx="0" cy="-28" rx="7" ry="24" fill="#F0EDE7" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(208)"/>
+<ellipse cx="0" cy="-26" rx="5.5" ry="21" fill="#ECEAE3" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(234)"/>
+<ellipse cx="0" cy="-29" rx="7.5" ry="24" fill="#F1EEE8" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(260)"/>
+<ellipse cx="0" cy="-27" rx="6" ry="22" fill="#EEEBe4" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(286)"/>
+<ellipse cx="0" cy="-28" rx="7" ry="23" fill="#F0EDE8" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(312)"/>
+<ellipse cx="0" cy="-26" rx="5.5" ry="21" fill="#EDEAE3" stroke="#1a1a1a" stroke-width="1.3" transform="rotate(338)"/>
+<circle r="14" fill="#1a1a1a"/>
+<circle r="11" fill="#FFB820"/>
+</g>
+</svg></div>
+    <div style="display:flex;align-items:baseline;gap:8px">
+      <div class="logo-txt">콩심캘리</div>
+      <div class="logo-ver" style="font-size:10px;color:rgba(255,255,255,.35);letter-spacing:.1em;margin-top:0">Congsim Calli Studio</div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <button class="hbtn hbtn-ghost" onclick="resetAll()">초기화</button>
+    <button class="hbtn hbtn-gold" onclick="openSaveModal()">내보내기</button>
+  </div>
+</header>
+
+<!-- ══ APP ══ -->
+<div class="app">
+
+  <!-- CANVAS ZONE -->
+  <div class="canvas-zone" id="canvasZone">
+    <!-- ── 레이어 플로팅 툴바 ── -->
+    <div id="layerToolbar">
+      <button class="ltb-btn" onclick="ltbDelete()" title="삭제">🗑</button>
+      <button class="ltb-btn" onclick="ltbLock()" id="ltbLockBtn" title="잠금">🔓</button>
+      <div class="ltb-sep"></div>
+      <button class="ltb-btn" onclick="ltbMore(event)" title="더보기">···</button>
+    </div>
+    <!-- ── 컨텍스트 메뉴 ── -->
+    <div id="layerCtxMenu">
+      <div class="ctx-item" onclick="ctxCopy()"><span class="ctx-icon">⧉</span>복사<span class="ctx-key">Ctrl+C</span></div>
+      <div class="ctx-item" onclick="ctxDuplicate()"><span class="ctx-icon">⊕</span>복제<span class="ctx-key">Ctrl+D</span></div>
+      <div class="ctx-item" onclick="ctxCrop()"><span class="ctx-icon">✂</span>이미지 자르기</div>
+      <div class="ctx-sep"></div>
+      <div class="ctx-sub" onclick="ctxOrderSub(event)"><span class="ctx-icon">≋</span>순서<span class="ctx-sub-arrow">›</span></div>
+      <div class="ctx-sub" onclick="ctxAlignSub(event)"><span class="ctx-icon">⊞</span>정렬<span class="ctx-sub-arrow">›</span></div>
+      <div class="ctx-sep"></div>
+      <div class="ctx-item" onclick="ctxLock()"><span class="ctx-icon">🔓</span><span id="ctxLockLabel">잠금</span><span class="ctx-key">Ctrl+L</span></div>
+      <div class="ctx-sep"></div>
+      <div class="ctx-item red" onclick="ctxDelete()"><span class="ctx-icon">🗑</span>삭제<span class="ctx-key">Delete</span></div>
+    </div>
+    <!-- ── 서브메뉴 ── -->
+    <div id="layerSubMenu" style="display:none;position:absolute;z-index:400;background:var(--parchment);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.2);min-width:140px;padding:6px 0;font-family:'Gowun Dodum',serif;">
+      <div id="subMenuItems"></div>
+    </div>
+    <div class="canvas-shell" id="canvasShell">
+      <canvas id="mainCanvas"></canvas>
+      <div id="bgTransformBox" aria-label="배경 이미지 선택 영역">
+        <div class="bg-transform-handle" data-dir="nw"></div><div class="bg-transform-handle" data-dir="n"></div><div class="bg-transform-handle" data-dir="ne"></div>
+        <div class="bg-transform-handle" data-dir="w"></div><div class="bg-transform-handle" data-dir="e"></div>
+        <div class="bg-transform-handle" data-dir="sw"></div><div class="bg-transform-handle" data-dir="s"></div><div class="bg-transform-handle" data-dir="se"></div>
+      </div>
+      <!-- ✂ LAYER CROP OVERLAY -->
+      <div id="lyrCropOverlay">
+        <div class="lyrcrop-mask" id="lyrCropM0"></div>
+        <div class="lyrcrop-mask" id="lyrCropM1"></div>
+        <div class="lyrcrop-mask" id="lyrCropM2"></div>
+        <div class="lyrcrop-mask" id="lyrCropM3"></div>
+        <div class="lyrcrop-border-box" id="lyrCropBox">
+          <div id="lyrCropSzLbl"></div>
+          <div class="lyrcrop-handle corner" data-d="nw"></div>
+          <div class="lyrcrop-handle corner" data-d="ne"></div>
+          <div class="lyrcrop-handle corner" data-d="sw"></div>
+          <div class="lyrcrop-handle corner" data-d="se"></div>
+          <div class="lyrcrop-handle edge-h" data-d="n"></div>
+          <div class="lyrcrop-handle edge-h" data-d="s"></div>
+          <div class="lyrcrop-handle edge-v" data-d="w"></div>
+          <div class="lyrcrop-handle edge-v" data-d="e"></div>
+        </div>
+      </div>
+      <div id="lyrCropConfirmBar">
+        <button class="lyrcrop-btn lyrcrop-btn-cancel" id="lyrCropCancelBtn">✕ 취소</button>
+        <button class="lyrcrop-btn lyrcrop-btn-ok" id="lyrCropOkBtn">✓ 레이어 자르기 적용</button>
+      </div>
+
+      <div class="canvas-resize-handle tl" id="rh-tl"></div>
+      <div class="canvas-resize-handle tc" id="rh-tc"></div>
+      <div class="canvas-resize-handle ml" id="rh-ml"></div>
+      <div class="canvas-resize-handle mr" id="rh-mr"></div>
+      <!-- 크롭 오버레이 -->
+      <div id="cropOverlay" style="display:none;position:absolute;inset:0;z-index:30;">
+        <!-- 4방향 어두운 영역 -->
+        <div id="cropDark-top"    style="position:absolute;background:rgba(0,0,0,0.55);left:0;right:0;top:0;"></div>
+        <div id="cropDark-bottom" style="position:absolute;background:rgba(0,0,0,0.55);left:0;right:0;bottom:0;"></div>
+        <div id="cropDark-left"   style="position:absolute;background:rgba(0,0,0,0.55);top:0;bottom:0;left:0;"></div>
+        <div id="cropDark-right"  style="position:absolute;background:rgba(0,0,0,0.55);top:0;bottom:0;right:0;"></div>
+        <!-- 밝은 크롭 영역 테두리 -->
+        <div id="cropBox" style="position:absolute;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,0.3);cursor:move;box-sizing:border-box;">
+          <!-- 3x3 그리드 선 -->
+          <div style="position:absolute;inset:0;pointer-events:none;">
+            <div style="position:absolute;left:33.3%;top:0;bottom:0;border-left:1px solid rgba(255,255,255,0.4);"></div>
+            <div style="position:absolute;left:66.6%;top:0;bottom:0;border-left:1px solid rgba(255,255,255,0.4);"></div>
+            <div style="position:absolute;top:33.3%;left:0;right:0;border-top:1px solid rgba(255,255,255,0.4);"></div>
+            <div style="position:absolute;top:66.6%;left:0;right:0;border-top:1px solid rgba(255,255,255,0.4);"></div>
+          </div>
+          <!-- 8방향 핸들 -->
+          <div class="crop-handle" data-dir="tl" style="top:-5px;left:-5px;cursor:nwse-resize;"></div>
+          <div class="crop-handle" data-dir="tc" style="top:-5px;left:calc(50% - 5px);cursor:ns-resize;"></div>
+          <div class="crop-handle" data-dir="tr" style="top:-5px;right:-5px;cursor:nesw-resize;"></div>
+          <div class="crop-handle" data-dir="ml" style="top:calc(50% - 5px);left:-5px;cursor:ew-resize;"></div>
+          <div class="crop-handle" data-dir="mr" style="top:calc(50% - 5px);right:-5px;cursor:ew-resize;"></div>
+          <div class="crop-handle" data-dir="bl" style="bottom:-5px;left:-5px;cursor:nesw-resize;"></div>
+          <div class="crop-handle" data-dir="bc" style="bottom:-5px;left:calc(50% - 5px);cursor:ns-resize;"></div>
+          <div class="crop-handle" data-dir="br" style="bottom:-5px;right:-5px;cursor:nwse-resize;"></div>
+        </div>
+        <!-- 완료/취소 버튼 -->
+        <div id="cropActions" style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:40;">
+          <button onclick="applyCrop()" style="background:#C4973A;color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-family:'Gowun Dodum',serif;cursor:pointer;font-weight:700;">✓ 자르기 완료</button>
+          <button onclick="cancelCrop()" style="background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-family:'Gowun Dodum',serif;cursor:pointer;">✕ 취소</button>
+        </div>
+      </div>
+      <div class="canvas-resize-handle tr" id="rh-tr"></div>
+      <div class="canvas-resize-handle bl" id="rh-bl"></div>
+      <div class="canvas-resize-handle bc" id="rh-bc"></div>
+      <div class="canvas-resize-handle br" id="rh-br"></div>
+      <div id="sizeLabel" style="position:absolute;bottom:5px;right:6px;font-size:10px;color:rgba(255,255,255,.85);background:rgba(0,0,0,.38);padding:2px 7px;border-radius:5px;letter-spacing:.03em;pointer-events:none;z-index:10;white-space:nowrap">5,000 × 5,000 px</div>
+      <div class="canvas-hint" id="canvasHint">
+        <img src="data:image/png;base64,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001TFyxYIDjTZ4wdUP1B5qqrrho/fOiw1MWfPv6LAPDkwp9WTxo3lAAcDAC/r//WEVUVgygSiRyWu+u7qp33B8hFixblXXXVVY9ef/31096unPH8888Hf//731e/3WNdeeWV4QGv37rhhhuuv+qqq744sMQy0G233Tb92muvve7qq69+JBaLOfuXZfpfwx//+McfXXfddctypRsJQPQPxv7iF7/Iv+GGG1K33HLLlwc+T//7uv3228tuueWW49/uNT/99NPWW9Xs//jHP37miiuumMmlHcbYB0UJIRAKuMvOPHb6IgD4x93fn5gL+AcJkQ1sJYWFL59xxok35VbAejcBXwAQl19+efCmm2568i9/+cukWCxm7RecBQBx0003HXrXXXeN/+1vf/vkn/70p1PeLojX1dWpdxIgY7GYAwB/+tOffnfLLbdkrr766sr9g2v/IPCdd955yK233kpXXnllWf9t+gP6TTfdVHrrrbcu/cMf/jDhXwXngTuKWCz2lkG+/7r/5sA3+8/xmrbso4qMMapsUElw/MTJG/HE66CQJgOdK8NICCGoZsrwtueef3b6e5mOH4vFRHNzc2b48OEjUqnUmfX19T8aeP3ChQvl/PnzdTwe/5plWTWu6z7uOM4bRCQWLFhA+wdMIUT/GWFvW+/PMbFYzAoEAq1KqbTjOOUAdjQ3N4sBOw8zf/58Wrhw4dre3t4tRUVFJQDa+ktQAHDhhRfuuf7664++7LLLdveXg/Z/TQ0NDXL+/Pm6v6wEwH+7shYAv76+vn+mjvkXr59xwGfs/bFw4UI1f/583draOaWqcuiYa+98tA4AWlftMF4iMzBI4dA5B63+818WjyDqtoUQ/rsYaKSJEyfK+vp6feyxx86Px+OP3nTTTSWZTOamSy+9dHluB2IAIBgMXkJEk1pbW5+tr683F154oei/br+Aufex6+vr3/Y1TJw4kebPn69vueWWYVLKSCgUigNAdXU1DXy8WCwm58+f337jjTcuBzADQPPEiRPFgNsYAG87WJ3727s+Lbm+vp7XjOSAz9gHo2H+fADAOaefFmhrWY94Z6+ura21fn/d4zKdTGP27AnipZdWCyKCEOK20aPGfvOu6/82HsCKBQsWSLzDk7Dmz5+vc8Gy6Y477piRyWRO6ejoyMvdf28QvfjiizsALBmQyb/nmSt1dXVq/vz5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" class="canvas-hint-char" alt="">
+        <div class="canvas-hint-txt">배경 사진을 올리거나<br>레이어를 추가해보세요</div>
+      </div>
+    </div>
+    <!-- SIZE BAR -->
+
+    <!-- ── 직접 입력 사이즈 모달 ── -->
+    <div id="customSizeModal" onclick="if(event.target===this)closeCustomSize()">
+      <div id="customSizeBox">
+        <h3>✏ 사이즈 직접 입력</h3>
+
+        <!-- 단위 선택 -->
+        <div class="csz-unit-row">
+          <div class="csz-unit-btn active" onclick="setCszUnit('px')">px</div>
+          <div class="csz-unit-btn" onclick="setCszUnit('cm')">cm</div>
+          <div class="csz-unit-btn" onclick="setCszUnit('mm')">mm</div>
+        </div>
+        <!-- DPI 선택 -->
+        <div class="csz-dpi-row" id="cszDpiRow">
+          <div class="csz-dpi-btn" onclick="setCszDpi(72)">72</div>
+          <div class="csz-dpi-btn" onclick="setCszDpi(96)">96</div>
+          <div class="csz-dpi-btn" onclick="setCszDpi(150)">150</div>
+          <div class="csz-dpi-btn active" onclick="setCszDpi(300)">300</div>
+          <div class="csz-dpi-btn" onclick="setCszDpi(600)">600 DPI</div>
+        </div>
+
+        <!-- 가로/세로 입력 -->
+        <div class="csz-row">
+          <label>가로</label>
+          <input type="number" id="cszW" min="1" max="10000" placeholder="" oninput="onCszInput('w')">
+          <span class="csz-unit-lbl" id="cszUnitLbl">px</span>
+        </div>
+        <div class="csz-row">
+          <label>세로</label>
+          <input type="number" id="cszH" min="1" max="10000" placeholder="" oninput="onCszInput('h')">
+          <span class="csz-unit-lbl">px</span>
+        </div>
+
+        <!-- 방향 -->
+        <div class="csz-dir-row">
+          <span class="csz-dir-lbl">방향</span>
+          <div class="csz-dir-btn active" id="cszDirP" onclick="setCszDir('portrait')">□ 세로</div>
+          <div class="csz-dir-btn" id="cszDirL" onclick="setCszDir('landscape')">▭ 가로</div>
+        </div>
+
+        <!-- 비율 고정 -->
+        <label class="csz-lock">
+          <input type="checkbox" id="cszLock" onchange="onCszLockToggle()"> 비율 고정 <span style="font-size:10px;color:var(--ink3)">(켜면 가로·세로가 함께 변해요)</span>
+        </label>
+
+        <!-- 프리셋 -->
+        <div class="csz-presets">
+          <div class="csz-preset" onclick="cszPreset(5000,5000)">1:1</div>
+          <div class="csz-preset" onclick="cszPreset(1080,1920)">9:16</div>
+          <div class="csz-preset" onclick="cszPreset(1920,1080)">16:9</div>
+          <div class="csz-preset" onclick="cszPreset(1080,1350)">4:5</div>
+          <div class="csz-preset" onclick="cszPreset(1200,630)">SNS</div>
+          <div class="csz-preset" onclick="cszPreset(2480,3508)">A4</div>
+        </div>
+
+        <div class="csz-btns">
+          <button class="csz-btn-cancel" onclick="closeCustomSize()">취소</button>
+          <button class="csz-btn-ok" onclick="applyCustomSize()">적용</button>
+        </div>
+      </div>
+    </div>
+    <div class="size-bar" id="sizeBar">
+      <div class="size-chip active" data-w="5000" data-h="5000" onclick="setSize(this)">1:1</div>
+      <div class="size-chip" data-w="1080" data-h="1920" onclick="setSize(this)">9:16</div>
+      <div class="size-chip" data-w="1920" data-h="1080" onclick="setSize(this)">16:9</div>
+      <div class="size-chip" data-w="1080" data-h="1350" onclick="setSize(this)">4:5</div>
+
+      <div class="size-chip" onclick="enterCropMode()" style="border-color:#C4973A;color:#C4973A;flex-shrink:0">자르기</div>
+      <div class="size-chip" onclick="openCustomSize()" style="border-color:#7B9E87;color:#7B9E87;flex-shrink:0">직접입력</div>
+      <div class="zoom-bar">
+        <button class="zoom-btn" onclick="zoomCanvas(-1)" title="축소">－</button>
+        <span class="zoom-pct" id="zoomPct">100%</span>
+        <button class="zoom-btn" onclick="zoomCanvas(+1)" title="확대">＋</button>
+      </div>
+    </div>
+    <div style="text-align:center;padding:3px 0 4px;font-size:10px;color:rgba(28,15,6,.55);letter-spacing:.01em;font-family:'Gowun Dodum',serif;flex-shrink:0">
+      © 2025 Congsim. All rights reserved.
+    </div>
+  </div>
+  <div class="panel" id="sidePanel">
+    <!-- 모바일 바텀시트 드래그 손잡이 -->
+    <div class="panel-grip" id="panelGrip" title="위아래로 끌어 크기 조절"></div>
+    <!-- ⑦ 3단계 표시바 -->
+    <div class="ptabs">
+      <div class="ptab active" id="ptab-bg" onclick="switchTab('bg',this)">① 배경사진</div>
+      <div class="ptab" id="ptab-layers" onclick="switchTab('layers',this)">② 글자 올리기</div>
+      <div class="ptab" id="ptab-gallery" onclick="switchTab('gallery',this)">③ 갤러리</div>
+    </div>
+
+    <div class="pcontent">
+
+      <!-- ── LAYERS PANE ── -->
+      <div class="pane" id="pane-layers">
+
+        <!-- 액션 버튼 바 -->
+        <div style="display:flex;gap:6px;margin-bottom:10px;align-items:center">
+          <button class="cctrl-btn" onclick="undoCanvas()" title="되돌리기" style="width:38px;height:38px;font-size:16px;flex-shrink:0">↩</button>
+          <button class="cctrl-btn" onclick="redoCanvas()" title="앞으로가기" style="width:38px;height:38px;font-size:16px;flex-shrink:0">↪</button>
+          <button class="canvas-done-btn" onclick="doneCanvas()" style="flex:1;height:38px;margin:0;border-radius:10px">저장 ✓</button>
+          <button class="cctrl-btn" onclick="resetAll()" title="초기화" style="width:38px;height:38px;font-size:16px;flex-shrink:0">↺</button>
+        </div>
+
+        <!-- 다중선택 정렬 바 -->
+        <div id="multiAlignBar">
+          <div class="mab-head">◈ <span id="mabCount">0</span>개 선택됨 — 정렬</div>
+          <div class="mab-row">
+            <button class="mab-btn" onclick="alignLayers('left')"    title="왼쪽 맞춤">⇤</button>
+            <button class="mab-btn" onclick="alignLayers('centerX')" title="가로 가운데">⇹</button>
+            <button class="mab-btn" onclick="alignLayers('right')"   title="오른쪽 맞춤">⇥</button>
+            <button class="mab-btn" onclick="alignLayers('top')"     title="위 맞춤">⤒</button>
+            <button class="mab-btn" onclick="alignLayers('centerY')" title="세로 가운데">⇳</button>
+            <button class="mab-btn" onclick="alignLayers('bottom')"  title="아래 맞춤">⤓</button>
+          </div>
+          <div class="mab-row">
+            <button class="mab-btn sm" onclick="alignLayers('distX')" title="가로 간격 균등">↔균등</button>
+            <button class="mab-btn sm" onclick="alignLayers('distY')" title="세로 간격 균등">↕균등</button>
+            <button class="mab-btn sm" onclick="resizeSelected(90)"  title="10% 축소">－크기</button>
+            <button class="mab-btn sm" onclick="resizeSelected(110)" title="10% 확대">＋크기</button>
+            <button class="mab-btn sm" onclick="rotateSelected(-15)" title="왼쪽 15° 회전">↺15°</button>
+            <button class="mab-btn sm" onclick="rotateSelected(15)"  title="오른쪽 15° 회전">↻15°</button>
+          </div>
+        </div>
+
+        <div class="addrow" style="grid-template-columns:repeat(4,1fr)">
+          <div class="addbtn" onclick="addTextLayer()">
+            <div class="addbtn-icon">✍️</div>
+            <div class="addbtn-lbl">텍스트</div>
+          </div>
+          <div class="addbtn" onclick="$('calliFileIn').click()">
+            <div class="addbtn-icon">🖌</div>
+            <div class="addbtn-lbl">캘리PNG</div>
+            <input type="file" id="calliFileIn" accept="image/*,.png,.jpg,.jpeg,.webp" style="display:none" onchange="onCalliLoad(event)">
+          </div>
+          <input type="file" id="imgFileIn" accept="image/*" style="display:none" onchange="onImgLoad(event)">
+          <div class="addbtn" onclick="$('imgFileIn').click()">
+            <div class="addbtn-icon">🖼</div>
+            <div class="addbtn-lbl">이미지</div>
+          </div>
+          <div class="addbtn" onclick="openStickerModal()">
+            <div class="addbtn-icon">⭐</div>
+            <div class="addbtn-lbl">스티커</div>
+          </div>
+        </div>
+
+        <div class="slabel">레이어 목록</div>
+        <div class="llist" id="layerList">
+          <div style="text-align:center;padding:18px 0;color:var(--muted);font-size:12px;line-height:1.7">
+            레이어가 없어요<br><small>위 버튼으로 추가하세요</small>
+          </div>
+        </div>
+
+        <!-- PROP AREA -->
+        <div id="propArea">
+          <div id="noPropHint" style="text-align:center;padding:16px;color:var(--muted);font-size:12px;line-height:1.8">
+            ☝️<br>레이어를 선택하면<br>속성을 편집할 수 있어요
+          </div>
+        </div>
+
+        <!-- 캘리 레이어 색상 변경 -->
+        <div class="slabel" style="margin-top:4px">🎨 선택 레이어 색상 변경</div>
+        <div id="layerTintSection">
+          <div style="font-size:10px;color:var(--muted);line-height:1.5;margin-bottom:6px">레이어를 선택하면 색상을 바꿀 수 있어요</div>
+          <div class="layer-tint-row" id="layerTintRow">
+            <div class="tint-dot tint-orig active" id="tintOrigDot" data-color="null" onclick="setLayerTint(null,this)" title="원본 색상으로 되돌리기"></div>
+            <div class="tint-dot" style="background:#1c0f06" data-color="#1c0f06" onclick="setLayerTint('#1c0f06',this)" title="먹색"></div>
+            <div class="tint-dot" style="background:#FFFFFF;border-color:var(--border)" data-color="#FFFFFF" onclick="setLayerTint('#FFFFFF',this)" title="흰색"></div>
+            <div class="tint-dot" style="background:#C4973A" data-color="#C4973A" onclick="setLayerTint('#C4973A',this)" title="금색"></div>
+            <div class="tint-dot" style="background:#8B4513" data-color="#8B4513" onclick="setLayerTint('#8B4513',this)" title="갈색"></div>
+            <div class="tint-dot" style="background:#B22222" data-color="#B22222" onclick="setLayerTint('#B22222',this)" title="붉은색"></div>
+            <div class="tint-dot" style="background:#2F4F4F" data-color="#2F4F4F" onclick="setLayerTint('#2F4F4F',this)" title="청록"></div>
+            <div class="tint-dot" style="background:#4B0082" data-color="#4B0082" onclick="setLayerTint('#4B0082',this)" title="보라"></div>
+            <div class="tint-dot" style="background:#1a3a5c" data-color="#1a3a5c" onclick="setLayerTint('#1a3a5c',this)" title="남색"></div>
+            <div class="tint-dot" style="background:#A8D8A0" data-color="#A8D8A0" onclick="setLayerTint('#A8D8A0',this)" title="연두 (파스텔)"></div>
+            <div class="tint-dot" style="background:#A8CFE8" data-color="#A8CFE8" onclick="setLayerTint('#A8CFE8',this)" title="하늘 (파스텔)"></div>
+            <div class="tint-dot" style="background:#C5E8DC" data-color="#C5E8DC" onclick="setLayerTint('#C5E8DC',this)" title="민트 (파스텔)"></div>
+            <div class="tint-dot" style="background:#F2C4D4" data-color="#F2C4D4" onclick="setLayerTint('#F2C4D4',this)" title="분홍 (파스텔)"></div>
+            <div class="tint-dot" style="background:#EBD9A8" data-color="#EBD9A8" onclick="setLayerTint('#EBD9A8',this)" title="크림 (파스텔)"></div>
+            <div class="tint-dot" style="background:#CFC0E0" data-color="#CFC0E0" onclick="setLayerTint('#CFC0E0',this)" title="라벤더 (파스텔)"></div>
+          </div>
+          <div class="tint-custom-row">
+            <input type="color" id="layerTintPicker" value="#C4973A" style="width:32px;height:32px;border-radius:8px;border:1.5px solid var(--border);cursor:pointer;padding:2px;background:var(--parchment)" onchange="setLayerTint(this.value,null)">
+            <div class="lbtn" style="flex:1;height:32px;font-size:11px;display:flex;align-items:center;justify-content:center" onclick="setLayerTint($('layerTintPicker').value,null)">커스텀 색 적용</div>
+          </div>
+        </div>
+
+        <!-- 선택 레이어 필터 -->
+        <div class="slabel" style="margin-top:12px">선택한 레이어 필터</div>
+        <div style="font-size:10px;color:var(--muted);margin:-2px 0 6px">레이어를 선택한 뒤 필터를 누르면 그 레이어에만 적용돼요</div>
+        <div class="filter-thumb-grid" id="filterThumbGrid2"></div>
+        <div class="ctrl" style="margin-top:8px"><div class="ctrl-row"><span class="ctrl-n">비네팅</span><span class="ctrl-v" id="vVig2">0</span></div><input type="range" id="slVig2" min="0" max="100" value="0" oninput="cv('vVig2',this);_vig=+this.value;syncSlider('slVig','vVig',this.value);render()" ontouchend="this.oninput({target:this})"></div>
+        <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">필름 그레인</span><span class="ctrl-v" id="vGrain2">0</span></div><input type="range" id="slGrain2" min="0" max="80" value="0" oninput="cv('vGrain2',this);_grain=+this.value;syncSlider('slGrain','vGrain',this.value);render()" ontouchend="this.oninput({target:this})"></div>
+
+        <!-- 폰트 추가 -->
+        <div class="slabel" style="margin-top:14px">🔤 폰트 추가</div>
+        <div style="display:flex;gap:6px;margin-bottom:7px;align-items:center">
+          <div class="addbtn" style="flex:1;flex-direction:row;gap:6px;padding:8px 10px;justify-content:center" onclick="$('fontFileIn').click()">
+            <span style="font-size:14px">📁</span>
+            <span style="font-size:11px">TTF/OTF 업로드</span>
+            <input type="file" id="fontFileIn" accept=".ttf,.otf,.woff,.woff2" multiple style="display:none" onchange="onFontFileLoad(event)">
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;margin-bottom:12px;align-items:center">
+          <input id="gFontUrlIn" type="text" placeholder="Google Fonts 이름 (예: Nanum Pen Script)" style="flex:1;background:var(--parchment);border:1.5px solid var(--border);border-radius:8px;padding:7px 9px;font-size:11px;outline:none;color:var(--ink)">
+          <div class="addbtn" style="width:60px;padding:8px 4px;flex-shrink:0" onclick="addGoogleFont()">
+            <span style="font-size:11px">추가</span>
+          </div>
+        </div>
+
+        <!-- 폰트 갤러리 -->
+        <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">
+          <span>🎨 폰트 갤러리</span>
+          <span id="fontGalleryToggle" style="font-size:10px;color:var(--muted);cursor:pointer" onclick="toggleFontGallery()">접기 ▲</span>
+        </div>
+        <div id="fontGallery" style="display:flex;flex-direction:column;gap:5px"></div>
+      </div>
+
+      <!-- ── GALLERY PANE ── -->
+      <div class="pane" id="pane-gallery">
+        <!-- 액션 버튼 바 -->
+        <div style="display:flex;gap:6px;margin-bottom:10px;align-items:center">
+          <button class="cctrl-btn" onclick="undoCanvas()" title="되돌리기" style="width:38px;height:38px;font-size:16px;flex-shrink:0">↩</button>
+          <button class="cctrl-btn" onclick="redoCanvas()" title="앞으로가기" style="width:38px;height:38px;font-size:16px;flex-shrink:0">↪</button>
+          <button class="canvas-done-btn" onclick="doneCanvas()" style="flex:1;height:38px;margin:0;border-radius:10px">저장 ✓</button>
+          <button class="cctrl-btn" onclick="resetAll()" title="초기화" style="width:38px;height:38px;font-size:16px;flex-shrink:0">↺</button>
+        </div>
+        <div style="font-size:10px;color:var(--muted);line-height:1.6;background:rgba(196,151,58,.07);border-radius:8px;padding:7px 9px;margin-bottom:10px">
+          ✅ <b>저장</b> 버튼을 누르면 갤러리에 저장돼요<br>
+          🖊 작품을 탭하면 다시 편집할 수 있어요
+        </div>
+        <div class="gallery-toolbar">
+          <button class="gallery-folder-btn" onclick="addFolder()">📁 폴더 추가</button>
+          <button class="gallery-folder-btn" onclick="$('galleryImgFileIn').click()" style="background:rgba(196,151,58,.1);border-color:var(--gold)">🖼 이미지 추가
+            <input type="file" id="galleryImgFileIn" accept="image/*" multiple style="display:none" onchange="addGalleryImages(event)">
+          </button>
+        </div>
+
+        <div id="galleryImgSection" style="display:none">
+          <div class="slabel" style="margin-bottom:6px;display:flex;align-items:center;justify-content:space-between">
+            <span>📸 내 이미지</span>
+            <span style="font-size:10px;color:var(--muted);cursor:pointer" onclick="toggleGalleryImgSection()">접기 ▲</span>
+          </div>
+          <div class="bg-photo-grid" id="galleryImgGrid"></div>
+          <div class="bg-photo-pg" id="galleryImgPg"></div>
+          <div style="height:8px"></div>
+        </div>
+        <div class="gallery-folder-section" id="galleryFolderSection"></div>
+        <div class="works-grid" id="worksGrid"></div>
+        <div class="gallery-pagination" id="galleryPagination"></div>
+      </div>
+
+      <!-- ── BG PANE ── -->
+      <div class="pane active" id="pane-bg">
+
+        <!-- 액션 버튼 바 -->
+        <div style="display:flex;gap:6px;margin-bottom:10px;align-items:center">
+          <button class="cctrl-btn" onclick="undoCanvas()" title="되돌리기" style="width:38px;height:38px;font-size:16px;flex-shrink:0">↩</button>
+          <button class="cctrl-btn" onclick="redoCanvas()" title="앞으로가기" style="width:38px;height:38px;font-size:16px;flex-shrink:0">↪</button>
+          <button class="canvas-done-btn" onclick="doneCanvas()" style="flex:1;height:38px;margin:0;border-radius:10px">저장 ✓</button>
+          <button class="cctrl-btn" onclick="resetAll()" title="초기화" style="width:38px;height:38px;font-size:16px;flex-shrink:0">↺</button>
+        </div>
+        <!-- 배경사진 추가 버튼 -->
+        <div style="margin-bottom:10px">
+          <div class="togbtn" style="width:100%;height:38px;font-size:12px;display:flex;align-items:center;justify-content:center;gap:4px" onclick="$('bgFileIn').click()">🌄 배경사진 추가</div>
+          <input type="file" id="bgFileIn" accept="image/*" multiple onchange="onBgLoad(event)" style="display:none">
+        </div>
+
+        <!-- 3탭 통일 -->
+        <div class="bgtabs">
+          <div class="bgtab active" id="bgtab-texture" onclick="switchBgTab('texture',this)">🖼 이미지뷰</div>
+          <div class="bgtab" id="bgtab-color" onclick="switchBgTab('color',this)">🎨 배경컬러</div>
+          <div class="bgtab" id="bgtab-bgfilter" onclick="switchBgTab('bgfilter',this)">✨ 필터사용</div>
+        </div>
+
+        <!-- ① 컬러 bgpane -->
+        <div class="bgpane" id="bgp-color" style="display:none;padding-top:10px">
+          <div class="slabel" style="margin-top:0">단색</div>
+          <div class="color-palette" id="colorPalette"></div>
+          <div style="display:flex;gap:7px;align-items:center;margin-top:8px">
+            <input type="color" id="newColorPicker" value="#FF6B6B" style="width:36px;height:36px;border-radius:8px;border:1.5px solid var(--border);cursor:pointer;padding:2px;background:var(--parchment)">
+            <div class="lbtn" style="flex:1;height:36px;font-size:12px;color:var(--ink2);border-color:var(--border2);display:flex;align-items:center;justify-content:center" onclick="addCustomColor()">+ 색상 추가</div>
+          </div>
+          <div class="slabel" style="margin-top:14px">텍스처</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:12px" id="texGrid"></div>
+          <div class="slabel" style="margin-top:2px">그라데이션</div>
+          <div class="grad-grid" id="gradGrid"></div>
+          <div class="custom-grad-list" id="customGradList"></div>
+          <div class="grad-editor" id="gradEditor">
+            <div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:8px">
+              <div><div style="font-size:10px;color:var(--muted);margin-bottom:3px">시작색</div>
+                <input type="color" id="gradC1" value="#FAF6F0" style="width:40px;height:40px;border-radius:8px;border:1.5px solid var(--border);cursor:pointer;padding:2px;background:var(--parchment)">
+              </div>
+              <div style="font-size:20px;color:var(--muted);padding-bottom:8px">→</div>
+              <div><div style="font-size:10px;color:var(--muted);margin-bottom:3px">끝색</div>
+                <input type="color" id="gradC2" value="#C4973A" style="width:40px;height:40px;border-radius:8px;border:1.5px solid var(--border);cursor:pointer;padding:2px;background:var(--parchment)">
+              </div>
+              <div style="flex:1"><div style="font-size:10px;color:var(--muted);margin-bottom:3px">방향</div>
+                <select id="gradDir" style="width:100%;background:var(--parchment);border:1.5px solid var(--border);border-radius:7px;padding:6px;font-size:11px;outline:none;color:var(--ink);height:40px">
+                  <option value="to bottom right">↘ 대각선</option>
+                  <option value="to bottom">↓ 아래</option>
+                  <option value="to right">→ 오른쪽</option>
+                  <option value="to top">↑ 위</option>
+                  <option value="135deg">↙ 역대각</option>
+                </select>
+              </div>
+            </div>
+            <div style="display:flex;gap:6px">
+              <input type="text" id="gradNameIn" placeholder="이름 (예: 노을)" style="flex:1;background:var(--parchment);border:1.5px solid var(--border);border-radius:7px;padding:7px 10px;font-size:11px;outline:none;color:var(--ink);font-family:'Gowun Dodum',serif">
+              <div class="lbtn" style="width:auto;padding:0 12px;font-size:12px;color:var(--ink2);border-color:var(--border2);display:flex;align-items:center" onclick="saveCustomGrad()">저장</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ③ 이미지 — 배경사진 갤러리 -->
+        <div class="bgpane active" id="bgp-texture">
+
+          <!-- 배경 없음 버튼 -->
+          <div onclick="clearBgPhoto()" style="display:flex;align-items:center;gap:8px;padding:8px 12px;margin-bottom:10px;border-radius:10px;border:1.5px dashed var(--border2);cursor:pointer;background:transparent;transition:all .15s" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border2)'">
+            <span style="font-size:18px">🚫</span>
+            <span style="font-size:12px;color:var(--ink3)">배경 없음 (투명)</span>
+          </div>
+
+          <!-- 선택된 배경사진 미리보기 (항상 상단 고정) -->
+          <div id="bgCurrentThumb" style="display:none;align-items:center;gap:10px;margin-bottom:10px;padding:8px 10px;background:var(--warm);border:1.5px solid var(--border);border-radius:10px">
+            <img id="bgThumbImg" style="width:48px;height:48px;object-fit:cover;border-radius:7px;border:1.5px solid var(--border)" src="">
+            <div style="flex:1;min-width:0">
+              <div id="bgThumbName" style="font-size:11px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">배경사진</div>
+              <div style="font-size:10px;color:var(--muted);margin-top:2px">선택됨</div>
+            </div>
+            <div id="bgVisToggle2" onclick="toggleBgVisible()" style="cursor:pointer;font-size:20px;line-height:1;padding:4px;border-radius:7px;border:1.5px solid var(--border);background:var(--parchment)" title="배경사진 숨기기/보이기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
+          </div>
+
+          <!-- 배경 위치·크기·조정 (상단 고정, 선택 시 표시) -->
+          <div id="bgOverlayProps" style="display:none;margin-bottom:12px;padding:10px;background:rgba(196,151,58,.05);border:1.5px solid var(--border);border-radius:10px">
+            <div class="slabel" style="margin-top:0;display:flex;align-items:center;justify-content:space-between">
+              <span>배경 위치 · 크기</span>
+              <div id="bgVisToggle" onclick="toggleBgVisible()" style="cursor:pointer;padding:2px 6px;border-radius:6px;border:1.5px solid var(--border);background:var(--parchment)" title="배경사진 숨기기/보이기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
+            </div>
+            <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">배경 크기</span><span class="ctrl-v" id="vBgScale">100%</span></div><input type="range" id="slBgScale" min="10" max="400" value="100" oninput="setBgScale(this)" onchange="saveHistory()" ontouchend="this.oninput({target:this})"></div>
+            <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">배경 가로 크기</span><span class="ctrl-v" id="vBgScaleX">100%</span></div><input type="range" id="slBgScaleX" min="10" max="400" value="100" onpointerdown="saveHistory()" oninput="setBgScaleX(this)" ontouchend="this.oninput({target:this})"></div>
+            <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">배경 세로 크기</span><span class="ctrl-v" id="vBgScaleY">100%</span></div><input type="range" id="slBgScaleY" min="10" max="400" value="100" onpointerdown="saveHistory()" oninput="setBgScaleY(this)" ontouchend="this.oninput({target:this})"></div>
+            <div class="togbtn" id="bgDirectEditBtn" onclick="toggleBgDirectEdit()" style="text-align:center;padding:9px;margin-bottom:8px;font-size:11px">⤢ 배경 직접 조정</div>
+            <label style="display:flex;align-items:center;gap:7px;font-size:11px;margin:0 0 9px 2px"><input type="checkbox" id="bgAspectLock" checked onchange="setBgAspectLock(this.checked)"> 모서리 비율 유지</label>
+            <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">좌우 위치</span><span class="ctrl-v" id="vBgX">0</span></div><input type="range" id="slBgX" min="-200" max="200" value="0" oninput="setBgX(this)" onchange="saveHistory()" ontouchend="this.oninput({target:this})"></div>
+            <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">상하 위치</span><span class="ctrl-v" id="vBgY">0</span></div><input type="range" id="slBgY" min="-200" max="200" value="0" oninput="setBgY(this)" onchange="saveHistory()" ontouchend="this.oninput({target:this})"></div>
+            <div class="slabel" style="margin-top:6px">배경 맞춤</div>
+            <div class="bgfit-row">
+              <div class="bgfit-btn active" id="bgfitCover" onclick="setBgFit('cover',this)" title="캔버스를 꽉 채웁니다. 사진 일부가 잘릴 수 있어요">
+                <span class="bgfit-ic">▣</span><span>채우기</span>
+              </div>
+              <div class="bgfit-btn" id="bgfitContain" onclick="setBgFit('contain',this)" title="사진 전체가 보이게 넣습니다. 여백이 생길 수 있어요">
+                <span class="bgfit-ic">⬚</span><span>전체보기</span>
+              </div>
+              <div class="bgfit-btn" id="bgfitCanvas" onclick="setBgFit('canvas',this)" title="캔버스 비율을 사진에 맞춰 바꿉니다">
+                <span class="bgfit-ic">⤢</span><span>비율맞춤</span>
+              </div>
+            </div>
+            <div style="margin-bottom:8px"><div class="togbtn" onclick="resetBgPos()" style="text-align:center;padding:8px;font-size:11px">↺ 위치·크기 초기화</div></div>
+            <div class="slabel" style="margin-top:4px">배경 조정</div>
+            <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">밝기</span><span class="ctrl-v" id="vBright">100</span></div><input type="range" id="slBright" min="0" max="200" value="100" oninput="cv('vBright',this);_bright=+this.value;render()" ontouchend="this.oninput({target:this})"></div>
+            <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">대비</span><span class="ctrl-v" id="vContrast">100</span></div><input type="range" id="slContrast" min="0" max="200" value="100" oninput="cv('vContrast',this);_contrast=+this.value;render()" ontouchend="this.oninput({target:this})"></div>
+            <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">채도</span><span class="ctrl-v" id="vSat">100</span></div><input type="range" id="slSat" min="0" max="200" value="100" oninput="cv('vSat',this);_sat=+this.value;render()" ontouchend="this.oninput({target:this})"></div>
+            <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">투명도</span><span class="ctrl-v" id="vBgOp">100%</span></div><input type="range" id="slBgOp" min="0" max="100" value="100" oninput="cv('vBgOp',this,'%');_bgOp=+this.value;render()" ontouchend="this.oninput({target:this})"></div>
+            <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">흐림</span><span class="ctrl-v" id="vBgBlur">0</span></div><input type="range" id="slBgBlur" min="0" max="20" value="0" oninput="cv('vBgBlur',this);_bgBlur=+this.value;render()" ontouchend="this.oninput({target:this})"></div>
+          </div>
+
+          <!-- 배경사진 갤러리 그리드 (항상 고정) -->
+          <div class="bg-photo-grid" id="bgPhotoGrid"></div>
+          <div class="bg-photo-pg" id="bgPhotoPg"></div>
+
+        </div>
+
+        <!-- ④ 배경 필터 -->
+        <div class="bgpane" id="bgp-bgfilter" style="display:none">
+          <div class="slabel" style="margin-top:0">사진 필터 프리셋</div>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:8px;line-height:1.5">💡 미리보기 확인 후 클릭해서 적용하세요</div>
+          <div class="filter-thumb-grid" id="filterThumbGrid"></div>
+
+          <div class="slabel" style="margin-top:14px">세부 조정</div>
+          <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">밝기</span><span class="ctrl-v" id="vFBright">100</span></div><input type="range" id="slFBright" min="0" max="200" value="100" oninput="cv('vFBright',this);_fBright=+this.value;render()" ontouchend="this.oninput({target:this})"></div>
+          <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">대비</span><span class="ctrl-v" id="vFContrast">100</span></div><input type="range" id="slFContrast" min="0" max="200" value="100" oninput="cv('vFContrast',this);_fCont=+this.value;render()" ontouchend="this.oninput({target:this})"></div>
+          <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">채도</span><span class="ctrl-v" id="vFSat">100</span></div><input type="range" id="slFSat" min="0" max="200" value="100" oninput="cv('vFSat',this);_fSat=+this.value;render()" ontouchend="this.oninput({target:this})"></div>
+          <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">색온도 따뜻↔차갑</span><span class="ctrl-v" id="vFTemp">0</span></div><input type="range" id="slFTemp" min="-50" max="50" value="0" oninput="cv('vFTemp',this);_fTemp=+this.value;render()" ontouchend="this.oninput({target:this})"></div>
+
+          <div class="slabel" style="margin-top:8px">오버레이 효과</div>
+          <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">비네팅</span><span class="ctrl-v" id="vVig">0</span></div><input type="range" id="slVig" min="0" max="100" value="0" oninput="cv('vVig',this);_vig=+this.value;syncSlider('slVig2','vVig2',this.value);render()" ontouchend="this.oninput({target:this})"></div>
+          <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">필름 그레인</span><span class="ctrl-v" id="vGrain">0</span></div><input type="range" id="slGrain" min="0" max="80" value="0" oninput="cv('vGrain',this);_grain=+this.value;syncSlider('slGrain2','vGrain2',this.value);render()" ontouchend="this.oninput({target:this})"></div>
+        </div>
+
+      </div>
+
+  </div>
+</div>
+
+<!-- ══ STICKER MODAL ══ -->
+<div id="stickerModal" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:flex-end;justify-content:center" onclick="closeStickerModal()">
+  <div style="background:var(--parchment);border-radius:20px 20px 0 0;padding:16px;width:100%;max-width:520px;max-height:60vh;overflow-y:auto" onclick="event.stopPropagation()">
+    <div style="text-align:center;font-size:13px;font-weight:700;color:var(--ink);margin-bottom:12px">스티커 추가</div>
+    <div id="stickerGrid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:16px"></div>
+    <div class="togbtn" style="text-align:center;padding:10px;font-size:13px" onclick="closeStickerModal()">닫기</div>
+  </div>
+</div>
+
+<!-- ══ PREVIEW MODAL ══ -->
+<div id="previewModal" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.85);align-items:center;justify-content:center;flex-direction:column;gap:14px" onclick="closePreviewModal()">
+  <img id="previewImg" style="max-width:92vw;max-height:78vh;border-radius:12px;object-fit:contain;box-shadow:0 8px 40px rgba(0,0,0,.5)" src="" alt="">
+  <div id="previewLbl" style="color:rgba(255,255,255,.8);font-size:13px;font-family:'Gowun Dodum',serif;letter-spacing:.05em"></div>
+  <div style="color:rgba(255,255,255,.4);font-size:11px">탭하면 닫혀요</div>
+</div>
+
+<!-- ══ CONFIRM MODAL ══ -->
+<div id="confirmModal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.45);align-items:center;justify-content:center">
+  <div style="background:var(--parchment);border-radius:16px;padding:24px;width:min(300px,88vw);box-shadow:0 8px 32px rgba(0,0,0,.25)">
+    <div id="confirmModalTitle" style="font-size:15px;font-weight:700;color:var(--ink);margin-bottom:6px"></div>
+    <div id="confirmModalDesc" style="font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.6"></div>
+    <div style="display:flex;gap:8px">
+      <div class="togbtn" style="flex:1;text-align:center;padding:10px;font-size:13px;cursor:pointer" onclick="closeConfirmModal()">취소</div>
+      <div id="confirmModalOk" class="hbtn hbtn-gold" style="flex:1;text-align:center;padding:10px;font-size:13px;cursor:pointer;border-radius:10px">확인</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MOVE FOLDER MODAL ══ -->
+<div id="moveFolderModal" style="display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.45);align-items:center;justify-content:center">
+  <div style="background:var(--parchment);border-radius:16px;padding:20px;width:min(300px,90vw);box-shadow:0 8px 32px rgba(0,0,0,.2)">
+    <div style="font-size:15px;font-weight:700;color:var(--ink);margin-bottom:12px">📁 폴더로 이동</div>
+    <div id="moveFolderList" style="display:flex;flex-direction:column;gap:6px;max-height:240px;overflow-y:auto;margin-bottom:14px"></div>
+    <div class="togbtn" style="text-align:center;padding:10px;font-size:13px" onclick="$('moveFolderModal').style.display='none'">취소</div>
+  </div>
+</div>
+
+<!-- ══ FOLDER NAME MODAL ══ -->
+<div id="folderModal" style="display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.45);align-items:center;justify-content:center">
+  <div style="background:var(--parchment);border-radius:16px;padding:24px;width:min(320px,90vw);box-shadow:0 8px 32px rgba(0,0,0,.2)">
+    <div id="folderModalTitle" style="font-size:15px;font-weight:700;color:var(--ink);margin-bottom:14px">폴더 이름</div>
+    <input id="folderModalInput" type="text" style="width:100%;background:var(--warm);border:1.5px solid var(--border);border-radius:9px;padding:10px 12px;font-size:14px;outline:none;color:var(--ink);font-family:'Gowun Dodum',serif;box-sizing:border-box" placeholder="폴더 이름 입력">
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <div class="togbtn" style="flex:1;text-align:center;padding:10px;font-size:13px" onclick="closeFolderModal()">취소</div>
+      <div class="hbtn hbtn-gold" style="flex:1;text-align:center;padding:10px;font-size:13px;cursor:pointer;border-radius:10px" onclick="confirmFolderModal()">확인</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SAVE MODAL ══ -->
+<div class="modal-bg" id="saveModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">내보내기</div>
+
+    <div class="slabel" style="margin-top:0">출력 크기 선택</div>
+    <div class="size-grid" id="modalSizeGrid">
+      <div class="sgrid-item sgrid-native" id="sgridNative" data-native="1" onclick="setModalSize(this)">
+        <div class="sgrid-icon">⬛</div>
+        <div class="sgrid-ratio">원본</div>
+        <div class="sgrid-px" id="sgridNativePx">— × —</div>
+      </div>
+      <div class="sgrid-item active" data-w="1080" data-h="1080" onclick="setModalSize(this)">
+        <div class="sgrid-icon">■</div>
+        <div class="sgrid-ratio">1:1</div>
+        <div class="sgrid-px">1080 × 1080</div>
+      </div>
+      <div class="sgrid-item" data-w="1080" data-h="1920" onclick="setModalSize(this)">
+        <div class="sgrid-icon">▯</div>
+        <div class="sgrid-ratio">9:16</div>
+        <div class="sgrid-px">1080 × 1920</div>
+      </div>
+      <div class="sgrid-item" data-w="1920" data-h="1080" onclick="setModalSize(this)">
+        <div class="sgrid-icon">▭</div>
+        <div class="sgrid-ratio">16:9</div>
+        <div class="sgrid-px">1920 × 1080</div>
+      </div>
+      <div class="sgrid-item" data-w="1080" data-h="1350" onclick="setModalSize(this)">
+        <div class="sgrid-icon">▯</div>
+        <div class="sgrid-ratio">4:5</div>
+        <div class="sgrid-px">1080 × 1350</div>
+      </div>
+
+      <div class="sgrid-item" data-w="2000" data-h="2000" onclick="setModalSize(this)">
+        <div class="sgrid-icon">■</div>
+        <div class="sgrid-ratio">2K</div>
+        <div class="sgrid-px">2000 × 2000</div>
+      </div>
+      <div class="sgrid-item" data-w="3000" data-h="3000" onclick="setModalSize(this)">
+        <div class="sgrid-icon">■</div>
+        <div class="sgrid-ratio">3K</div>
+        <div class="sgrid-px">3000 × 3000</div>
+      </div>
+      <div class="sgrid-item" data-w="5000" data-h="5000" onclick="setModalSize(this)">
+        <div class="sgrid-icon">■</div>
+        <div class="sgrid-ratio">5K</div>
+        <div class="sgrid-px">5000 × 5000</div>
+      </div>
+    </div>
+
+    <div class="slabel">파일 형식</div>
+    <div class="fmt-row" id="fmtRow">
+      <div class="fmt-btn active" data-fmt="png" onclick="setFmt(this)">PNG<br><small style="color:var(--muted);font-size:10px">배경 투명</small></div>
+      <div class="fmt-btn" data-fmt="jpg" onclick="setFmt(this)">JPG<br><small style="color:var(--muted);font-size:10px">작은 용량</small></div>
+      <div class="fmt-btn" data-fmt="jpg-hq" onclick="setFmt(this)">JPG<br><small style="color:var(--muted);font-size:10px">고화질</small></div>
+      <div class="fmt-btn" data-fmt="png-bg" onclick="setFmt(this)">PNG<br><small style="color:var(--muted);font-size:10px">배경 포함</small></div>
+      <div class="fmt-btn" data-fmt="webp" onclick="setFmt(this)">WEBP<br><small style="color:var(--muted);font-size:10px">최신 형식</small></div>
+    </div>
+
+
+    <!-- 안내 메시지 -->
+    <div style="background:rgba(196,151,58,.09);border:1px solid rgba(196,151,58,.25);border-radius:10px;padding:10px 13px;margin-bottom:14px;font-size:11px;color:var(--ink3);line-height:1.7">
+      💡 <b style="color:var(--ink2)">내보내기 방법</b><br>
+      ① <b>다운로드</b> → 기기에 저장 + 앱 갤러리 자동 저장<br>
+      ② <b>공유하기</b> → 카카오·문자 등 앱으로 바로 공유 (모바일)<br>
+      ③ <b>클립보드 복사</b> → 바로 붙여넣기 (Chrome 권장)
+    </div>
+
+    <div class="share-grid">
+      <div class="share-btn" onclick="doDownload()">
+        <div class="share-icon">💾</div>
+        <div class="share-lbl">다운로드</div>
+      </div>
+      <div class="share-btn" onclick="doNativeShare()">
+        <div class="share-icon">📤</div>
+        <div class="share-lbl">공유하기</div>
+      </div>
+      <div class="share-btn" onclick="doCopy()">
+        <div class="share-icon">📋</div>
+        <div class="share-lbl">클립보드 복사</div>
+      </div>
+      <div class="share-btn" onclick="closeSaveModal()">
+        <div class="share-icon">✕</div>
+        <div class="share-lbl">닫기</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="loading" id="loading">
+  <div class="spinner"></div>
+  <div class="loading-txt" id="loadTxt">처리 중...</div>
+</div>
+
+<script>
+window.onerror = function(msg, src, line, col, err) {
+  if (line === 0 && col === 0) return true;
+  const div = document.getElementById('_dbg') || document.createElement('div');
+  div.id = '_dbg';
+  div.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#8B0000;color:#fff;padding:8px;font-size:11px;z-index:99999;word-break:break-all';
+  div.textContent = `❌ ${msg} | line:${line} | ${src?.split('/').pop()||''}`;
+  document.body.appendChild(div);
+  return true;
+};
+</script>
+
+<script src="js/state.js"></script>
+<script src="js/canvas.js"></script>
+<script src="js/render.js"></script>
+<script src="js/bg.js"></script>
+<script src="js/layers.js"></script>
+<script src="js/bg-transform.js"></script>
+<script src="js/drag.js"></script>
+<script src="js/ui.js"></script>
+
+
+
+
+</body>
+</html>
