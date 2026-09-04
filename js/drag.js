@@ -697,8 +697,9 @@ function enterLyrCrop() {
   const cache = calliCache && calliCache[l.id];
   let bx = W*0.1, by = H*0.1, bw = W*0.8, bh = H*0.8;
   if (cache) {
-    const dW = l.size * (mc.clientWidth / mc.width);
-    const dH = dW * (cache.h / cache.w);
+    const displayScale = mc.clientWidth / mc.width;
+    const dW = l.size * displayScale * ((l.scaleX || 100) / 100);
+    const dH = l.size * displayScale * (cache.h / cache.w) * ((l.scaleY || 100) / 100);
     bx = Math.max(0, l.x * W - dW/2);
     by = Math.max(0, l.y * H - dH/2);
     bw = Math.min(W - bx, dW);
@@ -734,8 +735,9 @@ function _applyLyrCrop() {
   const ch = Math.min(H-cy, Math.max(10, Math.round(lyrCropRect.h)));
   const cache = calliCache && calliCache[l.id];
   if (!cache) return;
-  const dW = l.size * (mc.clientWidth / mc.width);
-  const dH = dW * (cache.h / cache.w);
+  const displayScale = mc.clientWidth / mc.width;
+  const dW = l.size * displayScale * ((l.scaleX || 100) / 100);
+  const dH = l.size * displayScale * (cache.h / cache.w) * ((l.scaleY || 100) / 100);
   const layerLeft = l.x * W - dW/2;
   const layerTop  = l.y * H - dH/2;
   const scaleX = l.srcImg.width / dW;
@@ -749,6 +751,11 @@ function _applyLyrCrop() {
   sw = Math.min(sw, l.srcImg.width - sx);
   sh = Math.min(sh, l.srcImg.height - sy);
   if (sw < 1 || sh < 1) { showToast('자르기 영역이 너무 작습니다'); return; }
+  // 잘린 이미지를 기존 전체 폭으로 다시 늘리지 않는다.
+  // 선택한 자르기 영역의 화면 크기와 중심 위치를 그대로 유지한다.
+  const croppedCenterX = (cx + cw / 2) / W;
+  const croppedCenterY = (cy + ch / 2) / H;
+  const croppedSize = Math.max(10, Math.round(l.size * (cw / dW)));
   const tmp = document.createElement('canvas');
   tmp.width = Math.round(sw); tmp.height = Math.round(sh);
   tmp.getContext('2d').drawImage(l.srcImg, Math.round(sx), Math.round(sy), Math.round(sw), Math.round(sh), 0, 0, tmp.width, tmp.height);
@@ -758,6 +765,9 @@ function _applyLyrCrop() {
     saveHistory();
     l.srcImg = newImg;
     l.srcDataUrl = dataUrl;
+    l.x = croppedCenterX;
+    l.y = croppedCenterY;
+    l.size = croppedSize;
     if (calliCache) delete calliCache[l.id];
     if (typeof processCalliLayer === 'function') processCalliLayer(l.id);
     refreshLayerList(); renderProps(); render();
