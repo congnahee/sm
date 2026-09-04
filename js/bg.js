@@ -33,8 +33,6 @@ function onBgLoad(e) {
 function clearBgPhoto() {
   saveHistory();
   bgImg = null; currentBgDataUrl = null; activeBgPhotoId = null; bgHidden = false;
-  bgDirectEdit = false;
-  const shell = document.querySelector('.canvas-shell'); if (shell) shell.classList.remove('bg-direct-edit');
   const thumb = $('bgCurrentThumb'); if (thumb) thumb.style.display = 'none';
   const props = $('bgOverlayProps'); if (props) props.style.display = 'none';
   render();
@@ -48,9 +46,7 @@ function applyBgPhoto(photo) {
   activeBgPhotoId = photo.id;
   bgHidden = false;
   bgOffX = 0; bgOffY = 0; bgScale = 100; bgScaleX = 100; bgScaleY = 100;
-  bgAspectLocked = true; if ($('bgAspectLock')) $('bgAspectLock').checked = true;
   bgFit = 'cover';
-  setTimeout(() => { if (typeof toggleBgDirectEdit === 'function') toggleBgDirectEdit(true); }, 0);
   if (typeof _syncBgFitBtns === 'function') _syncBgFitBtns('cover');
   // 필터/조정값 초기화
   _bright=100; _contrast=100; _sat=100; _bgOp=100; _bgBlur=0;

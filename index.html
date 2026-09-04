@@ -152,15 +152,6 @@ header{
 .canvas-resize-handle.bc{bottom:-6px;left:calc(50% - 8px);cursor:ns-resize;}
 .canvas-resize-handle.ml{left:-6px;top:calc(50% - 8px);cursor:ew-resize;}
 .canvas-resize-handle.mr{right:-6px;top:calc(50% - 8px);cursor:ew-resize;}
-.canvas-shell.bg-direct-edit{overflow:visible}
-.canvas-shell.bg-direct-edit .canvas-resize-handle{display:none!important}
-#bgTransformBox{display:none;position:absolute;z-index:45;border:2px dashed #20b9a9;box-sizing:border-box;touch-action:none;cursor:move;background:rgba(78,205,196,.025)}
-.canvas-shell.bg-direct-edit #bgTransformBox{display:block}
-.bg-transform-handle{position:absolute;width:36px;height:36px;z-index:46;touch-action:none}
-.bg-transform-handle::after{content:'';position:absolute;left:11px;top:11px;width:12px;height:12px;background:#fff;border:2px solid #20b9a9;border-radius:3px;box-shadow:0 1px 6px rgba(0,0,0,.25)}
-.bg-transform-handle[data-dir=nw]{left:-18px;top:-18px;cursor:nwse-resize}.bg-transform-handle[data-dir=n]{left:calc(50% - 18px);top:-18px;cursor:ns-resize}.bg-transform-handle[data-dir=ne]{right:-18px;top:-18px;cursor:nesw-resize}
-.bg-transform-handle[data-dir=w]{left:-18px;top:calc(50% - 18px);cursor:ew-resize}.bg-transform-handle[data-dir=e]{right:-18px;top:calc(50% - 18px);cursor:ew-resize}
-.bg-transform-handle[data-dir=sw]{left:-18px;bottom:-18px;cursor:nesw-resize}.bg-transform-handle[data-dir=s]{left:calc(50% - 18px);bottom:-18px;cursor:ns-resize}.bg-transform-handle[data-dir=se]{right:-18px;bottom:-18px;cursor:nwse-resize}
 #mainCanvas{display:block;touch-action:none}
 @media(max-width:680px){
   /* ⚠ 캔버스 크기는 initCanvas() 가 outputW:outputH 비율에 맞춰 직접 계산한다.
@@ -487,7 +478,7 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
 /* ────────────────────────────────────────
    TOAST
 ──────────────────────────────────────── */
-.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--ink);color:var(--gold2);padding:10px 22px;border-radius:24px;font-size:13px;z-index:999;opacity:0;transition:all .28s cubic-bezier(.34,1.56,.64,1);pointer-events:none;white-space:nowrap;box-shadow:0 4px 20px rgba(28,15,6,.35)}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--ink);color:var(--gold2);padding:10px 22px;border-radius:24px;font-size:13px;z-index:999;opacity:0;transition:opacity .15s ease,transform .15s ease;pointer-events:none;white-space:nowrap;box-shadow:0 4px 20px rgba(28,15,6,.35)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* ────────────────────────────────────────
@@ -664,7 +655,6 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
   .panel-grip:active::before{background:var(--gold)}
   .panel-grip.dragging::before{background:var(--gold);width:56px}
   .canvas-shell{max-width:calc(100vw - 16px);overflow:hidden;margin-top:auto;margin-bottom:auto}
-  .canvas-shell.bg-direct-edit{overflow:visible}
   .canvas-ctrl-bar{max-width:calc(100vw - 16px);padding:0 2px}
   .size-bar{gap:4px;max-width:calc(100vw - 16px);overflow-x:auto}
   .size-chip{font-size:10px;padding:5px 9px;white-space:nowrap;flex-shrink:0}
@@ -982,11 +972,6 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
     </div>
     <div class="canvas-shell" id="canvasShell">
       <canvas id="mainCanvas"></canvas>
-      <div id="bgTransformBox" aria-label="배경 이미지 선택 영역">
-        <div class="bg-transform-handle" data-dir="nw"></div><div class="bg-transform-handle" data-dir="n"></div><div class="bg-transform-handle" data-dir="ne"></div>
-        <div class="bg-transform-handle" data-dir="w"></div><div class="bg-transform-handle" data-dir="e"></div>
-        <div class="bg-transform-handle" data-dir="sw"></div><div class="bg-transform-handle" data-dir="s"></div><div class="bg-transform-handle" data-dir="se"></div>
-      </div>
       <!-- ✂ LAYER CROP OVERLAY -->
       <div id="lyrCropOverlay">
         <div class="lyrcrop-mask" id="lyrCropM0"></div>
@@ -1124,7 +1109,7 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
       <div class="size-chip" data-w="1920" data-h="1080" onclick="setSize(this)">16:9</div>
       <div class="size-chip" data-w="1080" data-h="1350" onclick="setSize(this)">4:5</div>
 
-      <div class="size-chip" onclick="enterCropMode()" style="border-color:#C4973A;color:#C4973A;flex-shrink:0">자르기</div>
+      <div class="size-chip" id="bgCropMenu" onclick="enterCropMode()" style="display:none;border-color:#C4973A;color:#C4973A;flex-shrink:0">자르기</div>
       <div class="size-chip" onclick="openCustomSize()" style="border-color:#7B9E87;color:#7B9E87;flex-shrink:0">직접입력</div>
       <div class="zoom-bar">
         <button class="zoom-btn" onclick="zoomCanvas(-1)" title="축소">－</button>
@@ -1397,8 +1382,6 @@ input[type=color]{width:25px;height:25px;border-radius:50%;border:2px solid var(
             <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">배경 크기</span><span class="ctrl-v" id="vBgScale">100%</span></div><input type="range" id="slBgScale" min="10" max="400" value="100" oninput="setBgScale(this)" onchange="saveHistory()" ontouchend="this.oninput({target:this})"></div>
             <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">배경 가로 크기</span><span class="ctrl-v" id="vBgScaleX">100%</span></div><input type="range" id="slBgScaleX" min="10" max="400" value="100" onpointerdown="saveHistory()" oninput="setBgScaleX(this)" ontouchend="this.oninput({target:this})"></div>
             <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">배경 세로 크기</span><span class="ctrl-v" id="vBgScaleY">100%</span></div><input type="range" id="slBgScaleY" min="10" max="400" value="100" onpointerdown="saveHistory()" oninput="setBgScaleY(this)" ontouchend="this.oninput({target:this})"></div>
-            <div class="togbtn" id="bgDirectEditBtn" onclick="toggleBgDirectEdit()" style="text-align:center;padding:9px;margin-bottom:8px;font-size:11px">⤢ 배경 직접 조정</div>
-            <label style="display:flex;align-items:center;gap:7px;font-size:11px;margin:0 0 9px 2px"><input type="checkbox" id="bgAspectLock" checked onchange="setBgAspectLock(this.checked)"> 모서리 비율 유지</label>
             <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">좌우 위치</span><span class="ctrl-v" id="vBgX">0</span></div><input type="range" id="slBgX" min="-200" max="200" value="0" oninput="setBgX(this)" onchange="saveHistory()" ontouchend="this.oninput({target:this})"></div>
             <div class="ctrl"><div class="ctrl-row"><span class="ctrl-n">상하 위치</span><span class="ctrl-v" id="vBgY">0</span></div><input type="range" id="slBgY" min="-200" max="200" value="0" oninput="setBgY(this)" onchange="saveHistory()" ontouchend="this.oninput({target:this})"></div>
             <div class="slabel" style="margin-top:6px">배경 맞춤</div>
@@ -1612,7 +1595,6 @@ window.onerror = function(msg, src, line, col, err) {
 <script src="js/render.js"></script>
 <script src="js/bg.js"></script>
 <script src="js/layers.js"></script>
-<script src="js/bg-transform.js"></script>
 <script src="js/drag.js"></script>
 <script src="js/ui.js"></script>
 

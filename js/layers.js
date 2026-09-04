@@ -405,30 +405,6 @@ function setBgMode(mode) {
   bgMode = mode;
   mc.style.cursor = mode==='move' ? 'grab' : 'move';
 }
-function toggleBgDirectEdit(force) {
-  if (!bgImg) { showToast('배경사진을 먼저 넣어주세요'); return; }
-  bgDirectEdit = typeof force === 'boolean' ? force : !bgDirectEdit;
-  if (bgDirectEdit) bgMode = 'move';
-  selId = null; selIds = [];
-  const shell = document.querySelector('.canvas-shell');
-  if (shell) shell.classList.toggle('bg-direct-edit', bgDirectEdit);
-  const btn = $('bgDirectEditBtn');
-  if (btn) {
-    btn.classList.toggle('active', bgDirectEdit);
-    btn.textContent = bgDirectEdit ? '✓ 배경 직접 조정 중' : '⤢ 배경 직접 조정';
-  }
-  mc.style.cursor = bgDirectEdit ? 'grab' : 'default';
-  refreshLayerList(); renderProps(); render();
-  if (typeof updateBgTransformBox === 'function') updateBgTransformBox();
-  if (bgDirectEdit) setTimeout(() => {
-    const box=$('bgTransformBox'), zone=$('canvasZone');
-    if(box&&zone){
-      zone.scrollLeft=Math.max(0,box.offsetLeft+box.offsetWidth/2-zone.clientWidth/2);
-      zone.scrollTop=Math.max(0,box.offsetTop+box.offsetHeight/2-zone.clientHeight/2);
-    }
-  },0);
-  showToast(bgDirectEdit ? '배경을 이동하거나 8개 조절점을 드래그하세요' : '배경 직접 조정 완료');
-}
 function toggleBgVisible() {
   bgHidden = !bgHidden;
   const icon = bgHidden ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>` : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
@@ -466,7 +442,6 @@ function setBgY(el) {
 function resetBgPos() {
   saveHistory();
   bgOffX=0; bgOffY=0; bgScale=100; bgScaleX=100; bgScaleY=100;
-  bgAspectLocked=true; if($('bgAspectLock'))$('bgAspectLock').checked=true;
   $('slBgScale').value=100; $('vBgScale').textContent='100%';
   $('slBgScaleX').value=100; $('vBgScaleX').textContent='100%';
   $('slBgScaleY').value=100; $('vBgScaleY').textContent='100%';

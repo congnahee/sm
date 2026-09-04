@@ -24,7 +24,6 @@ function switchTab(name, el) {
       if (props) props.style.display = bgImg ? 'block' : 'none';
     }, 0);
   } else {
-    if (bgDirectEdit && typeof toggleBgDirectEdit === 'function') toggleBgDirectEdit(false);
     bgMode = 'layer';
     mc.style.cursor = 'default';
     // 배경 드래그 상태 초기화
@@ -71,7 +70,7 @@ function saveToGallery(dataUrl) {
     const layersSnap = layers.map(l => { const c2=Object.assign({},l); delete c2.srcImg; return c2; });
 
     const snapshot = {
-      bgColor, bgOffX, bgOffY, bgScale, bgScaleX, bgScaleY, bgAspectLocked, currentFilter,
+      bgColor, bgOffX, bgOffY, bgScale, bgScaleX, bgScaleY, currentFilter,
       bright: _bright, contrast: _contrast, sat: _sat,
       bgOp: _bgOp, bgBlur: _bgBlur, vig: _vig, grain: _grain,
       fBright: _fBright, fCont: _fCont, fSat: _fSat, fTemp: _fTemp,
@@ -323,8 +322,7 @@ function doResetAll() {
 
   // 모든 상태 초기화
   bgImg=null; layers=[]; selId=null; idCtr=0;
-  bgOffX=0; bgOffY=0; bgScale=100; bgScaleX=100; bgScaleY=100; bgAspectLocked=true; bgMode='move'; bgDirectEdit=false;
-  const canvasShell=document.querySelector('.canvas-shell'); if(canvasShell) canvasShell.classList.remove('bg-direct-edit');
+  bgOffX=0; bgOffY=0; bgScale=100; bgScaleX=100; bgScaleY=100; bgMode='move';
   activeBgPhotoId=null; currentBgDataUrl=null; bgHidden=false;
   bgPhotos=[]; bgPhotoPage=0;
   currentFilter='none';
@@ -391,7 +389,7 @@ function cv(id, el, suffix) { $(id).textContent = el.value + (suffix||''); }
 ════════════════════════════════════ */
 function showToast(msg) {
   const t=$('toast'); t.textContent=msg; t.classList.add('show');
-  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),5000);
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),850);
 }
 function showLoad(msg) { $('loadTxt').textContent=msg||'처리 중...'; $('loading').classList.add('show'); }
 function hideLoad() { $('loading').classList.remove('show'); }
@@ -1264,7 +1262,6 @@ function loadWork(work) {
   bgColor = snap.bgColor;
   bgOffX = snap.bgOffX; bgOffY = snap.bgOffY; bgScale = snap.bgScale || 100;
   bgScaleX = snap.bgScaleX || 100; bgScaleY = snap.bgScaleY || 100;
-  bgAspectLocked = snap.bgAspectLocked !== false;
   currentFilter = snap.currentFilter || 'none';
   layers = JSON.parse(JSON.stringify(snap.layers));
   calliCache = {};
@@ -1280,7 +1277,6 @@ function loadWork(work) {
   if ($('slBgScale'))   { $('slBgScale').value = snap.bgScale||100;   $('vBgScale').textContent = (snap.bgScale||100)+'%'; }
   if ($('slBgScaleX'))  { $('slBgScaleX').value = bgScaleX; $('vBgScaleX').textContent = Math.round(bgScaleX)+'%'; }
   if ($('slBgScaleY'))  { $('slBgScaleY').value = bgScaleY; $('vBgScaleY').textContent = Math.round(bgScaleY)+'%'; }
-  if ($('bgAspectLock')) $('bgAspectLock').checked = bgAspectLocked;
 
   // 배경 이미지 복원
   if (snap.bgDataUrl) {
