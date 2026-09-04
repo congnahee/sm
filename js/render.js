@@ -122,6 +122,7 @@ function render(targetCtx, TW, TH, transparent) {
 
   // Empty hint
   $('canvasHint').style.display = (bgImg||layers.length>0)?'none':'flex';
+  if (!TW && typeof updateBgTransformBox === 'function') updateBgTransformBox();
   } catch(e) { console.warn('render 오류:', e.message); }
 }
 

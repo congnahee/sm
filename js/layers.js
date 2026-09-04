@@ -419,6 +419,14 @@ function toggleBgDirectEdit(force) {
   }
   mc.style.cursor = bgDirectEdit ? 'grab' : 'default';
   refreshLayerList(); renderProps(); render();
+  if (typeof updateBgTransformBox === 'function') updateBgTransformBox();
+  if (bgDirectEdit) setTimeout(() => {
+    const box=$('bgTransformBox'), zone=$('canvasZone');
+    if(box&&zone){
+      zone.scrollLeft=Math.max(0,box.offsetLeft+box.offsetWidth/2-zone.clientWidth/2);
+      zone.scrollTop=Math.max(0,box.offsetTop+box.offsetHeight/2-zone.clientHeight/2);
+    }
+  },0);
   showToast(bgDirectEdit ? '배경을 이동하거나 8개 조절점을 드래그하세요' : '배경 직접 조정 완료');
 }
 function toggleBgVisible() {
@@ -458,6 +466,7 @@ function setBgY(el) {
 function resetBgPos() {
   saveHistory();
   bgOffX=0; bgOffY=0; bgScale=100; bgScaleX=100; bgScaleY=100;
+  bgAspectLocked=true; if($('bgAspectLock'))$('bgAspectLock').checked=true;
   $('slBgScale').value=100; $('vBgScale').textContent='100%';
   $('slBgScaleX').value=100; $('vBgScaleX').textContent='100%';
   $('slBgScaleY').value=100; $('vBgScaleY').textContent='100%';
