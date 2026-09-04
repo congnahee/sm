@@ -458,8 +458,6 @@ window.addEventListener('resize', initCanvas);
     cx = 0.05; cy = 0.05; cw = 0.9; ch = 0.9;
     const overlay = $('cropOverlay');
     overlay.style.display = 'block';
-    // 리사이즈 핸들 숨기기
-    ['rh-tl','rh-tr','rh-bl','rh-br'].forEach(id => { const el=$(id); if(el) el.style.display='none'; });
     updateCropUI();
     showToast('드래그로 자를 영역을 선택하세요');
   };
@@ -467,7 +465,6 @@ window.addEventListener('resize', initCanvas);
   window.cancelCrop = function() {
     cropActive = false;
     $('cropOverlay').style.display = 'none';
-    ['rh-tl','rh-tr','rh-bl','rh-br'].forEach(id => { const el=$(id); if(el) el.style.display=''; });
   };
 
   window.applyCrop = function() {
@@ -552,87 +549,5 @@ window.addEventListener('resize', initCanvas);
     window.addEventListener('touchmove',  onCropMove, {passive:false});
     window.addEventListener('mouseup',    onCropUp);
     window.addEventListener('touchend',   onCropUp);
-  });
-})();
-
-/* ════════════════════════════════════
-   CANVAS RESIZE HANDLES
-════════════════════════════════════ */
-(function() {
-  let resizing = false;
-  let resizeCorner = '';
-  let startX = 0, startY = 0;
-  let startW = 0, startH = 0;
-  let startRatio = 1;
-  const MIN_SIZE = 200;
-  const MAX_SIZE = 8000;
-
-  function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
-
-  function onResizeStart(e, corner) {
-    e.preventDefault();
-    e.stopPropagation();
-    resizing = true;
-    resizeCorner = corner;
-    const src = e.touches ? e.touches[0] : e;
-    startX = src.clientX;
-    startY = src.clientY;
-    startW = outputW;
-    startH = outputH;
-    startRatio = outputH / outputW;
-    saveHistory();
-  }
-
-  function onResizeMove(e) {
-    if (!resizing) return;
-    e.preventDefault();
-    const src = e.touches ? e.touches[0] : e;
-    const dx = src.clientX - startX;
-    const dy = src.clientY - startY;
-
-    // 화면상의 캔버스 크기 → 실제 px 비율 계산
-    const dispScale = mc.clientWidth / startW;
-
-    let newW = startW, newH = startH;
-    const sx = resizeCorner.includes('l') ? -1 : resizeCorner.includes('r') ? 1 : 0;
-    const sy = resizeCorner.includes('t') ? -1 : resizeCorner.includes('b') ? 1 : 0;
-
-    if (sx) newW = clamp(Math.round(startW + sx * dx / dispScale), MIN_SIZE, MAX_SIZE);
-    if (sy) newH = clamp(Math.round(startH + sy * dy / dispScale), MIN_SIZE, MAX_SIZE);
-
-    // Corners resize both axes while keeping the current aspect ratio.
-    if (sx && sy) {
-      const widthDelta = Math.abs(newW - startW) / startW;
-      const heightDelta = Math.abs(newH - startH) / startH;
-      if (widthDelta >= heightDelta) newH = clamp(Math.round(newW * startRatio), MIN_SIZE, MAX_SIZE);
-      else newW = clamp(Math.round(newH / startRatio), MIN_SIZE, MAX_SIZE);
-    }
-
-    outputW = newW; outputH = newH;
-    saveW = newW; saveH = newH;
-    initCanvas();
-    const lbl = $('sizeLabel');
-    if (lbl) lbl.textContent = `${newW.toLocaleString()} × ${newH.toLocaleString()} px`;
-    // 사이즈칩 active 해제
-    document.querySelectorAll('.size-chip').forEach(c => c.classList.remove('active'));
-  }
-
-  function onResizeEnd() {
-    if (!resizing) return;
-    resizing = false;
-    showToast(`캔버스 ${outputW}×${outputH}px`);
-  }
-
-  window.addEventListener('load', () => {
-    ['tl','tc','tr','ml','mr','bl','bc','br'].forEach(corner => {
-      const el = $('rh-' + corner);
-      if (!el) return;
-      el.addEventListener('mousedown',  e => onResizeStart(e, corner));
-      el.addEventListener('touchstart', e => onResizeStart(e, corner), {passive:false});
-    });
-    window.addEventListener('mousemove',  onResizeMove);
-    window.addEventListener('touchmove',  onResizeMove, {passive:false});
-    window.addEventListener('mouseup',    onResizeEnd);
-    window.addEventListener('touchend',   onResizeEnd);
   });
 })();

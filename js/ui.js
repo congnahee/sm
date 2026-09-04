@@ -12,11 +12,6 @@ function switchTab(name, el) {
   if (name === 'bg') {
     bgMode = 'move';
     mc.style.cursor = bgImg ? 'grab' : 'default';
-    // 캔버스 리사이즈 핸들 표시
-    ['rh-tl','rh-tc','rh-tr','rh-ml','rh-mr','rh-bl','rh-bc','rh-br'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.style.display = '';
-    });
     // 배경탭 진입 시 갤러리 갱신 + 배경 있으면 오버레이 속성 표시
     setTimeout(() => {
       renderBgPhotoGallery();
@@ -28,11 +23,6 @@ function switchTab(name, el) {
     mc.style.cursor = 'default';
     // 배경 드래그 상태 초기화
     bgDrag = false;
-    // 캔버스 리사이즈 핸들 숨기기
-    ['rh-tl','rh-tc','rh-tr','rh-ml','rh-mr','rh-bl','rh-bc','rh-br'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.style.display = 'none';
-    });
     render();
   }
   // 단계 표시바 연동
