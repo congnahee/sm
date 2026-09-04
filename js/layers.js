@@ -13,7 +13,7 @@ function onCalliLoad(e) {
         saveHistory(); // 레이어 추가 전 상태 저장
         const id = ++idCtr;
         layers.push({ id, type:'calli', name:f.name.replace(/\.[^.]+$/,''), srcImg:img, srcDataUrl:ev.target.result, size:Math.round(mc.width*.7), scaleX:100, scaleY:100, x:.5, y:.5, rotate:0, flipH:false, opacity:100, thresh:200, visible:true, tintColor:null, filter:'none' });
-        selId = id;
+        selId = id; selIds = [];
         processCalliLayer(id);
         refreshLayerList(); renderProps(); render();
         hideLoad(); showToast('캘리 오버레이 추가됨 ✓');
@@ -37,7 +37,7 @@ function onImgLoad(e) {
         saveHistory();
         const id = ++idCtr;
         layers.push({ id, type:'calli', name:f.name.replace(/\.[^.]+$/,''), srcImg:img, srcDataUrl:ev.target.result, size:Math.round(mc.width*.7), scaleX:100, scaleY:100, x:.5, y:.5, rotate:0, flipH:false, opacity:100, thresh:255, noBgRemove:true, visible:true, tintColor:null, filter:'none' });
-        selId = id;
+        selId = id; selIds = [];
         processCalliLayer(id);
         refreshLayerList(); renderProps(); render();
         hideLoad(); showToast('이미지 추가됨 ✓');
@@ -90,7 +90,7 @@ function addTextLayer() {
     saveHistory();
     const id = ++idCtr;
     layers.push({ id, type:'text', text:'', font:FONTS[0].v, size:Math.round(mc.width*.09), color:'#1C0F06', weight:'700', align:'center', x:.5, y:.5, rotate:0, opacity:100, shadow:false, visible:true, filter:'none' });
-    selId = id;
+    selId = id; selIds = [];
     refreshLayerList(); renderProps(); render();
     showToast('텍스트 레이어 추가됨');
     // ⚠ 모바일에서 자동 focus 하면 키보드가 올라오며 브라우저가 입력창으로
@@ -132,7 +132,7 @@ function duplicateLayer(id) {
   if (srcImgRef) copy.srcImg = srcImgRef; // 원본 Image 객체 참조 복원
   const idx = layers.findIndex(x => x.id === id);
   layers.splice(idx + 1, 0, copy);
-  selId = copy.id;
+  selId = copy.id; selIds = [];
   if (copy.type === 'calli' && copy.srcImg) processCalliLayer(copy.id); // calliCache 등록
   saveHistory();
   refreshLayerList();
@@ -145,6 +145,8 @@ function delLayer(id) {
   saveHistory();
   layers = layers.filter(l=>l.id!==id);
   delete calliCache[id];
+  selIds = selIds.filter(selectedId => selectedId !== id && layers.some(l => l.id === selectedId));
+  if (selIds.length < 2) selIds = [];
   if (selId===id) { selId=null; renderProps(); }
   refreshLayerList(); render(); showToast('레이어 삭제됨');
 }
@@ -183,7 +185,24 @@ function refreshLayerList() {
         <div class="lbtn" title="아래로" onclick="event.stopPropagation();moveLayer(${l.id},'down')">↓</div>
         <div class="lbtn del" title="삭제" onclick="event.stopPropagation();delLayer(${l.id})">✕</div>
       </div>`;
-    div.addEventListener('click', ()=>{ selId=l.id; refreshLayerList(); renderProps(); updateLayerToolbar(); });
+    div.addEventListener('click', e => {
+      if (e.shiftKey || e.ctrlKey || e.metaKey) {
+        let next = selIds.length > 1 ? selIds.slice() : (selId ? [selId] : []);
+        if (next.includes(l.id)) next = next.filter(id => id !== l.id);
+        else next.push(l.id);
+        next = [...new Set(next)];
+        selId = next.includes(l.id) ? l.id : (next[next.length - 1] || null);
+        selIds = next.length > 1 ? next : [];
+      } else {
+        selId = l.id;
+        selIds = [];
+      }
+      refreshLayerList();
+      renderProps();
+      render();
+      if (selIds.length > 1) updateMultiToolbar();
+      else updateLayerToolbar();
+    });
     div.dataset.layerId = l.id;
     list.appendChild(div);
   });

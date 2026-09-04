@@ -101,7 +101,7 @@ function applySnap(snap) {
     }
     layers = snap.layers || [];
     calliCache = {};
-    selId = null;
+    selId = null; selIds = [];
 
     const calliLayers = layers.filter(l => l.type === 'calli' && l.srcDataUrl);
     // 배경 + 캘리 모두 로드 완료 후 render

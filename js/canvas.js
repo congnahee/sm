@@ -357,7 +357,7 @@ function cropCanvas() {
           currentBgDataUrl = dataUrl;
           activeBgPhotoId = id;
           bgOffX = 0; bgOffY = 0; bgScale = 100; bgScaleX = 100; bgScaleY = 100;
-          layers = []; selId = null;
+          layers = []; selId = null; selIds = [];
           refreshLayerList(); renderProps();
           renderBgPhotoGallery();
           render();

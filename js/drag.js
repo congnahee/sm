@@ -122,32 +122,33 @@ function startDrag(e) {
       const hitW = b ? b.hw/dW : 0.28;
       const hitH = b ? b.hh/dH : 0.28;
       if (Math.abs(fx - l.x) < Math.max(hitW, 0.05) && Math.abs(fy - l.y) < Math.max(hitH, 0.05)) {
-        const changed = selId !== l.id;
+        const previousSelId = selId;
+        const changed = previousSelId !== l.id;
+        const hadMultiSelection = selIds.length > 1;
+        if (e.shiftKey) {
+          let next = selIds.length > 1 ? selIds.slice() : (previousSelId ? [previousSelId] : []);
+          if (next.includes(l.id)) next = next.filter(id => id !== l.id);
+          else next.push(l.id);
+          next = [...new Set(next)];
+          selId = next.includes(l.id) ? l.id : (next[next.length - 1] || null);
+          selIds = next.length > 1 ? next : [];
+          render(); refreshLayerList(); renderProps();
+          if (selIds.length > 1) updateMultiToolbar(); else updateLayerToolbar();
+          return;
+        }
         selId = l.id;
+        selIds = [];
         if (l.locked) {
           render();
-          if (changed) { refreshLayerList(); renderProps(); }
+          if (changed || hadMultiSelection) { refreshLayerList(); renderProps(); }
           updateLayerToolbar();
           showToast('🔒 잠금된 레이어예요');
           return;
         }
-        if (e.shiftKey) {
-          if (selIds.includes(l.id)) {
-            selIds = selIds.filter(x => x !== l.id);
-            if (selId === l.id) selId = selIds[selIds.length-1] || null;
-          } else {
-            if (selId && !selIds.includes(selId)) selIds.push(selId);
-            selIds.push(l.id);
-            selId = l.id;
-          }
-          render(); refreshLayerList(); updateMultiToolbar();
-          return;
-        }
-        if (!selIds.includes(l.id)) selIds = [];
         pendingDrag = true;
         dsx = fx; dsy = fy; dlx = l.x; dly = l.y;
         render();
-        if (changed) {
+        if (changed || hadMultiSelection) {
           const layerTab = document.getElementById('ptab-layers');
           if (layerTab && !layerTab.classList.contains('active')) switchTab('layers', layerTab);
           refreshLayerList(); renderProps();

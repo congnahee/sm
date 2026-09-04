@@ -311,7 +311,7 @@ function doResetAll() {
   if (chip1) chip1.classList.add('active');
 
   // 모든 상태 초기화
-  bgImg=null; layers=[]; selId=null; idCtr=0;
+  bgImg=null; layers=[]; selId=null; selIds=[]; idCtr=0;
   bgOffX=0; bgOffY=0; bgScale=100; bgScaleX=100; bgScaleY=100; bgMode='move';
   activeBgPhotoId=null; currentBgDataUrl=null; bgHidden=false;
   bgPhotos=[]; bgPhotoPage=0;
@@ -487,7 +487,7 @@ function applyFontToSelected(f) {
   if (!l) l = layers.find(x=>x.type==='text');
   if (!l) { showToast('✍️ 먼저 텍스트 레이어를 추가/선택하세요'); return; }
   l.font = f.v;
-  selId = l.id;
+  selId = l.id; selIds = [];
   // propbox 전체 재생성 대신 select만 업데이트
   const sel = $('pe_font');
   if (sel) sel.value = f.v;
@@ -792,7 +792,11 @@ function openConfirmModal(title, desc, callback) {
   $('confirmModalTitle').textContent = title;
   $('confirmModalDesc').textContent = desc;
   $('confirmModalDesc').style.display = desc ? 'block' : 'none';
-  $('confirmModalOk').onclick = () => { closeConfirmModal(); if (_confirmCallback) _confirmCallback(); };
+  $('confirmModalOk').onclick = () => {
+    const confirmedAction = _confirmCallback;
+    closeConfirmModal();
+    if (confirmedAction) confirmedAction();
+  };
   $('confirmModal').style.display = 'flex';
 }
 function closeConfirmModal() {
@@ -1286,7 +1290,7 @@ function loadWork(work) {
       // 오버레이 속성 패널 표시 준비 (배경탭 이동 시 보임)
       // 캘리 이미지 캐시 복원
       restoreCalliCaches(() => {
-        selId = null;
+        selId = null; selIds = [];
         refreshLayerList(); renderProps(); render();
         showToast('작품 불러오기 저장 ✓');
       });
@@ -1295,7 +1299,7 @@ function loadWork(work) {
   } else {
     bgImg = null;
     restoreCalliCaches(() => {
-      selId = null;
+      selId = null; selIds = [];
       refreshLayerList(); renderProps(); render();
       showToast('작품 불러오기 저장 ✓');
     });
@@ -1416,7 +1420,7 @@ function addStickerLayer(emoji) {
   saveHistory();
   const id = ++idCtr;
   layers.push({ id, type:'sticker', text:emoji, font:"'Noto Serif KR',serif", size:Math.round(mc.width*.15), color:'#000000', weight:'400', align:'center', x:.5, y:.5, rotate:0, opacity:100, shadow:false, visible:true, filter:'none' });
-  selId = id;
+  selId = id; selIds = [];
   refreshLayerList(); renderProps(); render();
   showToast(emoji + ' 스티커 추가됨');
 }
