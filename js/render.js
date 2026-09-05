@@ -59,7 +59,7 @@ function render(targetCtx, TW, TH, transparent) {
     const ox = bgOffX * W, oy = bgOffY * H;
     const dx = (W-bW)/2 + ox, dy = (H-bH)/2 + oy;
 
-    // CSS filter로 배경이미지 렌더 (getImageData 없이 → 캔버스 오염 없음)
+    // Canvas 2D filter를 지원하지 않는 iOS/Safari 계열은 픽셀 필터로 처리한다.
     let filterStr = `brightness(${totalBright}%) contrast(${totalCont}%) saturate(${totalSat}%)`;
     if (_fTemp > 0) filterStr += ` sepia(${Math.round(_fTemp*1.2)}%) saturate(${100+_fTemp}%)`;
     if (_fTemp < 0) filterStr += ` hue-rotate(${Math.round(-_fTemp*0.4)}deg) saturate(${100+_fTemp}%)`;
@@ -67,14 +67,28 @@ function render(targetCtx, TW, TH, transparent) {
     const filt = FILTERS[currentFilter] || '';
     if (filt) filterStr += ' ' + filt;
 
-    c.save();
-    c.globalAlpha = _bgOp / 100;
-    c.filter = filterStr;
-    c.imageSmoothingEnabled = true;
-    c.imageSmoothingQuality = 'high';
-    c.drawImage(bgImg, dx, dy, bW, bH);
-    c.filter = 'none';
-    c.restore();
+    const canUseCanvasFilter = typeof c.filter === 'string';
+    if (canUseCanvasFilter) {
+      c.save();
+      c.globalAlpha = _bgOp / 100;
+      c.filter = filterStr;
+      c.imageSmoothingEnabled = true;
+      c.imageSmoothingQuality = 'high';
+      c.drawImage(bgImg, dx, dy, bW, bH);
+      c.filter = 'none';
+      c.restore();
+    } else {
+      const filteredBg = document.createElement('canvas');
+      filteredBg.width = W; filteredBg.height = H;
+      const fc = filteredBg.getContext('2d', {willReadFrequently:true});
+      fc.globalAlpha = _bgOp / 100;
+      fc.imageSmoothingEnabled = true;
+      fc.imageSmoothingQuality = 'high';
+      fc.drawImage(bgImg, dx, dy, bW, bH);
+      fc.globalAlpha = 1;
+      applyPixelFilter(fc, W, H, totalBright, totalCont, totalSat, currentFilter, _bgBlur, _fTemp);
+      c.drawImage(filteredBg, 0, 0);
+    }
     if (!TW) mc.style.filter = 'none';
   }
 
@@ -229,32 +243,36 @@ function drawCalli(c, W, H, l) {
   // ── 레이어 필터 ──
   // ⚠ tint 는 임시 캔버스에서 합성하므로, 필터는 '최종 그리기' 단계에서 한 번만 적용한다.
   //   (임시 캔버스에도 걸면 이중 적용되어 색이 뭉개짐)
-  const lFilt = (l.filter && l.filter !== 'none') ? (FILTERS[l.filter] || '') : '';
-  if (lFilt) { try { c.filter = lFilt; } catch(e) {} }
+  const filterId = l.filter || 'none';
+  const lFilt = filterId !== 'none' ? (FILTERS[filterId] || '') : '';
+  const canUseCanvasFilter = typeof c.filter === 'string';
+  let source = cache.offscreen;
 
-  if (tint) {
+  // 색상 합성 또는 모바일 픽셀 필터가 필요하면 안전한 임시 캔버스에서 처리한다.
+  if (tint || (lFilt && !canUseCanvasFilter)) {
     try {
       const ow = cache.offscreen.width, oh = cache.offscreen.height;
       if (!ow || !oh) throw new Error('offscreen 크기 0');
       const tmp = document.createElement('canvas');
       tmp.width = ow; tmp.height = oh;
-      const tc = tmp.getContext('2d');
-      tc.clearRect(0, 0, ow, oh);
-      tc.globalCompositeOperation = 'source-over';
+      const tc = tmp.getContext('2d', {willReadFrequently:true});
       tc.drawImage(cache.offscreen, 0, 0);
-      tc.globalCompositeOperation = 'source-atop';
-      tc.fillStyle = tint;
-      tc.fillRect(0, 0, ow, oh);
-      tc.globalCompositeOperation = 'source-over';
-      c.drawImage(tmp, -dW/2, -dH/2, dW, dH);
+      if (tint) {
+        tc.globalCompositeOperation = 'source-atop';
+        tc.fillStyle = tint;
+        tc.fillRect(0, 0, ow, oh);
+        tc.globalCompositeOperation = 'source-over';
+      }
+      if (lFilt && !canUseCanvasFilter) applyPixelFilter(tc, ow, oh, 100, 100, 100, filterId, 0, 0);
+      source = tmp;
     } catch(e) {
-      // 실패해도 캘리는 반드시 보이게 — 원본으로 폴백
-      console.warn('tint 적용 실패, 원본 표시:', e.message);
-      c.drawImage(cache.offscreen, -dW/2, -dH/2, dW, dH);
+      console.warn('레이어 필터 처리 실패, 원본 표시:', e.message);
+      source = cache.offscreen;
     }
-  } else {
-    c.drawImage(cache.offscreen, -dW/2, -dH/2, dW, dH);
   }
-  if (lFilt) { try { c.filter = 'none'; } catch(e) {} }
+
+  if (lFilt && canUseCanvasFilter) { try { c.filter = lFilt; } catch(e) {} }
+  c.drawImage(source, -dW/2, -dH/2, dW, dH);
+  if (lFilt && canUseCanvasFilter) { try { c.filter = 'none'; } catch(e) {} }
   c.restore();
 }

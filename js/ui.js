@@ -10,8 +10,15 @@ function switchTab(name, el) {
   // 탭에 따라 캔버스 드래그 모드 자동 전환
   // 배경사진 탭 → 배경 이동 모드 / 나머지 탭 → 레이어 이동 모드
   if (name === 'bg') {
+    // 배경 탭에서는 레이어 선택 테두리와 이전 자르기 오버레이를 남기지 않는다.
+    if (typeof cancelCrop === 'function') cancelCrop();
+    selId = null;
+    selIds = [];
+    if (typeof hideLayerToolbar === 'function') hideLayerToolbar();
+    if (typeof refreshLayerList === 'function') refreshLayerList();
     bgMode = 'move';
     mc.style.cursor = bgImg ? 'grab' : 'default';
+    render();
     // 배경탭 진입 시 갤러리 갱신 + 배경 있으면 오버레이 속성 표시
     setTimeout(() => {
       renderBgPhotoGallery();

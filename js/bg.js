@@ -204,6 +204,8 @@ function setFilter(name, clickedEl) {
   document.querySelectorAll('.fchip').forEach(c => c.classList.remove('active'));
   if (clickedEl && clickedEl.classList.contains('fchip')) clickedEl.classList.add('active');
   render();
+  const lbl = (FILTER_LIST.find(f => f.id === name) || {}).lbl || name;
+  showToast('배경 필터: ' + lbl);
 }
 
 /* 레이어 필터 — 선택된 레이어(들)에만 적용 */
@@ -296,7 +298,35 @@ function buildFilterThumbs(gridId) {
     const div = document.createElement('div');
     div.className = 'fthumb' + (activeId === f.id ? ' active' : '');
     div.dataset.filter = f.id;
-    div.onclick = () => (isLayerGrid ? setLayerFilter(f.id, div) : setFilter(f.id, div));
+    div.setAttribute('role', 'button');
+    div.setAttribute('tabindex', '0');
+    div.setAttribute('aria-label', f.lbl + ' 필터');
+    const activate = () => (isLayerGrid ? setLayerFilter(f.id, div) : setFilter(f.id, div));
+    let touchStart = null;
+    let lastTouchAt = 0;
+    div.addEventListener('touchstart', e => {
+      const t = e.touches && e.touches[0];
+      touchStart = t ? {x:t.clientX, y:t.clientY, moved:false} : null;
+    }, {passive:true});
+    div.addEventListener('touchmove', e => {
+      if (!touchStart || !e.touches || !e.touches[0]) return;
+      const t = e.touches[0];
+      if (Math.hypot(t.clientX-touchStart.x, t.clientY-touchStart.y) > 8) touchStart.moved = true;
+    }, {passive:true});
+    div.addEventListener('touchend', e => {
+      if (!touchStart || touchStart.moved) { touchStart = null; return; }
+      e.preventDefault();
+      lastTouchAt = Date.now();
+      touchStart = null;
+      activate();
+    }, {passive:false});
+    div.addEventListener('click', () => {
+      if (Date.now() - lastTouchAt < 600) return;
+      activate();
+    });
+    div.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(); }
+    });
 
     const cv2 = document.createElement('canvas');
     cv2.width = 120; cv2.height = 70;

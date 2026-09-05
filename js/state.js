@@ -257,18 +257,31 @@ function applyPixelFilter(ctx, W, H, bright, contrast, sat, filterName, blur, te
   const sFac = sat / 100;
 
   // 필터 프리셋 → 파라미터로 변환
-  let pb=bFac, pc=cFac, ps=sFac, sepia=0, hueRot=0;
-  if (filterName === 'bw')       { ps=0; }
-  else if (filterName === 'sepia')    { sepia=0.75; }
-  else if (filterName === 'warm')     { ps*=1.3; pb*=1.05; }
-  else if (filterName === 'cool')     { ps*=0.8; pb*=1.02; hueRot=18; }
-  else if (filterName === 'vintage')  { sepia=0.45; pc*=0.88; pb*=0.88; ps*=0.8; }
-  else if (filterName === 'fade')     { pb*=1.18; ps*=0.65; pc*=0.88; }
-  else if (filterName === 'vivid')    { ps*=1.65; pc*=1.12; }
-  else if (filterName === 'dramatic') { pc*=1.25; ps*=1.1; pb*=0.9; }
-  else if (filterName === 'matte')    { pc*=0.85; ps*=0.75; pb*=1.08; }
-  else if (filterName === 'soft')     { pb*=1.1; pc*=0.9; ps*=0.85; }
-  else if (filterName === 'cinematic'){ pc*=1.15; ps*=0.9; pb*=0.88; hueRot=5; }
+  let pb=bFac, pc=cFac, ps=sFac, sepia=0, rShift=0, gShift=0, bShift=0;
+  if (filterName === 'bw')             { ps=0; }
+  else if (filterName === 'sepia')     { sepia=0.75; }
+  else if (filterName === 'soft')      { pb*=1.10; pc*=0.90; ps*=0.85; }
+  else if (filterName === 'clean')     { pb*=1.08; pc*=1.08; ps*=0.92; }
+  else if (filterName === 'vivid')     { ps*=1.65; pc*=1.12; }
+  else if (filterName === 'warm')      { ps*=1.30; pb*=1.05; rShift+=12; bShift-=8; }
+  else if (filterName === 'autumn')    { sepia=0.35; pc*=1.10; ps*=1.25; rShift+=8; }
+  else if (filterName === 'champagne') { sepia=0.25; pb*=1.10; pc*=0.92; ps*=0.75; }
+  else if (filterName === 'honey')     { sepia=0.45; pb*=1.05; ps*=1.25; rShift+=10; }
+  else if (filterName === 'cool')      { ps*=0.80; pb*=1.02; rShift-=8; bShift+=14; }
+  else if (filterName === 'moonlight') { ps*=0.58; pb*=0.88; pc*=1.22; rShift-=8; bShift+=18; }
+  else if (filterName === 'mist')      { pb*=1.32; pc*=0.64; ps*=0.48; bShift+=6; }
+  else if (filterName === 'frost')     { ps*=0.70; pb*=1.12; pc*=0.96; rShift-=5; bShift+=12; }
+  else if (filterName === 'dawn')      { ps*=0.75; pb*=0.96; pc*=1.12; sepia=0.15; bShift+=8; }
+  else if (filterName === 'fade')      { pb*=1.14; ps*=0.45; pc*=0.94; sepia=0.10; }
+  else if (filterName === 'matte')     { pc*=0.76; ps*=0.92; pb*=1.06; }
+  else if (filterName === 'faint')     { pb*=0.94; ps*=0.65; pc*=0.88; sepia=0.32; }
+  else if (filterName === 'cotton')    { pb*=1.18; ps*=1.25; pc*=0.82; rShift+=15; bShift+=8; }
+  else if (filterName === 'romantic')  { sepia=0.30; ps*=1.65; pb*=1.05; pc*=0.90; rShift+=10; }
+  else if (filterName === 'vintage')   { sepia=0.58; pc*=0.90; pb*=0.80; ps*=0.88; }
+  else if (filterName === 'film')      { sepia=0.18; pc*=1.38; ps*=0.75; pb*=0.97; }
+  else if (filterName === 'dramatic')  { pc*=1.48; ps*=1.30; pb*=0.82; }
+  else if (filterName === 'cinematic') { pc*=1.24; ps*=0.88; pb*=0.84; sepia=0.30; rShift+=6; }
+  else if (filterName === 'elegant')   { ps*=0.40; pc*=1.15; pb*=1.03; }
 
   // 색온도 (temp: -50~50)
   const tempWarm = temp > 0 ? temp/50 : 0;
@@ -296,6 +309,7 @@ function applyPixelFilter(ctx, W, H, bright, contrast, sat, filterName, blur, te
     // 색온도
     if (tempWarm > 0) { r += 30*tempWarm; g += 10*tempWarm; b -= 20*tempWarm; }
     if (tempCool > 0) { r -= 20*tempCool; g -= 5*tempCool; b += 30*tempCool; }
+    r += rShift; g += gShift; b += bShift;
 
     // 밝기
     r *= pb; g *= pb; b *= pb;

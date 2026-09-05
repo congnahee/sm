@@ -453,18 +453,31 @@ window.addEventListener('resize', initCanvas);
   }
 
   window.enterCropMode = function() {
-    if (cropActive) return;
-    cropActive = true;
-    cx = 0.05; cy = 0.05; cw = 0.9; ch = 0.9;
+    // 배경 자르기/조절점 기능은 사용자 요청에 따라 완전히 폐기한다.
+    cropActive = false;
+    dragType = null;
+    selId = null;
+    selIds = [];
+    if (typeof hideLayerToolbar === 'function') hideLayerToolbar();
+    if (typeof refreshLayerList === 'function') refreshLayerList();
     const overlay = $('cropOverlay');
-    overlay.style.display = 'block';
-    updateCropUI();
-    showToast('드래그로 자를 영역을 선택하세요');
+    if (overlay) {
+      overlay.style.display = 'none';
+      overlay.style.pointerEvents = 'none';
+    }
+    document.body.classList.remove('crop-mode-active');
+    render();
   };
 
   window.cancelCrop = function() {
     cropActive = false;
-    $('cropOverlay').style.display = 'none';
+    dragType = null;
+    document.body.classList.remove('crop-mode-active');
+    const overlay = $('cropOverlay');
+    if (overlay) {
+      overlay.style.display = 'none';
+      overlay.style.pointerEvents = 'none';
+    }
   };
 
   window.applyCrop = function() {
@@ -487,11 +500,13 @@ window.addEventListener('resize', initCanvas);
 
     outputW = newW; outputH = newH; saveW = newW; saveH = newH;
     document.querySelectorAll('.size-chip').forEach(c => c.classList.remove('active'));
+    // 캔버스 재계산 전에 자르기 UI를 먼저 완전히 종료한다.
+    // initCanvas()/render() 도중 이전 오버레이가 다시 그려지는 것을 막는다.
+    cancelCrop();
     initCanvas();
     const lbl = $('sizeLabel');
     if (lbl) lbl.textContent = `${newW.toLocaleString()} × ${newH.toLocaleString()} px`;
 
-    cancelCrop();
     render();
     showToast(`✂ 자르기 완료 — ${newW}×${newH}px`);
   };
@@ -543,6 +558,9 @@ window.addEventListener('resize', initCanvas);
   window.addEventListener('load', () => {
     const overlay = $('cropOverlay');
     if (!overlay) return;
+    document.body.classList.remove('crop-mode-active');
+    overlay.style.display = 'none';
+    overlay.style.pointerEvents = 'none';
     overlay.addEventListener('mousedown',  onCropDown);
     overlay.addEventListener('touchstart', onCropDown, {passive:false});
     window.addEventListener('mousemove',  onCropMove);
