@@ -335,9 +335,11 @@ function buildFilterThumbs(gridId) {
     if (thumbSrc) {
       const sc2 = Math.max(120/thumbSrc.width, 70/thumbSrc.height);
       const dw = thumbSrc.width*sc2, dh = thumbSrc.height*sc2;
-      ctx2.filter = FILTERS[f.id] || 'none';
+      // 모바일 인앱 브라우저는 CanvasRenderingContext2D.filter 속성이 있어도
+      // 실제 drawImage 결과에는 적용하지 않는 경우가 있다. 썸네일은 작은
+      // 120×70 캔버스이므로 모든 환경에서 픽셀 필터를 직접 적용한다.
       ctx2.drawImage(thumbSrc, (120-dw)/2, (70-dh)/2, dw, dh);
-      ctx2.filter = 'none';
+      applyPixelFilter(ctx2, 120, 70, 100, 100, 100, f.id, 0, 0);
     } else {
       // 소스 없을 때 색상 데모
       const DEMO = {
